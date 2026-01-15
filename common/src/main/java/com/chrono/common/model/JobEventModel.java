@@ -1,8 +1,10 @@
 package com.chrono.common.model;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 
 import com.chrono.common.enums.JobStatus;
+import com.chrono.common.enums.JobType;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,12 +16,12 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class JobEvent {
+public class JobEventModel {
     
     private String jobId;
-    private String jobType;
+    private JobType jobType;
     
-    private long createdAt;
+    private LocalDateTime createdAt;
     
     private Map<String, Object> payload;
     
