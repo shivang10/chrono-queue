@@ -3,9 +3,8 @@ package com.chrono.producer.service;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import com.chrono.common.model.JobEventModel;
@@ -23,11 +22,11 @@ public class JobEventProducerService {
     @Value("${kafka.topic.job-events:job-events}")
     private String topicName;
 
-    private final KafkaProducer<String, String> kafkaProducer;
+    private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
 
-    public JobEventProducerService(KafkaProducer<String, String> kafkaProducer, ObjectMapper objectMapper, JobProducerMapper jobProducerMapper) {
-        this.kafkaProducer = kafkaProducer;
+    public JobEventProducerService(KafkaTemplate<String, String> kafkaTemplate, ObjectMapper objectMapper, JobProducerMapper jobProducerMapper) {
+        this.kafkaTemplate = kafkaTemplate;
         this.objectMapper = objectMapper;
         JobEventProducerService.jobProducerMapper = jobProducerMapper;
         logger.info("JobEventProducerService initialized");
@@ -54,16 +53,17 @@ public class JobEventProducerService {
     }
 
     private void sendToKafka(String key, String value) {
-        ProducerRecord<String, String> record = new ProducerRecord<>(topicName, key, value);
-        
-        kafkaProducer.send(record, (metadata, exception) -> {
-            if (exception != null) {
-                logger.log(Level.SEVERE, "Error sending job event to Kafka", exception);
-            } else {
-                logger.info(String.format("Job event sent successfully - Topic: %s, Partition: %d, Offset: %d", 
-                    metadata.topic(), metadata.partition(), metadata.offset()));
-            }
-        });
+        kafkaTemplate.send(topicName, key, value)
+            .whenComplete((result, exception) -> {
+                if (exception != null) {
+                    logger.log(Level.SEVERE, "Error sending job event to Kafka", exception);
+                } else {
+                    logger.info(String.format("Job event sent successfully - Topic: %s, Partition: %d, Offset: %d", 
+                        result.getRecordMetadata().topic(), 
+                        result.getRecordMetadata().partition(), 
+                        result.getRecordMetadata().offset()));
+                }
+            });
     }
     
 }
