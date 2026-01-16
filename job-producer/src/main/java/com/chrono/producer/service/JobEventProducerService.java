@@ -1,6 +1,5 @@
 package com.chrono.producer.service;
 
-import java.time.LocalDateTime;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -12,12 +11,14 @@ import org.springframework.stereotype.Service;
 import com.chrono.common.model.JobEventModel;
 import com.chrono.producer.dto.jobEventDto.JobEventRequestDTO;
 import com.chrono.producer.dto.jobEventDto.JobEventResponseDTO;
+import com.chrono.producer.mapper.JobProducerMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class JobEventProducerService {
 
     private static final Logger logger = Logger.getLogger(JobEventProducerService.class.getName());
+    private static JobProducerMapper jobProducerMapper;
     
     @Value("${kafka.topic.job-events:job-events}")
     private String topicName;
@@ -25,9 +26,10 @@ public class JobEventProducerService {
     private final KafkaProducer<String, String> kafkaProducer;
     private final ObjectMapper objectMapper;
 
-    public JobEventProducerService(KafkaProducer<String, String> kafkaProducer, ObjectMapper objectMapper) {
+    public JobEventProducerService(KafkaProducer<String, String> kafkaProducer, ObjectMapper objectMapper, JobProducerMapper jobProducerMapper) {
         this.kafkaProducer = kafkaProducer;
         this.objectMapper = objectMapper;
+        JobEventProducerService.jobProducerMapper = jobProducerMapper;
         logger.info("JobEventProducerService initialized");
     }
 
@@ -36,26 +38,14 @@ public class JobEventProducerService {
             if (jobEventRequestDTO == null || jobEventRequestDTO.getJobType() == null) {
                 throw new IllegalArgumentException("Job event request or job type cannot be null");
             }
-            JobEventModel jobEventModel = createJobEventModel(jobEventRequestDTO);
-
+            JobEventModel jobEventModel = jobProducerMapper.toJobEvent(jobEventRequestDTO);
             String jobEventJson = objectMapper.writeValueAsString(jobEventModel);
             sendToKafka(jobEventModel.getJobType().toString(), jobEventJson);
-            // ProducerRecord<String, String> record = new ProducerRecord<String, String>(topicName, jobEventModel.getJobType().toString(), jobEventJson);
-            // kafkaProducer.send(record, (metadata, exception) -> {
-            //     if (exception != null) {
-            //         logger.severe("Error sending message to Kafka: " + exception.getMessage());
-            //     } else {
-            //         logger.info("Message sent to topic " + metadata.topic() + " partition " + metadata.partition() + " offset " + metadata.offset());
-            //     }
-            // });
             logger.info("Produced Job Event: " + jobEventModel.toString());
-
-
             if (jobEventRequestDTO == null || jobEventRequestDTO.getJobType() == null) {
                 throw new IllegalArgumentException("Job event request or job type cannot be null");
             }
-            JobEventResponseDTO jobEventResponseDTO = new JobEventResponseDTO();
-            jobEventResponseDTO.setMessage("Job event produced successfully");
+            JobEventResponseDTO jobEventResponseDTO = jobProducerMapper.toJobEventResponse(jobEventModel);
             return jobEventResponseDTO;
         } catch (Exception e) {
             logger.severe("Error producing job event: " + e.getMessage());
@@ -74,14 +64,6 @@ public class JobEventProducerService {
                     metadata.topic(), metadata.partition(), metadata.offset()));
             }
         });
-    }
-
-    private JobEventModel createJobEventModel(JobEventRequestDTO dto) {
-        JobEventModel jobEventModel = new JobEventModel();
-        jobEventModel.setJobType(dto.getJobType());
-        jobEventModel.setPayload(dto.getPayload());
-        jobEventModel.setCreatedAt(LocalDateTime.now());
-        return jobEventModel;
     }
     
 }

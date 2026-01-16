@@ -9,4 +9,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class JobEventResponseDTO {
     private String message;
+    private String jobId;
+    
+    public JobEventResponseDTO(String message) {
+        this.message = message;
+    }
 }
