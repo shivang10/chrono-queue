@@ -1,0 +1,7 @@
+spring:
+  kafka:
+    bootstrap-servers: kafka:9092
+
+kafka:
+  topic:
+    job-events: job-events
