@@ -1,15 +1,14 @@
 package com.chrono.common.model;
 
-import java.time.LocalDateTime;
-import java.util.Map;
-import java.util.UUID;
-
 import com.chrono.common.enums.JobStatus;
 import com.chrono.common.enums.JobType;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.UUID;
 
 
 @Data
@@ -18,14 +17,14 @@ import lombok.NoArgsConstructor;
 public class JobEventModel {
 
     private static final int DEFAULT_MAX_RETRIES = 3;
-    
+
     private String jobId;
     private JobType jobType;
-    
+
     private LocalDateTime createdAt;
-    
+
     private Map<String, Object> payload;
-    
+
     private int retryCount = 0;
     private int maxRetries = DEFAULT_MAX_RETRIES;
 

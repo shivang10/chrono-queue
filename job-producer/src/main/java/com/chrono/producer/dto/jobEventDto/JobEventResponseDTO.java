@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 public class JobEventResponseDTO {
     private String message;
     private String jobId;
-    
+
     public JobEventResponseDTO(String message) {
         this.message = message;
     }

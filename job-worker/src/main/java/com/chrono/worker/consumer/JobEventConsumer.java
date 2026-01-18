@@ -1,15 +1,14 @@
 package com.chrono.worker.consumer;
 
-import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.stereotype.Component;
-
 import com.chrono.common.model.JobEventModel;
 import com.chrono.worker.services.JobProcessingService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.stereotype.Component;
 
 @Component
 public class JobEventConsumer {
-    
+
     private final ObjectMapper objectMapper;
     private final JobProcessingService jobProcessingService;
 

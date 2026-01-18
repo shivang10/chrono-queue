@@ -5,5 +5,6 @@ import com.chrono.common.model.JobEventModel;
 
 public interface JobExecutor {
     JobType supports();
+
     void execute(JobEventModel jobEvent);
 }

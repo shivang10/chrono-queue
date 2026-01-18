@@ -1,29 +1,26 @@
 package com.chrono.producer.service;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.stereotype.Service;
-
 import com.chrono.common.model.JobEventModel;
 import com.chrono.producer.dto.jobEventDto.JobEventRequestDTO;
 import com.chrono.producer.dto.jobEventDto.JobEventResponseDTO;
 import com.chrono.producer.mapper.JobProducerMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.stereotype.Service;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Service
 public class JobEventProducerService {
 
     private static final Logger logger = Logger.getLogger(JobEventProducerService.class.getName());
     private static JobProducerMapper jobProducerMapper;
-    
-    @Value("${kafka.topic.job-events:job-events}")
-    private String topicName;
-
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
+    @Value("${kafka.topic.job-events:job-events}")
+    private String topicName;
 
     public JobEventProducerService(KafkaTemplate<String, String> kafkaTemplate, ObjectMapper objectMapper, JobProducerMapper jobProducerMapper) {
         this.kafkaTemplate = kafkaTemplate;
@@ -33,7 +30,7 @@ public class JobEventProducerService {
     }
 
     public JobEventResponseDTO produceJobEvent(JobEventRequestDTO jobEventRequestDTO) {
-        try{
+        try {
             if (jobEventRequestDTO == null || jobEventRequestDTO.getJobType() == null) {
                 throw new IllegalArgumentException("Job event request or job type cannot be null");
             }
@@ -54,16 +51,16 @@ public class JobEventProducerService {
 
     private void sendToKafka(String key, String value) {
         kafkaTemplate.send(topicName, key, value)
-            .whenComplete((result, exception) -> {
-                if (exception != null) {
-                    logger.log(Level.SEVERE, "Error sending job event to Kafka", exception);
-                } else {
-                    logger.info(String.format("Job event sent successfully - Topic: %s, Partition: %d, Offset: %d", 
-                        result.getRecordMetadata().topic(), 
-                        result.getRecordMetadata().partition(), 
-                        result.getRecordMetadata().offset()));
-                }
-            });
+                .whenComplete((result, exception) -> {
+                    if (exception != null) {
+                        logger.log(Level.SEVERE, "Error sending job event to Kafka", exception);
+                    } else {
+                        logger.info(String.format("Job event sent successfully - Topic: %s, Partition: %d, Offset: %d",
+                                result.getRecordMetadata().topic(),
+                                result.getRecordMetadata().partition(),
+                                result.getRecordMetadata().offset()));
+                    }
+                });
     }
-    
+
 }

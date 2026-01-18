@@ -1,10 +1,9 @@
 package com.chrono.worker.executor.impl;
 
-import org.springframework.stereotype.Component;
-
 import com.chrono.common.enums.JobType;
 import com.chrono.common.model.JobEventModel;
 import com.chrono.worker.executor.JobExecutor;
+import org.springframework.stereotype.Component;
 
 
 @Component
@@ -19,5 +18,5 @@ public class EmailJobExecutor implements JobExecutor {
     public void execute(JobEventModel jobEvent) {
         System.out.println("Executing Email Job: " + jobEvent);
     }
-    
+
 }

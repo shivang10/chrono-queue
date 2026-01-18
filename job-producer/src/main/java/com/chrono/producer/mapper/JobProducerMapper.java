@@ -1,11 +1,10 @@
 package com.chrono.producer.mapper;
 
 
-import org.springframework.stereotype.Component;
-
 import com.chrono.common.model.JobEventModel;
 import com.chrono.producer.dto.jobEventDto.JobEventRequestDTO;
 import com.chrono.producer.dto.jobEventDto.JobEventResponseDTO;
+import org.springframework.stereotype.Component;
 
 @Component
 public class JobProducerMapper {
