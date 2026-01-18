@@ -20,6 +20,7 @@ public class JobProducerMapper {
         JobEventResponseDTO jobEventResponseDTO = new JobEventResponseDTO();
         jobEventResponseDTO.setMessage("Job producer response created successfully");
         jobEventResponseDTO.setJobId(jobEventModel.getJobId());
+        jobEventResponseDTO.setJobType(jobEventModel.getJobType());
         return jobEventResponseDTO;
     }
 }

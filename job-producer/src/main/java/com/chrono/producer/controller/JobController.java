@@ -5,12 +5,10 @@ import com.chrono.producer.dto.jobEventDto.JobEventResponseDTO;
 import com.chrono.producer.service.JobEventProducerService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.logging.Logger;
+
 
 @RestController
 @RequestMapping("/api/job")
@@ -32,5 +30,11 @@ public class JobController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
     }
+
+    @GetMapping("/health")
+    public String getMethodName(@RequestParam String param) {
+        return ResponseEntity.ok("Service is up and running").getBody();
+    }
+
 
 }

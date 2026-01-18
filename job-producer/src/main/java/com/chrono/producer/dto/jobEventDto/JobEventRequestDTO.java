@@ -2,7 +2,8 @@ package com.chrono.producer.dto.jobEventDto;
 
 
 import com.chrono.common.enums.JobType;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,10 +15,9 @@ import java.util.Map;
 @AllArgsConstructor
 public class JobEventRequestDTO {
 
-    @NotBlank(message = "Job Type cannot be blank")
+    @NotNull(message = "Job Type cannot be blank")
     private JobType jobType;
 
-    @NotBlank(message = "Payload cannot be blank")
+    @NotEmpty(message = "Payload cannot be blank")
     private Map<String, Object> payload;
-
 }
