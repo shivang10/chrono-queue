@@ -1,11 +1,11 @@
 package com.chrono.producer.service;
 
+import com.chrono.common.constants.KafkaTopics;
 import com.chrono.common.model.JobEventModel;
 import com.chrono.producer.dto.jobEventDto.JobEventRequestDTO;
 import com.chrono.producer.dto.jobEventDto.JobEventResponseDTO;
 import com.chrono.producer.mapper.JobProducerMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -16,31 +16,35 @@ import java.util.logging.Logger;
 public class JobEventProducerService {
 
     private static final Logger logger = Logger.getLogger(JobEventProducerService.class.getName());
-    private static JobProducerMapper jobProducerMapper;
+    private final JobProducerMapper jobProducerMapper;
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
-    @Value("${kafka.topic.job-events:job-events}")
-    private String topicName;
 
     public JobEventProducerService(KafkaTemplate<String, String> kafkaTemplate, ObjectMapper objectMapper, JobProducerMapper jobProducerMapper) {
         this.kafkaTemplate = kafkaTemplate;
         this.objectMapper = objectMapper;
-        JobEventProducerService.jobProducerMapper = jobProducerMapper;
+        this.jobProducerMapper = jobProducerMapper;
         logger.info("JobEventProducerService initialized");
     }
 
     public JobEventResponseDTO produceJobEvent(JobEventRequestDTO jobEventRequestDTO) {
         try {
+
             if (jobEventRequestDTO == null || jobEventRequestDTO.getJobType() == null) {
                 throw new IllegalArgumentException("Job event request or job type cannot be null");
             }
+
             JobEventModel jobEventModel = jobProducerMapper.toJobEvent(jobEventRequestDTO);
             String jobEventJson = objectMapper.writeValueAsString(jobEventModel);
-            sendToKafka(jobEventModel.getJobType().toString(), jobEventJson);
+            String topicName = KafkaTopics.getTopicForJobType(jobEventModel.getJobType());
+
+            sendToKafka(topicName, jobEventModel.getJobType().toString(), jobEventJson);
             logger.info("Produced Job Event: " + jobEventModel.toString());
+
             if (jobEventRequestDTO == null || jobEventRequestDTO.getJobType() == null) {
                 throw new IllegalArgumentException("Job event request or job type cannot be null");
             }
+
             JobEventResponseDTO jobEventResponseDTO = jobProducerMapper.toJobEventResponse(jobEventModel);
             return jobEventResponseDTO;
         } catch (Exception e) {
@@ -49,7 +53,11 @@ public class JobEventProducerService {
         }
     }
 
-    private void sendToKafka(String key, String value) {
+    private void sendToKafka(String topicName, String key, String value) {
+        if (topicName == null || key == null || value == null) {
+            logger.severe("Cannot send to Kafka: topicName, key, or value is null");
+            return;
+        }
         kafkaTemplate.send(topicName, key, value)
                 .whenComplete((result, exception) -> {
                     if (exception != null) {

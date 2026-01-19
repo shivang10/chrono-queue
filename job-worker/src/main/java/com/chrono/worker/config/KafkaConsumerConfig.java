@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import org.springframework.lang.NonNull;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,6 +20,7 @@ public class KafkaConsumerConfig {
     private String bootstrapServers;
 
     @Bean
+    @NonNull
     public ConsumerFactory<String, String> consumerFactory() {
         Map<String, Object> properties = new HashMap<>();
 

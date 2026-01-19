@@ -24,3 +24,4 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
 
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CREATE_TOPICS: "webhook-jobs:3:1,email-jobs:3:1,payment-jobs:3:1,order-cancellation-jobs:3:1,job-dlq:1:1"
