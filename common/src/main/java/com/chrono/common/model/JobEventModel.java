@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 
 @Data
@@ -27,6 +28,7 @@ public class JobEventModel {
 
     private int retryCount = 0;
     private int maxRetries = DEFAULT_MAX_RETRIES;
+    private int shouldJobFail;
 
     private JobStatus status;
 
@@ -42,6 +44,7 @@ public class JobEventModel {
         model.createdAt = LocalDateTime.now();
         model.retryCount = 0;
         model.maxRetries = DEFAULT_MAX_RETRIES;
+        model.shouldJobFail = ThreadLocalRandom.current().nextInt(1, 101);
         model.status = JobStatus.PENDING;
         return model;
     }

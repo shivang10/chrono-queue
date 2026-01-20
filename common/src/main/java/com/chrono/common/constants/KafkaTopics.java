@@ -13,9 +13,9 @@ public final class KafkaTopics {
     // Job Events Sub-Topics
     public static final String WEBHOOK_JOBS = "webhook-jobs";
     public static final String EMAIL_JOBS = "email-jobs";
-    public static final String PAYMENT_JOBS = "payment-jobs";
-    
+    public static final String PAYMENT_JOBS = "payment-processing-jobs";
     public static final String ORDER_CANCELLATION_JOBS = "order-cancellation-jobs";
+
     private KafkaTopics() {
         throw new AssertionError("Cannot instantiate KafkaTopics - constant class.");
     }

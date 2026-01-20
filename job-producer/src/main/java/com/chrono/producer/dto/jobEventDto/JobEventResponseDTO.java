@@ -12,6 +12,7 @@ public class JobEventResponseDTO {
     private String message;
     private String jobId;
     private JobType jobType;
+    private int shouldJobFail;
 
     public JobEventResponseDTO(String message) {
         this.message = message;
