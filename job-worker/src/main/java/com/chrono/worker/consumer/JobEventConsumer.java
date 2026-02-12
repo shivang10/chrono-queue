@@ -1,8 +1,10 @@
 package com.chrono.worker.consumer;
 
 import com.chrono.common.constants.KafkaTopics;
+import com.chrono.common.enums.JobStatus;
 import com.chrono.common.model.JobEventModel;
 import com.chrono.worker.services.JobProcessingService;
+import com.chrono.worker.services.retry.RetryHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
@@ -19,10 +21,14 @@ public class JobEventConsumer {
     private static final Logger logger = Logger.getLogger(JobEventConsumer.class.getName());
     private final ObjectMapper objectMapper;
     private final JobProcessingService jobProcessingService;
+    private final RetryHandler retryHandler;
 
-    public JobEventConsumer(ObjectMapper objectMapper, JobProcessingService jobProcessingService) {
+    public JobEventConsumer(ObjectMapper objectMapper,
+                            JobProcessingService jobProcessingService,
+                            RetryHandler retryHandler) {
         this.objectMapper = objectMapper;
         this.jobProcessingService = jobProcessingService;
+        this.retryHandler = retryHandler;
     }
 
     @KafkaListener(topics = {
@@ -36,22 +42,31 @@ public class JobEventConsumer {
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
             @Header(KafkaHeaders.RECEIVED_PARTITION) int partition,
             @Header(KafkaHeaders.OFFSET) long offset,
-            @Header(KafkaHeaders.RECEIVED_KEY) String key, Acknowledgment acknowledgment) throws Exception {
-        JobEventModel jobEvent = objectMapper.readValue(message, JobEventModel.class);
+            @Header(KafkaHeaders.RECEIVED_KEY) String key,
+            Acknowledgment acknowledgment) {
         try {
-            validateJob(jobEvent);
-            logger.info(String.format("Consuming message - Topic: %s, Partition: %d, Offset: %d, Key: %s", topic, partition, offset, key));
-            jobProcessingService.processJobEvent(jobEvent);
-            logger.info(String.format("Successfully processed job: %s from topic: %s", jobEvent.getJobId(), topic));
-            acknowledgment.acknowledge();
+            JobEventModel jobEvent = objectMapper.readValue(message, JobEventModel.class);
+            try {
+                validateJob(jobEvent);
+                logger.info(String.format("Consuming message - Topic: %s, Partition: %d, Offset: %d, Key: %s",
+                        topic, partition, offset, key));
+                jobProcessingService.processJobEvent(jobEvent);
+                jobEvent.setStatus(JobStatus.COMPLETED);
+                logger.info(String.format("Successfully processed job: %s from topic: %s",
+                        jobEvent.getJobId(), topic));
+            } catch (Exception e) {
+                logger.severe(String.format("Job %s failed: %s", jobEvent.getJobId(), e.getMessage()));
+                jobEvent.setStatus(JobStatus.FAILED);
+                retryHandler.handleFailure(jobEvent, e);
+                logger.info(String.format("Job %s scheduled for retry (attempt %d/%d)",
+                        jobEvent.getJobId(), jobEvent.getRetryCount(), jobEvent.getMaxRetries()));
+            }
         } catch (Exception e) {
-            logger.severe("Error processing job event: " + e.getMessage());
-            logger.warning(String.format("Job %s is set to fail (shouldJobFail=%d is divisible by 5)",
-                    jobEvent.getJobId(), jobEvent.getShouldJobFail()));
+            logger.severe("Fatal error processing message: " + e.getMessage());
+        } finally {
             acknowledgment.acknowledge();
         }
     }
-
 
     private void validateJob(JobEventModel jobEvent) {
         if (jobEvent.getShouldJobFail() % 5 == 0) {

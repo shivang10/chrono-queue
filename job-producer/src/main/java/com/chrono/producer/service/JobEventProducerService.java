@@ -38,12 +38,8 @@ public class JobEventProducerService {
             String jobEventJson = objectMapper.writeValueAsString(jobEventModel);
             String topicName = KafkaTopics.getTopicForJobType(jobEventModel.getJobType());
 
-            sendToKafka(topicName, jobEventModel.getJobType().toString(), jobEventJson);
+            sendToKafka(topicName, jobEventModel.getJobId().toString(), jobEventJson);
             logger.info("Produced Job Event: " + jobEventModel.toString());
-
-            if (jobEventRequestDTO == null || jobEventRequestDTO.getJobType() == null) {
-                throw new IllegalArgumentException("Job event request or job type cannot be null");
-            }
 
             JobEventResponseDTO jobEventResponseDTO = jobProducerMapper.toJobEventResponse(jobEventModel);
             return jobEventResponseDTO;

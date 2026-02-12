@@ -32,6 +32,8 @@ public class JobEventModel {
 
     private JobStatus status;
 
+    private long executeAt;
+
     public static JobEventModel create(JobType jobType, Map<String, Object> payload) {
         return JobEventModel.builderInternal(jobType, payload);
     }
@@ -46,6 +48,7 @@ public class JobEventModel {
         model.maxRetries = DEFAULT_MAX_RETRIES;
         model.shouldJobFail = ThreadLocalRandom.current().nextInt(1, 101);
         model.status = JobStatus.PENDING;
+        model.executeAt = System.currentTimeMillis();
         return model;
     }
 }

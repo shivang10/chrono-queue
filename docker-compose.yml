@@ -33,6 +33,19 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - chrono-queue-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   job-producer:
     build:
       context: .
@@ -61,9 +74,13 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
       SERVER_PORT: ${JOB_WORKER_PORT}
     depends_on:
       kafka:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - chrono-queue-network
