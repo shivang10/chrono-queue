@@ -17,5 +17,5 @@ public class ExponentialBackoffPolicy implements RetryPolicy {
         long delay = (long) Math.pow(2, retryCount) * 1000;
         return Math.min(delay, MAX_DELAY_MS);
     }
-    
+
 }

@@ -1,10 +1,9 @@
 package com.chrono.worker.services.retry;
 
-import org.springframework.stereotype.Component;
-
 import com.chrono.common.model.JobEventModel;
 import com.chrono.worker.repository.redis.RetryRedisRepository;
 import com.chrono.worker.services.dlq.DlqProducer;
+import org.springframework.stereotype.Component;
 
 @Component
 public class RetryHandler {
@@ -21,14 +20,14 @@ public class RetryHandler {
         this.dlqProducer = dlqProducer;
     }
 
-    public void handleFailure(JobEventModel job, Exception ex) throws Exception{
-        if(!retryPolicy.isRetryable(ex) ){
+    public void handleFailure(JobEventModel job, Exception ex) throws Exception {
+        if (!retryPolicy.isRetryable(ex)) {
             dlqProducer.send(job, ex);
             return;
         }
 
         int nextRetry = job.getRetryCount() + 1;
-        if(nextRetry > job.getMaxRetries()){
+        if (nextRetry > job.getMaxRetries()) {
             dlqProducer.send(job, ex);
             return;
         }
@@ -39,5 +38,5 @@ public class RetryHandler {
         job.setRetryCount(nextRetry);
         retryRedisRepository.scheduleRetry(job);
     }
-    
+
 }

@@ -12,7 +12,7 @@ COPY job-producer/pom.xml job-producer/
 COPY job-worker/pom.xml job-worker/
 COPY retry-dispatcher/pom.xml retry-dispatcher/
 
-# Download dependencies
+# Download dependencies (CACHED if POMs unchanged)
 RUN mvn dependency:go-offline -B
 
 # Copy source code
@@ -21,7 +21,7 @@ COPY job-producer/src job-producer/src
 COPY job-worker/src job-worker/src
 COPY retry-dispatcher/src retry-dispatcher/src
 
-# Build all modules
+# Build all modules (dependencies mostly cached, only compiles source)
 RUN mvn clean package -DskipTests
 
 # Job Producer Service

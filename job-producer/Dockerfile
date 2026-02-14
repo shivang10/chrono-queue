@@ -12,12 +12,14 @@ COPY job-producer/pom.xml job-producer/
 COPY job-worker/pom.xml job-worker/
 COPY retry-dispatcher/pom.xml retry-dispatcher/
 
+# Download dependencies (CACHED if POMs unchanged)
+RUN mvn dependency:go-offline -pl job-producer -am -B
+
 # Copy source for modules we need to build
 COPY common/src common/src
 COPY job-producer/src job-producer/src
 
-# Build common first, then job-producer
-RUN mvn clean install -pl common -am -DskipTests
+# Build (dependencies mostly cached, only compiles source)
 RUN mvn clean package -pl job-producer -am -DskipTests
 
 # Runtime stage
