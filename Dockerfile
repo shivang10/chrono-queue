@@ -11,6 +11,7 @@ COPY common/pom.xml common/
 COPY job-producer/pom.xml job-producer/
 COPY job-worker/pom.xml job-worker/
 COPY retry-dispatcher/pom.xml retry-dispatcher/
+COPY dlq/pom.xml dlq/
 
 # Download dependencies (CACHED if POMs unchanged)
 RUN mvn dependency:go-offline -B
@@ -20,6 +21,7 @@ COPY common/src common/src
 COPY job-producer/src job-producer/src
 COPY job-worker/src job-worker/src
 COPY retry-dispatcher/src retry-dispatcher/src
+COPY dlq/src dlq/src
 
 # Build all modules (dependencies mostly cached, only compiles source)
 RUN mvn clean package -DskipTests
@@ -43,4 +45,11 @@ FROM eclipse-temurin:21-jre-alpine AS retry-dispatcher
 WORKDIR /app
 COPY --from=build /app/retry-dispatcher/target/retry-dispatcher-*.jar app.jar
 EXPOSE 8082
+ENTRYPOINT ["java", "-jar", "app.jar"]
+
+# DLQ Service
+FROM eclipse-temurin:21-jre-alpine AS dlq
+WORKDIR /app
+COPY --from=build /app/dlq/target/dlq-*.jar app.jar
+EXPOSE 8083
 ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -11,6 +11,7 @@ COPY common/pom.xml common/
 COPY job-producer/pom.xml job-producer/
 COPY job-worker/pom.xml job-worker/
 COPY retry-dispatcher/pom.xml retry-dispatcher/
+COPY dlq/pom.xml dlq/
 
 # Download dependencies (CACHED if POMs unchanged)
 RUN mvn dependency:go-offline -pl job-producer -am -B

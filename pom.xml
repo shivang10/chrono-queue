@@ -15,6 +15,7 @@
         <module>job-producer</module>
         <module>job-worker</module>
         <module>retry-dispatcher</module>
+        <module>dlq</module>
     </modules>
 
     <properties>

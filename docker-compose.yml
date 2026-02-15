@@ -28,7 +28,7 @@ services:
       - chrono-queue-network
     healthcheck:
       test:
-        [ "CMD", "kafka-broker-api-versions", "--bootstrap-server", "kafka:9092" ]
+        ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "kafka:9092"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -41,7 +41,7 @@ services:
     networks:
       - chrono-queue-network
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -103,6 +103,24 @@ services:
       kafka:
         condition: service_healthy
       redis:
+        condition: service_healthy
+    networks:
+      - chrono-queue-network
+    restart: unless-stopped
+
+  dlq:
+    build:
+      context: .
+      dockerfile: dlq/Dockerfile
+    container_name: dlq
+    ports:
+      - "${DLQ_PORT}:${DLQ_PORT}"
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SERVER_PORT: ${DLQ_PORT}
+    depends_on:
+      kafka:
         condition: service_healthy
     networks:
       - chrono-queue-network
