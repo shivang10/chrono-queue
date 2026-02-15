@@ -21,7 +21,7 @@ public class JobProducerMapper {
         jobEventResponseDTO.setMessage("Job producer response created successfully");
         jobEventResponseDTO.setJobId(jobEventModel.getJobId());
         jobEventResponseDTO.setJobType(jobEventModel.getJobType());
-        jobEventResponseDTO.setShouldJobFail(jobEventModel.getShouldJobFail());
+        jobEventResponseDTO.setFailUntilAttempt(jobEventModel.getFailUntilAttempt());
         return jobEventResponseDTO;
     }
 }

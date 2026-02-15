@@ -69,10 +69,23 @@ public class JobEventConsumer {
     }
 
     private void validateJob(JobEventModel jobEvent) {
-        if (jobEvent.getShouldJobFail() % 5 == 0) {
+        int maxRetries = jobEvent.getMaxRetries();
+        int failUntilAttempt = jobEvent.getFailUntilAttempt();
+        if(failUntilAttempt > maxRetries) {
             throw new RuntimeException(
-                    "Simulated failure: randomNumber divisible by 5 → "
-                            + jobEvent.getShouldJobFail()
+                    "Simulated failure: failUntilAttempt exceeded maxRetries → "
+                            + failUntilAttempt
+            );
+        }
+
+        double probabilisticFailure = 0.3 / (maxRetries + 1);
+        double currentRequiredVal = Math.random();
+        logger.info("Current Requirer Value is: " +  currentRequiredVal + " and the value of job is: " +  probabilisticFailure);
+
+        if(currentRequiredVal < probabilisticFailure) {
+            throw new RuntimeException(
+                    "Simulated failure: probabilistic failure triggered → "
+                            + failUntilAttempt
             );
         }
     }
