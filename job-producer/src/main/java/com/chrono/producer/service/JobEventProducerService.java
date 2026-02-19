@@ -19,7 +19,7 @@ public class JobEventProducerService {
     private final ObjectMapper objectMapper;
 
     public JobEventProducerService(KafkaTemplate<String, String> kafkaTemplate, ObjectMapper objectMapper,
-            JobProducerMapper jobProducerMapper) {
+                                   JobProducerMapper jobProducerMapper) {
         this.kafkaTemplate = kafkaTemplate;
         this.objectMapper = objectMapper;
         this.jobProducerMapper = jobProducerMapper;

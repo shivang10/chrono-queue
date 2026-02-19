@@ -8,12 +8,12 @@ import com.chrono.worker.services.JobProcessingService;
 import com.chrono.worker.services.retry.RetryHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Random;
@@ -29,10 +29,10 @@ public class JobEventConsumer {
     private final Random random;
 
     public JobEventConsumer(ObjectMapper objectMapper,
-            JobProcessingService jobProcessingService,
-            RetryHandler retryHandler,
-            @Value("${worker.validation.simulatedFailureRate:0.5}") double simulatedFailureRate,
-            @Value("${worker.validation.randomSeed:#{null}}") Long randomSeed) {
+                            JobProcessingService jobProcessingService,
+                            RetryHandler retryHandler,
+                            @Value("${worker.validation.simulatedFailureRate:0.5}") double simulatedFailureRate,
+                            @Value("${worker.validation.randomSeed:#{null}}") Long randomSeed) {
         this.objectMapper = objectMapper;
         this.jobProcessingService = jobProcessingService;
         this.retryHandler = retryHandler;

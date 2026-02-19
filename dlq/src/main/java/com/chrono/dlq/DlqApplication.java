@@ -9,8 +9,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 public class DlqApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(DlqApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(DlqApplication.class, args);
+    }
 
 }

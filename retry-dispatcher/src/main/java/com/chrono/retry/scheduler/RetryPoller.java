@@ -19,8 +19,8 @@ public class RetryPoller {
     private final ObjectMapper objectMapper;
 
     public RetryPoller(RetryQueueRepository retryQueueRepository,
-            JobRequeueProducer jobRequeueProducer,
-            ObjectMapper objectMapper) {
+                       JobRequeueProducer jobRequeueProducer,
+                       ObjectMapper objectMapper) {
         this.retryQueueRepository = retryQueueRepository;
         this.jobRequeueProducer = jobRequeueProducer;
         this.objectMapper = objectMapper;

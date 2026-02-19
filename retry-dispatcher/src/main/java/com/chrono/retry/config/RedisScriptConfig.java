@@ -12,7 +12,7 @@ import java.util.List;
 public class RedisScriptConfig {
 
     @Bean(name = "claimDueJobsScript")
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public DefaultRedisScript<List<String>> claimDueJobsScript() {
         DefaultRedisScript script = new DefaultRedisScript<>();
         script.setScriptSource(new ResourceScriptSource(
