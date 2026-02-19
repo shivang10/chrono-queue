@@ -1,20 +1,17 @@
 package com.chrono.dlq.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-import java.util.logging.Logger;
 
 import com.chrono.common.model.JobEventModel;
 
-
-
+@Slf4j
 @Service
 public class DlqHandlerService {
-    private static final Logger logger = Logger.getLogger(DlqHandlerService.class.getName());
 
     public void handleDlqMessage(JobEventModel jobEvent, String topic) {
-        logger.info(String.format("Handling DLQ message for job: %s from topic: %s", 
-                jobEvent.getJobId(), topic));
+        log.info("Handling DLQ message for job: {} from topic: {}",
+                jobEvent.getJobId(), topic);
     }
 
 }

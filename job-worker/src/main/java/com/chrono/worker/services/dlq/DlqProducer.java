@@ -4,16 +4,14 @@ import com.chrono.common.constants.KafkaTopics;
 import com.chrono.common.enums.JobStatus;
 import com.chrono.common.model.JobEventModel;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
+@Slf4j
 @Component
 public class DlqProducer {
 
-    private static final Logger logger = Logger.getLogger(DlqProducer.class.getName());
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
 
@@ -30,21 +28,18 @@ public class DlqProducer {
             kafkaTemplate.send(KafkaTopics.JOB_DLQ, job.getJobId(), payload)
                     .whenComplete((result, exception) -> {
                         if (exception != null) {
-                            logger.log(Level.SEVERE, String.format(
-                                    "Failed to send job %s to DLQ", job.getJobId()), exception);
+                            log.error("Failed to send job {} to DLQ", job.getJobId(), exception);
                         } else {
-                            logger.info(String.format(
-                                    "Job %s sent to DLQ - Topic: %s, Partition: %d, Offset: %d, Reason: %s",
+                            log.info("Job {} sent to DLQ - Topic: {}, Partition: {}, Offset: {}, Reason: {}",
                                     job.getJobId(),
                                     result.getRecordMetadata().topic(),
                                     result.getRecordMetadata().partition(),
                                     result.getRecordMetadata().offset(),
-                                    ex.getMessage()));
+                                    ex.getMessage());
                         }
                     });
         } catch (Exception e) {
-            logger.log(Level.SEVERE, String.format(
-                    "Error serializing job %s for DLQ", job.getJobId()), e);
+            log.error("Error serializing job {} for DLQ", job.getJobId(), e);
         }
     }
 }

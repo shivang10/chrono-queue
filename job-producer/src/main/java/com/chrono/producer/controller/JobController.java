@@ -3,26 +3,29 @@ package com.chrono.producer.controller;
 import com.chrono.producer.dto.jobEventDto.JobEventRequestDTO;
 import com.chrono.producer.dto.jobEventDto.JobEventResponseDTO;
 import com.chrono.producer.service.JobEventProducerService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.logging.Logger;
-
-
+@Slf4j
 @RestController
 @RequestMapping("/api/job")
+@Tag(name = "Job Producer", description = "Job submission and management endpoints")
 public class JobController {
-    private static final Logger logger = Logger.getLogger(JobController.class.getName());
     private final JobEventProducerService jobEventProducerService;
 
     public JobController(JobEventProducerService jobEventProducerService) {
         this.jobEventProducerService = jobEventProducerService;
-        logger.info("JobController initialized");
+        log.info("JobController initialized");
     }
 
     @PostMapping("/")
-    public ResponseEntity<JobEventResponseDTO> createNewJob(@RequestBody JobEventRequestDTO jobEventRequestDTO) {
+    @Operation(summary = "Create a new job", description = "Submit a new job to the queue for processing")
+    public ResponseEntity<JobEventResponseDTO> createNewJob(@Valid @RequestBody JobEventRequestDTO jobEventRequestDTO) {
         JobEventResponseDTO response = jobEventProducerService.produceJobEvent(jobEventRequestDTO);
         if (response.getMessage().contains("successfully")) {
             return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
@@ -32,9 +35,9 @@ public class JobController {
     }
 
     @GetMapping("/health")
-    public String getMethodName(@RequestParam String param) {
-        return ResponseEntity.ok("Service is up and running").getBody();
+    @Operation(summary = "Health check", description = "Check if the service is running")
+    public ResponseEntity<String> healthCheck() {
+        return ResponseEntity.ok("Service is up and running");
     }
-
 
 }

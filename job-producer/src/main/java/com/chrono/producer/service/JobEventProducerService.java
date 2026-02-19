@@ -6,25 +6,24 @@ import com.chrono.producer.dto.jobEventDto.JobEventRequestDTO;
 import com.chrono.producer.dto.jobEventDto.JobEventResponseDTO;
 import com.chrono.producer.mapper.JobProducerMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
+@Slf4j
 @Service
 public class JobEventProducerService {
 
-    private static final Logger logger = Logger.getLogger(JobEventProducerService.class.getName());
     private final JobProducerMapper jobProducerMapper;
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
 
-    public JobEventProducerService(KafkaTemplate<String, String> kafkaTemplate, ObjectMapper objectMapper, JobProducerMapper jobProducerMapper) {
+    public JobEventProducerService(KafkaTemplate<String, String> kafkaTemplate, ObjectMapper objectMapper,
+            JobProducerMapper jobProducerMapper) {
         this.kafkaTemplate = kafkaTemplate;
         this.objectMapper = objectMapper;
         this.jobProducerMapper = jobProducerMapper;
-        logger.info("JobEventProducerService initialized");
+        log.info("JobEventProducerService initialized");
     }
 
     public JobEventResponseDTO produceJobEvent(JobEventRequestDTO jobEventRequestDTO) {
@@ -39,30 +38,30 @@ public class JobEventProducerService {
             String topicName = KafkaTopics.getTopicForJobType(jobEventModel.getJobType());
 
             sendToKafka(topicName, jobEventModel.getJobId().toString(), jobEventJson);
-            logger.info("Produced Job Event: " + jobEventModel.toString());
+            log.info("Produced Job Event: {}", jobEventModel);
 
             JobEventResponseDTO jobEventResponseDTO = jobProducerMapper.toJobEventResponse(jobEventModel);
             return jobEventResponseDTO;
         } catch (Exception e) {
-            logger.severe("Error producing job event: " + e.getMessage());
+            log.error("Error producing job event: {}", e.getMessage(), e);
             return new JobEventResponseDTO("Failed to produce job event");
         }
     }
 
     private void sendToKafka(String topicName, String key, String value) {
         if (topicName == null || key == null || value == null) {
-            logger.severe("Cannot send to Kafka: topicName, key, or value is null");
+            log.error("Cannot send to Kafka: topicName, key, or value is null");
             return;
         }
         kafkaTemplate.send(topicName, key, value)
                 .whenComplete((result, exception) -> {
                     if (exception != null) {
-                        logger.log(Level.SEVERE, "Error sending job event to Kafka", exception);
+                        log.error("Error sending job event to Kafka", exception);
                     } else {
-                        logger.info(String.format("Job event sent successfully - Topic: %s, Partition: %d, Offset: %d",
+                        log.info("Job event sent successfully - Topic: {}, Partition: {}, Offset: {}",
                                 result.getRecordMetadata().topic(),
                                 result.getRecordMetadata().partition(),
-                                result.getRecordMetadata().offset()));
+                                result.getRecordMetadata().offset());
                     }
                 });
     }

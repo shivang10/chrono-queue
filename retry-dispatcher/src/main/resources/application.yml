@@ -1,20 +1,36 @@
 spring:
   application:
-    name: dlq-service
+    name: retry-dispatcher
   kafka:
     bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-    consumer:
-      group-id: dlq-group
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      auto-offset-reset: earliest
-      enable-auto-commit: false
-    listener:
-      ack-mode: manual
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      retries: 3
+      properties:
+        '[enable.idempotence]': true
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 2
+          max-wait: 2000ms
 
 server:
-  port: ${SERVER_PORT:8084}
+  port: ${SERVER_PORT:8083}
   shutdown: graceful
+
+# Retry Poller Configuration (custom application properties)
+retry:
+  poller:
+    fixedDelay: 5000
+    batchSize: 10
 
 # Actuator Configuration
 management:
@@ -46,7 +62,7 @@ management:
 logging:
   level:
     root: INFO
-    '[com.chrono.dlq]': DEBUG
+    '[com.chrono.retry]': DEBUG
     '[org.springframework.kafka]': WARN
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

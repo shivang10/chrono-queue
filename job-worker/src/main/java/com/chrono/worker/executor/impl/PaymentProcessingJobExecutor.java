@@ -3,14 +3,12 @@ package com.chrono.worker.executor.impl;
 import com.chrono.common.enums.JobType;
 import com.chrono.common.model.JobEventModel;
 import com.chrono.worker.executor.JobExecutor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.logging.Logger;
-
+@Slf4j
 @Component
 public class PaymentProcessingJobExecutor implements JobExecutor {
-
-    private static final Logger logger = Logger.getLogger(PaymentProcessingJobExecutor.class.getName());
 
     @Override
     public JobType supports() {
@@ -19,7 +17,7 @@ public class PaymentProcessingJobExecutor implements JobExecutor {
 
     @Override
     public void execute(JobEventModel jobEvent) {
-        logger.info(String.format("Processing payment - JobId: %s, Payload: %s",
-                jobEvent.getJobId(), jobEvent.getPayload()));
+        log.info("Processing payment - JobId: {}, Payload: {}",
+                jobEvent.getJobId(), jobEvent.getPayload());
     }
 }
