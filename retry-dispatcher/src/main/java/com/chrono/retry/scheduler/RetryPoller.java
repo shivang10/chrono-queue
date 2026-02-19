@@ -40,7 +40,6 @@ public class RetryPoller {
         for (String jobString : dueJobs) {
             try {
                 JobEventModel job = objectMapper.readValue(jobString, JobEventModel.class);
-                job.setFailUntilAttempt(job.getFailUntilAttempt() + 1);
                 String jobEventJson = objectMapper.writeValueAsString(job);
                 jobRequeueProducer.requeue(job, jobEventJson);
             } catch (JsonProcessingException e) {

@@ -2,6 +2,7 @@ package com.chrono.worker.consumer;
 
 import com.chrono.common.constants.KafkaTopics;
 import com.chrono.common.enums.JobStatus;
+import com.chrono.common.exceptions.JobExecutionException;
 import com.chrono.common.model.JobEventModel;
 import com.chrono.worker.services.JobProcessingService;
 import com.chrono.worker.services.retry.RetryHandler;
@@ -12,7 +13,10 @@ import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import java.util.Random;
 
 @Slf4j
 @Component
@@ -21,13 +25,19 @@ public class JobEventConsumer {
     private final ObjectMapper objectMapper;
     private final JobProcessingService jobProcessingService;
     private final RetryHandler retryHandler;
+    private final double simulatedFailureRate;
+    private final Random random;
 
     public JobEventConsumer(ObjectMapper objectMapper,
             JobProcessingService jobProcessingService,
-            RetryHandler retryHandler) {
+            RetryHandler retryHandler,
+            @Value("${worker.validation.simulatedFailureRate:0.5}") double simulatedFailureRate,
+            @Value("${worker.validation.randomSeed:#{null}}") Long randomSeed) {
         this.objectMapper = objectMapper;
         this.jobProcessingService = jobProcessingService;
         this.retryHandler = retryHandler;
+        this.simulatedFailureRate = simulatedFailureRate;
+        this.random = randomSeed == null ? new Random() : new Random(randomSeed);
     }
 
     @KafkaListener(topics = {
@@ -68,23 +78,37 @@ public class JobEventConsumer {
     }
 
     private void validateJob(JobEventModel jobEvent) {
-        int maxRetries = jobEvent.getMaxRetries();
-        int failUntilAttempt = jobEvent.getFailUntilAttempt();
-        if (failUntilAttempt > maxRetries) {
-            throw new RuntimeException(
-                    "Simulated failure: failUntilAttempt exceeded maxRetries → "
-                            + failUntilAttempt);
+        if (jobEvent == null) {
+            throw new JobExecutionException(false, "Invalid job event: null payload");
         }
 
-        double probabilisticFailure = 0.3 / (maxRetries + 1);
-        double currentRequiredVal = Math.random();
-        log.info("Current Required Value: {}, Probabilistic Failure Threshold: {}",
-                currentRequiredVal, probabilisticFailure);
+        if (jobEvent.getJobId() == null || jobEvent.getJobId().isBlank()) {
+            throw new JobExecutionException(false, "Invalid job event: missing jobId");
+        }
 
-        if (currentRequiredVal < probabilisticFailure) {
-            throw new RuntimeException(
-                    "Simulated failure: probabilistic failure triggered → "
-                            + failUntilAttempt);
+        if (jobEvent.getRetryCount() < 0 || jobEvent.getMaxRetries() < 0) {
+            throw new JobExecutionException(false,
+                    "Invalid retry config for job " + jobEvent.getJobId());
+        }
+
+        if (jobEvent.getRetryCount() > jobEvent.getMaxRetries()) {
+            throw new JobExecutionException(false,
+                    "Retry count exceeded max retries for job " + jobEvent.getJobId());
+        }
+
+        if (simulatedFailureRate < 0.0 || simulatedFailureRate > 1.0) {
+            throw new JobExecutionException(false,
+                    "Invalid worker.validation.simulatedFailureRate: " + simulatedFailureRate);
+        }
+
+        double roll = random.nextDouble();
+
+        log.info("Validation - JobId: {}, SimulatedFailureRate: {}, Roll: {}",
+                jobEvent.getJobId(), simulatedFailureRate, roll);
+
+        if (roll < simulatedFailureRate) {
+            throw new JobExecutionException(true,
+                    "Simulated transient failure for job " + jobEvent.getJobId());
         }
     }
 }

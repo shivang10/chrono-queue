@@ -1,5 +1,6 @@
 package com.chrono.worker.services.retry;
 
+import com.chrono.common.exceptions.JobExecutionException;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -9,6 +10,9 @@ public class ExponentialBackoffPolicy implements RetryPolicy {
 
     @Override
     public boolean isRetryable(Exception ex) {
+        if (ex instanceof JobExecutionException jobExecutionException) {
+            return jobExecutionException.isRetryable();
+        }
         return !(ex instanceof IllegalArgumentException);
     }
 

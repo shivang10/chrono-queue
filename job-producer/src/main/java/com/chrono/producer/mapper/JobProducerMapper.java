@@ -1,6 +1,5 @@
 package com.chrono.producer.mapper;
 
-
 import com.chrono.common.model.JobEventModel;
 import com.chrono.producer.dto.jobEventDto.JobEventRequestDTO;
 import com.chrono.producer.dto.jobEventDto.JobEventResponseDTO;
@@ -15,13 +14,11 @@ public class JobProducerMapper {
         return JobEventModel.create(dto.getJobType(), dto.getPayload());
     }
 
-
     public JobEventResponseDTO toJobEventResponse(JobEventModel jobEventModel) {
         JobEventResponseDTO jobEventResponseDTO = new JobEventResponseDTO();
         jobEventResponseDTO.setMessage("Job producer response created successfully");
         jobEventResponseDTO.setJobId(jobEventModel.getJobId());
         jobEventResponseDTO.setJobType(jobEventModel.getJobType());
-        jobEventResponseDTO.setFailUntilAttempt(jobEventModel.getFailUntilAttempt());
         return jobEventResponseDTO;
     }
 }
