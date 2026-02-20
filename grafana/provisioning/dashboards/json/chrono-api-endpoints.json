@@ -1,0 +1,96 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {"type": "loki", "uid": "loki"},
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "unit": "reqps"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "id": 1,
+      "options": {"legend": {"calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true}, "tooltip": {"mode": "single", "sort": "none"}},
+      "targets": [
+        {
+          "datasource": {"type": "loki", "uid": "loki"},
+          "editorMode": "code",
+          "expr": "sum by (job) (count_over_time({job=~\"$service\"} |= \"/api/job\" [1m]))",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "API Request Rate (/api/job)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "loki", "uid": "loki"},
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "unit": "short"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "id": 2,
+      "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["sum"], "fields": "", "values": false}, "textMode": "auto"},
+      "targets": [
+        {
+          "datasource": {"type": "loki", "uid": "loki"},
+          "editorMode": "code",
+          "expr": "sum(count_over_time({job=~\"$service\"} |= \"/api/job\" [$__range]))",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Total API Requests (Selected Range)",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "loki", "uid": "loki"},
+      "gridPos": {"h": 10, "w": 24, "x": 0, "y": 8},
+      "id": 3,
+      "options": {"dedupStrategy": "none", "enableLogDetails": true, "prettifyLogMessage": false, "showCommonLabels": false, "showLabels": true, "sortOrder": "Descending", "wrapLogMessage": true},
+      "targets": [
+        {
+          "datasource": {"type": "loki", "uid": "loki"},
+          "editorMode": "code",
+          "expr": "{job=~\"$service\"} |= \"/api/job\"",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Recent API Endpoint Logs",
+      "type": "logs"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": ["chrono-queue", "api", "loki"],
+  "templating": {
+    "list": [
+      {
+        "current": {"selected": true, "text": "All", "value": "$__all"},
+        "includeAll": true,
+        "label": "Service",
+        "multi": true,
+        "name": "service",
+        "options": [
+          {"selected": true, "text": "All", "value": "$__all"},
+          {"selected": false, "text": "job-producer", "value": "job-producer"},
+          {"selected": false, "text": "job-worker", "value": "job-worker"},
+          {"selected": false, "text": "retry-dispatcher", "value": "retry-dispatcher"},
+          {"selected": false, "text": "dlq", "value": "dlq"},
+          {"selected": false, "text": "varlogs", "value": "varlogs"}
+        ],
+        "query": "job-producer,job-worker,retry-dispatcher,dlq,varlogs",
+        "type": "custom"
+      }
+    ]
+  },
+  "time": {"from": "now-6h", "to": "now"},
+  "timepicker": {},
+  "timezone": "",
+  "title": "Chrono Queue - API Endpoints",
+  "uid": "chrono-api-endpoints",
+  "version": 1,
+  "weekStart": ""
+}

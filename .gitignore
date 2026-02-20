@@ -86,3 +86,5 @@ HELP.md
 !**/src/test/**/target/
 !**/src/main/**/build/
 !**/src/test/**/build/
+
+loki-data/

@@ -1,5 +1,4 @@
 version: "3.8"
-
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
@@ -28,7 +27,7 @@ services:
       - chrono-queue-network
     healthcheck:
       test:
-        [ "CMD", "kafka-broker-api-versions", "--bootstrap-server", "kafka:9092" ]
+        ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "kafka:9092"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -41,7 +40,7 @@ services:
     networks:
       - chrono-queue-network
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -125,6 +124,49 @@ services:
     networks:
       - chrono-queue-network
     restart: unless-stopped
+
+  # Loki for log aggregation
+  loki:
+    image: grafana/loki:2.9.4
+    container_name: loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki-config.yaml:/etc/loki/local-config.yaml:ro
+      - ./loki-data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - chrono-queue-network
+
+  # Promtail for log shipping
+  promtail:
+    image: grafana/promtail:2.9.4
+    container_name: promtail
+    volumes:
+      - /var/log:/var/log:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./promtail-config.yml:/etc/promtail/config.yml:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    networks:
+      - chrono-queue-network
+
+  # Grafana for dashboards
+  grafana:
+    image: grafana/grafana:10.2.3
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - loki
+    networks:
+      - chrono-queue-network
 
 networks:
   chrono-queue-network:

@@ -26,10 +26,13 @@ public class JobController {
     @PostMapping("/")
     @Operation(summary = "Create a new job", description = "Submit a new job to the queue for processing")
     public ResponseEntity<JobEventResponseDTO> createNewJob(@Valid @RequestBody JobEventRequestDTO jobEventRequestDTO) {
+        log.info("API endpoint hit: POST /api/job/");
         JobEventResponseDTO response = jobEventProducerService.produceJobEvent(jobEventRequestDTO);
         if (response.getMessage().contains("successfully")) {
+            log.info("API endpoint result: POST /api/job/ -> {}", HttpStatus.ACCEPTED.value());
             return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
         } else {
+            log.warn("API endpoint result: POST /api/job/ -> {}", HttpStatus.BAD_REQUEST.value());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
     }
@@ -37,6 +40,7 @@ public class JobController {
     @GetMapping("/health")
     @Operation(summary = "Health check", description = "Check if the service is running")
     public ResponseEntity<String> healthCheck() {
+        log.info("API endpoint hit: GET /api/job/health");
         return ResponseEntity.ok("Service is up and running");
     }
 
