@@ -1,0 +1,21 @@
+{
+  "EMAIL": {
+    "to": "loadtest@example.com",
+    "subject": "Chrono Queue load test",
+    "body": "Synthetic load payload"
+  },
+  "WEBHOOK": {
+    "url": "https://example.com/webhook",
+    "method": "POST",
+    "event": "load_test_event"
+  },
+  "PAYMENT_PROCESSING": {
+    "paymentId": "pay_load_test",
+    "amount": 1999,
+    "currency": "USD"
+  },
+  "ORDER_CANCELLATION": {
+    "orderId": "order_load_test",
+    "reason": "load_test"
+  }
+}

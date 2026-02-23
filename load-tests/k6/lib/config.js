@@ -1,0 +1,12 @@
+export const API_BASE_URL = __ENV.API_BASE_URL || 'http://localhost:8080';
+
+export const DEFAULT_HEADERS = {
+  'Content-Type': 'application/json',
+};
+
+export const JOB_TYPES = [
+  'EMAIL',
+  'WEBHOOK',
+  'PAYMENT_PROCESSING',
+  'ORDER_CANCELLATION',
+];
