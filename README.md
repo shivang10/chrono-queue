@@ -221,6 +221,7 @@ flowchart TD
     end
     subgraph Worker
         G[Job Worker]
+        J[Done]
     end
     subgraph Retry
         H[Retry Dispatcher]
@@ -230,11 +231,11 @@ flowchart TD
     end
     A -->|publish| B
     B -->|consume| G
-    G -- success -->|done| G
-    G -- fail -->|to retry| C
+    G -->|success| J
+    G -->|fail: to retry| C
     C -->|delay| H
     H -->|requeue| B
-    H -- max retries --> F
+    H -->|max retries| F
     F --> I
 ```
 
