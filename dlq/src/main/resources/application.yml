@@ -11,6 +11,13 @@ spring:
       enable-auto-commit: false
     listener:
       ack-mode: manual
+  data:
+    mongodb:
+      host: ${SPRING_DATA_MONGODB_HOST:mongodb}
+      port: ${MONGODB_PORT:27017}
+      database: dlq_db
+      username: ${MONGODB_USER}
+      password: ${MONGODB_PASSWORD}
 
 server:
   port: ${SERVER_PORT:8084}

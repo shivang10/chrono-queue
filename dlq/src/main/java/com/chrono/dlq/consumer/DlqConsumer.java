@@ -1,19 +1,18 @@
 package com.chrono.dlq.consumer;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.stereotype.Component;
 import com.chrono.common.constants.KafkaTopics;
 import com.chrono.common.model.JobEventModel;
 import com.chrono.dlq.service.DlqHandlerService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
@@ -42,6 +41,7 @@ public class DlqConsumer {
             log.info("Consuming failed job DLQ - Topic: {}, Partition: {}, Offset: {}, Key: {}",
                     topic, partition, offset, key);
             dlqHandlerService.handleDlqMessage(jobEvent, topic);
+            dlqHandlerService.saveFailedJob(jobEvent);
             log.info("Successfully consumed the failed job: {} from topic: {}",
                     jobEvent.getJobId(), topic);
         } catch (Exception e) {

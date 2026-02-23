@@ -37,10 +37,36 @@ services:
     container_name: redis
     ports:
       - "${REDIS_PORT}:6379"
+    volumes:
+      - redis_data:/data
     networks:
       - chrono-queue-network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongodb:
+    image: mongo:latest
+    hostname: mongodb
+    container_name: mongodb
+    ports:
+      - "${MONGODB_PORT}:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
+    command: ["--bind_ip_all"]
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - chrono-queue-network
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'mongosh --username ${MONGO_INITDB_ROOT_USERNAME} --password ${MONGO_INITDB_ROOT_PASSWORD} --authenticationDatabase admin --eval ''db.adminCommand("ping")''',
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -117,9 +143,12 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_DATA_MONGODB_URI: mongodb://${MONGODB_USER}:${MONGODB_PASSWORD}@mongodb:27017/${MONGODB_DATABASE}?authSource=admin
       SERVER_PORT: ${DLQ_PORT}
     depends_on:
       kafka:
+        condition: service_healthy
+      mongodb:
         condition: service_healthy
     networks:
       - chrono-queue-network
@@ -171,3 +200,7 @@ services:
 networks:
   chrono-queue-network:
     driver: bridge
+
+volumes:
+  mongo-data:
+  redis_data:

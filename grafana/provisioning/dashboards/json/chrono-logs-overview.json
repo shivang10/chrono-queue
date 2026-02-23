@@ -1,5 +1,7 @@
 {
-  "annotations": {"list": []},
+  "annotations": {
+    "list": []
+  },
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
@@ -8,14 +10,44 @@
   "liveNow": false,
   "panels": [
     {
-      "datasource": {"type": "loki", "uid": "loki"},
-      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "unit": "short"}, "overrides": []},
-      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 0},
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
       "id": 1,
-      "options": {"legend": {"calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true}, "tooltip": {"mode": "single", "sort": "none"}},
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
       "targets": [
         {
-          "datasource": {"type": "loki", "uid": "loki"},
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
           "editorMode": "code",
           "expr": "sum by (job) (count_over_time({job=~\"$service\"} [1m]))",
           "queryType": "range",
@@ -26,13 +58,32 @@
       "type": "timeseries"
     },
     {
-      "datasource": {"type": "loki", "uid": "loki"},
-      "gridPos": {"h": 10, "w": 24, "x": 0, "y": 8},
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
       "id": 2,
-      "options": {"dedupStrategy": "none", "enableLogDetails": true, "prettifyLogMessage": false, "showCommonLabels": false, "showLabels": true, "sortOrder": "Descending", "wrapLogMessage": true},
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
       "targets": [
         {
-          "datasource": {"type": "loki", "uid": "loki"},
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
           "editorMode": "code",
           "expr": "{job=~\"$service\"}",
           "queryType": "range",
@@ -46,29 +97,64 @@
   "refresh": "5s",
   "schemaVersion": 39,
   "style": "dark",
-  "tags": ["chrono-queue", "logs", "loki"],
+  "tags": [
+    "chrono-queue",
+    "logs",
+    "loki"
+  ],
   "templating": {
     "list": [
       {
-        "current": {"selected": true, "text": "All", "value": "$__all"},
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
         "includeAll": true,
         "label": "Service",
         "multi": true,
         "name": "service",
         "options": [
-          {"selected": true, "text": "All", "value": "$__all"},
-          {"selected": false, "text": "job-producer", "value": "job-producer"},
-          {"selected": false, "text": "job-worker", "value": "job-worker"},
-          {"selected": false, "text": "retry-dispatcher", "value": "retry-dispatcher"},
-          {"selected": false, "text": "dlq", "value": "dlq"},
-          {"selected": false, "text": "varlogs", "value": "varlogs"}
+          {
+            "selected": true,
+            "text": "All",
+            "value": "$__all"
+          },
+          {
+            "selected": false,
+            "text": "job-producer",
+            "value": "job-producer"
+          },
+          {
+            "selected": false,
+            "text": "job-worker",
+            "value": "job-worker"
+          },
+          {
+            "selected": false,
+            "text": "retry-dispatcher",
+            "value": "retry-dispatcher"
+          },
+          {
+            "selected": false,
+            "text": "dlq",
+            "value": "dlq"
+          },
+          {
+            "selected": false,
+            "text": "varlogs",
+            "value": "varlogs"
+          }
         ],
         "query": "job-producer,job-worker,retry-dispatcher,dlq,varlogs",
         "type": "custom"
       }
     ]
   },
-  "time": {"from": "now-1h", "to": "now"},
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
   "timepicker": {},
   "timezone": "",
   "title": "Chrono Queue - Logs Overview",
