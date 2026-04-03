@@ -53,27 +53,39 @@ public class JobEventConsumer {
             @Header(KafkaHeaders.OFFSET) long offset,
             @Header(KafkaHeaders.RECEIVED_KEY) String key,
             Acknowledgment acknowledgment) {
+        JobEventModel jobEvent;
         try {
-            JobEventModel jobEvent = objectMapper.readValue(message, JobEventModel.class);
-            try {
-                validateJob(jobEvent);
-                log.info("Consuming message - Topic: {}, Partition: {}, Offset: {}, Key: {}",
-                        topic, partition, offset, key);
-                jobProcessingService.processJobEvent(jobEvent);
-                jobEvent.setStatus(JobStatus.COMPLETED);
-                log.info("Successfully processed job: {} from topic: {}",
-                        jobEvent.getJobId(), topic);
-            } catch (Exception e) {
-                log.error("Job {} failed: {}", jobEvent.getJobId(), e.getMessage());
-                jobEvent.setStatus(JobStatus.FAILED);
-                retryHandler.handleFailure(jobEvent, e);
-                log.info("Job {} scheduled for retry (attempt {}/{})",
-                        jobEvent.getJobId(), jobEvent.getRetryCount(), jobEvent.getMaxRetries());
-            }
+            jobEvent = objectMapper.readValue(message, JobEventModel.class);
         } catch (Exception e) {
-            log.error("Fatal error processing message: {}", e.getMessage(), e);
-        } finally {
+            log.error("Failed to deserialize message from topic:{} with partition:{} and offset:{} and key:{}",
+                    topic,
+                    partition, offset, key, e);
+            throw new IllegalStateException("Deserialization failed: " + e.getMessage(), e);
+        }
+
+        try {
+            validateJob(jobEvent);
+            log.info("Consuming message - Topic: {}, Partition: {}, Offset: {}, Key: {}",
+                    topic, partition, offset, key);
+            jobProcessingService.processJobEvent(jobEvent);
+            jobEvent.setStatus(JobStatus.COMPLETED);
             acknowledgment.acknowledge();
+            log.info("Successfully processed job: {} from topic: {}",
+                    jobEvent.getJobId(), topic);
+        } catch (Exception processingError) {
+            log.error("Job {} failed: {}", jobEvent.getJobId(), processingError.getMessage());
+            jobEvent.setStatus(JobStatus.FAILED);
+            try {
+                retryHandler.handleFailure(jobEvent, processingError);
+                acknowledgment.acknowledge();
+                log.info("Job {} handed off to retry/DLQ and acknowledged (attempt {}/{})",
+                        jobEvent.getJobId(), jobEvent.getRetryCount(), jobEvent.getMaxRetries());
+            } catch (Exception ex) {
+                log.error("Retry/DLQ handoff failed for the job {}. Record will not be not be acknowledged.",
+                        jobEvent.getJobId(), ex);
+                throw new IllegalStateException(
+                        "Failed to handle retry/DLQ for job " + jobEvent.getJobId() + ": " + ex.getMessage(), ex);
+            }
         }
     }
 

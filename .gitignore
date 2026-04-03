@@ -79,7 +79,8 @@ Desktop.ini
 *.tmp
 
 # Documentation
-HELP.md
+*HELP.md
+*REPORT.md
 
 # Exclude target/build folders only at root, not in src
 !**/src/main/**/target/
