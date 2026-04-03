@@ -29,8 +29,8 @@ server:
 # Retry Poller Configuration (custom application properties)
 retry:
   poller:
-    fixedDelay: 5000
-    batchSize: 10
+    fixed-delay: 5000
+    batch-size: 10
 
 # Actuator Configuration
 management:
