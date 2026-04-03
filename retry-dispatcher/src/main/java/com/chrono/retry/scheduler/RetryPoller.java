@@ -1,13 +1,12 @@
 package com.chrono.retry.scheduler;
 
 import com.chrono.common.model.JobEventModel;
+import com.chrono.retry.config.RetryPollerProperties;
 import com.chrono.retry.producer.JobRequeueProducer;
 import com.chrono.retry.repository.RetryQueueRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -17,27 +16,27 @@ import java.util.List;
 @Component
 public class RetryPoller {
 
-    @Value("${retry.poller.batch-size:10}")
-    private int batchSize;
-
-    private final static String fixedDelay = "${retry.poller.fixed-delay:5000}";
-
     private final RetryQueueRepository retryQueueRepository;
     private final JobRequeueProducer jobRequeueProducer;
     private final ObjectMapper objectMapper;
+    private final RetryPollerProperties retryPollerProperties;
 
     public RetryPoller(RetryQueueRepository retryQueueRepository,
             JobRequeueProducer jobRequeueProducer,
-            ObjectMapper objectMapper) {
+            ObjectMapper objectMapper,
+            RetryPollerProperties retryPollerProperties) {
         this.retryQueueRepository = retryQueueRepository;
         this.jobRequeueProducer = jobRequeueProducer;
         this.objectMapper = objectMapper;
+        this.retryPollerProperties = retryPollerProperties;
         log.info("RetryPoller initialized successfully.");
     }
 
-    @Scheduled(fixedDelayString = fixedDelay)
+    @Scheduled(fixedDelayString = "#{@retryPollerProperties.getFixedDelay()}")
     public void pollAndDispatch() {
-        List<String> dueJobs = retryQueueRepository.fetchDueJobs(batchSize, System.currentTimeMillis());
+        List<String> dueJobs = retryQueueRepository.fetchDueJobs(
+                retryPollerProperties.getBatchSize(),
+                System.currentTimeMillis());
 
         if (dueJobs.isEmpty()) {
             return;

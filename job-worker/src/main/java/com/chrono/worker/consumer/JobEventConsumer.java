@@ -4,11 +4,11 @@ import com.chrono.common.constants.KafkaTopics;
 import com.chrono.common.enums.JobStatus;
 import com.chrono.common.exceptions.JobExecutionException;
 import com.chrono.common.model.JobEventModel;
+import com.chrono.worker.config.WorkerValidationProperties;
 import com.chrono.worker.services.JobProcessingService;
 import com.chrono.worker.services.retry.RetryHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
@@ -29,14 +29,14 @@ public class JobEventConsumer {
     private final Random random;
 
     public JobEventConsumer(ObjectMapper objectMapper,
-                            JobProcessingService jobProcessingService,
-                            RetryHandler retryHandler,
-                            @Value("${worker.validation.simulatedFailureRate:0.5}") double simulatedFailureRate,
-                            @Value("${worker.validation.randomSeed:#{null}}") Long randomSeed) {
+            JobProcessingService jobProcessingService,
+            RetryHandler retryHandler,
+            WorkerValidationProperties workerValidationProperties) {
         this.objectMapper = objectMapper;
         this.jobProcessingService = jobProcessingService;
         this.retryHandler = retryHandler;
-        this.simulatedFailureRate = simulatedFailureRate;
+        this.simulatedFailureRate = workerValidationProperties.getSimulatedFailureRate();
+        Long randomSeed = workerValidationProperties.getRandomSeed();
         this.random = randomSeed == null ? new Random() : new Random(randomSeed);
     }
 
@@ -110,7 +110,7 @@ public class JobEventConsumer {
 
         if (simulatedFailureRate < 0.0 || simulatedFailureRate > 1.0) {
             throw new JobExecutionException(false,
-                    "Invalid worker.validation.simulatedFailureRate: " + simulatedFailureRate);
+                    "Invalid worker.validation.simulated-failure-rate: " + simulatedFailureRate);
         }
 
         double roll = random.nextDouble();
