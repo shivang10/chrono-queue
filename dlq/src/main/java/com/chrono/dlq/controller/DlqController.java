@@ -28,12 +28,17 @@ public class DlqController {
                                                           @RequestParam(defaultValue = "20") int limit,
                                                           @RequestParam(required = false) JobType jobType,
                                                           @RequestParam(required = false) JobStatus status,
-                                                          @RequestParam(defaultValue = "failedAt") String sortBy,
+                                                          @RequestParam(required = false) Integer retryCount,
+                                                          @RequestParam(required = false) Integer maxRetries,
+                                                          @RequestParam(required = false) String createdAt,
+                                                          @RequestParam(required = false) String sortBy,
                                                           @RequestParam(defaultValue = "desc") String sortDir) {
         log.info(
-                "Received request to get DLQ jobs with page: {}, limit: {}, jobType: {}, status: {}, sortBy: {}, sortDir: {}",
-                page, limit, jobType, status, sortBy, sortDir);
-        return ResponseEntity.ok(dlqHandlerService.getDlqJobs(page, limit, jobType, status, sortBy, sortDir));
+                "Received request to get DLQ jobs with page: {}, limit: {}, jobType: {}, status: {}, retryCount: {}, maxRetries: {}, createdAt: {}, sortBy: {}, sortDir: {}",
+                page, limit, jobType, status, retryCount, maxRetries, createdAt, sortBy, sortDir);
+        return ResponseEntity.ok(
+                dlqHandlerService.getDlqJobs(page, limit, jobType, status, retryCount, maxRetries, createdAt, sortBy,
+                        sortDir));
     }
 
 }

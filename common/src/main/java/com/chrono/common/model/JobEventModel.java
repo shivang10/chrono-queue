@@ -10,7 +10,7 @@ import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
@@ -29,7 +29,7 @@ public class JobEventModel {
     @Indexed
     private JobType jobType;
 
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     private Map<String, Object> payload;
 
@@ -50,7 +50,7 @@ public class JobEventModel {
         model.jobId = UUID.randomUUID().toString();
         model.jobType = jobType;
         model.payload = payload;
-        model.createdAt = LocalDateTime.now();
+        model.createdAt = Instant.now();
         model.retryCount = 0;
         model.maxRetries = DEFAULT_MAX_RETRIES;
         model.status = JobStatus.PENDING;
