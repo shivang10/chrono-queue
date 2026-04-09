@@ -22,9 +22,9 @@ public class RetryPoller {
     private final RetryPollerProperties retryPollerProperties;
 
     public RetryPoller(RetryQueueRepository retryQueueRepository,
-            JobRequeueProducer jobRequeueProducer,
-            ObjectMapper objectMapper,
-            RetryPollerProperties retryPollerProperties) {
+                       JobRequeueProducer jobRequeueProducer,
+                       ObjectMapper objectMapper,
+                       RetryPollerProperties retryPollerProperties) {
         this.retryQueueRepository = retryQueueRepository;
         this.jobRequeueProducer = jobRequeueProducer;
         this.objectMapper = objectMapper;

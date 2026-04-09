@@ -29,9 +29,9 @@ public class JobEventConsumer {
     private final Random random;
 
     public JobEventConsumer(ObjectMapper objectMapper,
-            JobProcessingService jobProcessingService,
-            RetryHandler retryHandler,
-            WorkerValidationProperties workerValidationProperties) {
+                            JobProcessingService jobProcessingService,
+                            RetryHandler retryHandler,
+                            WorkerValidationProperties workerValidationProperties) {
         this.objectMapper = objectMapper;
         this.jobProcessingService = jobProcessingService;
         this.retryHandler = retryHandler;

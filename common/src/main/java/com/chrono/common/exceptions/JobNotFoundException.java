@@ -1,8 +1,11 @@
 package com.chrono.common.exceptions;
 
-public class JobNotFoundException extends RuntimeException {
+import com.chrono.common.api.ErrorCode;
+import org.springframework.http.HttpStatus;
+
+public class JobNotFoundException extends ChronoQueueException {
     public JobNotFoundException(String jobId) {
-        super("Job not found: " + jobId);
+        super(ErrorCode.JOB_NOT_FOUND, HttpStatus.NOT_FOUND, "Job not found: " + jobId);
     }
 
 }

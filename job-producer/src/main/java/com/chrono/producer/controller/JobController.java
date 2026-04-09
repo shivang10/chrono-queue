@@ -7,7 +7,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,13 +27,9 @@ public class JobController {
     public ResponseEntity<JobEventResponseDTO> createNewJob(@Valid @RequestBody JobEventRequestDTO jobEventRequestDTO) {
         log.info("API endpoint hit: POST /api/job/");
         JobEventResponseDTO response = jobEventProducerService.produceJobEvent(jobEventRequestDTO);
-        if (response.getMessage().contains("successfully")) {
-            log.info("API endpoint result: POST /api/job/ -> {}", HttpStatus.ACCEPTED.value());
-            return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
-        } else {
-            log.warn("API endpoint result: POST /api/job/ -> {}", HttpStatus.BAD_REQUEST.value());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        }
+        log.info("API endpoint result: POST /api/job/ -> {}",
+                ResponseEntity.accepted().build().getStatusCode().value());
+        return ResponseEntity.accepted().body(response);
     }
 
     @GetMapping("/health")

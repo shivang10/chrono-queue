@@ -1,7 +1,11 @@
 package com.chrono.worker.repository.redis;
 
+import com.chrono.common.api.ErrorCode;
 import com.chrono.common.constants.RedisKeys;
+import com.chrono.common.exceptions.InfrastructureException;
+import com.chrono.common.exceptions.JobPayloadSerializationException;
 import com.chrono.common.model.JobEventModel;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -33,13 +37,23 @@ public class RetryRedisRepository {
     }
 
     public void scheduleRetry(JobEventModel job) throws Exception {
-        String payload = objectMapper.writeValueAsString(job);
-        redisTemplate.execute(
-                scheduleScript,
-                List.of(RedisKeys.RETRY_ZSET, RedisKeys.RETRY_DATA),
-                job.getJobId(),
-                String.valueOf(job.getExecuteAt()),
-                payload
-        );
+        try {
+            String payload = objectMapper.writeValueAsString(job);
+            redisTemplate.execute(
+                    scheduleScript,
+                    List.of(RedisKeys.RETRY_ZSET, RedisKeys.RETRY_DATA),
+                    job.getJobId(),
+                    String.valueOf(job.getExecuteAt()),
+                    payload);
+        } catch (JsonProcessingException ex) {
+            throw new JobPayloadSerializationException(
+                    "Failed to serialize job " + job.getJobId() + " for retry scheduling",
+                    ex);
+        } catch (RuntimeException ex) {
+            throw new InfrastructureException(
+                    ErrorCode.RETRY_SCHEDULING_FAILED,
+                    "Failed to schedule retry for job " + job.getJobId(),
+                    ex);
+        }
     }
 }

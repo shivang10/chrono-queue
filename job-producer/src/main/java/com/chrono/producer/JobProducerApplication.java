@@ -3,7 +3,7 @@ package com.chrono.producer;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "com.chrono")
 public class JobProducerApplication {
 
     public static void main(String[] args) {

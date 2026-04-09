@@ -3,8 +3,6 @@ package com.chrono.dlq.consumer;
 import com.chrono.common.constants.KafkaTopics;
 import com.chrono.common.model.JobEventModel;
 import com.chrono.dlq.service.DlqHandlerService;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -35,8 +33,17 @@ public class DlqConsumer {
             @Header(KafkaHeaders.RECEIVED_PARTITION) int partition,
             @Header(KafkaHeaders.OFFSET) long offset,
             @Header(KafkaHeaders.RECEIVED_KEY) String key,
-            Acknowledgment acknowledgment) throws JsonMappingException, JsonProcessingException {
-        JobEventModel jobEvent = objectMapper.readValue(message, JobEventModel.class);
+            Acknowledgment acknowledgment) {
+        JobEventModel jobEvent;
+
+        try {
+            jobEvent = objectMapper.readValue(message, JobEventModel.class);
+        } catch (Exception ex) {
+            log.error("Failed to deserialize DLQ message from topic:{} partition:{} offset:{} key:{}",
+                    topic, partition, offset, key, ex);
+            throw new IllegalStateException("DLQ message deserialization failed", ex);
+        }
+
         try {
             log.info("Consuming failed job DLQ - Topic: {}, Partition: {}, Offset: {}, Key: {}",
                     topic, partition, offset, key);
@@ -44,12 +51,11 @@ public class DlqConsumer {
             dlqHandlerService.saveFailedJob(jobEvent);
             log.info("Successfully consumed the failed job: {} from topic: {}",
                     jobEvent.getJobId(), topic);
-        } catch (Exception e) {
-            log.error("Job {} failed: {}", jobEvent.getJobId(), e.getMessage());
-            log.info("Job {} cannot be saved for retry (attempt {}/{})",
-                    jobEvent.getJobId(), jobEvent.getRetryCount(), jobEvent.getMaxRetries());
-        } finally {
             acknowledgment.acknowledge();
+        } catch (Exception ex) {
+            log.error("Failed to persist DLQ job {} from topic {}",
+                    jobEvent.getJobId(), topic, ex);
+            throw ex;
         }
 
     }

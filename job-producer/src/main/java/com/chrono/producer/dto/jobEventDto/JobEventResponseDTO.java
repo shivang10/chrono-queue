@@ -9,12 +9,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class JobEventResponseDTO {
+    private JobSubmissionStatus status;
     private String message;
     private String jobId;
     private JobType jobType;
     private int failUntilAttempt;
-
-    public JobEventResponseDTO(String message) {
-        this.message = message;
-    }
 }

@@ -1,7 +1,10 @@
 package com.chrono.dlq.service;
 
+import com.chrono.common.api.ErrorCode;
 import com.chrono.common.enums.JobStatus;
 import com.chrono.common.enums.JobType;
+import com.chrono.common.exceptions.InfrastructureException;
+import com.chrono.common.exceptions.InvalidJobRequestException;
 import com.chrono.common.model.JobEventModel;
 import com.chrono.dlq.repository.DlqJobsRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +15,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.Set;
 
 @Slf4j
@@ -36,11 +40,18 @@ public class DlqHandlerService {
 
     public void saveFailedJob(JobEventModel jobEvent) {
         if (jobEvent == null) {
-            log.error("JobEventModel is null");
-            return;
+            throw new InvalidJobRequestException("Failed job payload cannot be null");
         }
-        dlqJobsRepository.save(jobEvent);
-        log.info("Saved failed job with ID: {} to DLQ repository", jobEvent.getJobId());
+
+        try {
+            dlqJobsRepository.save(jobEvent);
+            log.info("Saved failed job with ID: {} to DLQ repository", jobEvent.getJobId());
+        } catch (RuntimeException ex) {
+            throw new InfrastructureException(
+                    ErrorCode.DLQ_PERSISTENCE_FAILED,
+                    "Failed to persist job " + jobEvent.getJobId() + " to the DLQ",
+                    ex);
+        }
     }
 
     public Page<JobEventModel> getDlqJobs(
@@ -56,17 +67,17 @@ public class DlqHandlerService {
         log.info(
                 "Fetching DLQ jobs with filters - page: {}, limit: {}, jobType: {}, status: {}, retryCount: {}, maxRetries: {}, createdAt: {}, sortBy: {}, sortDir: {}",
                 page, limit, jobType, status, retryCount, maxRetries, createdAt, sortBy, sortDir);
+        validateRetryFilterRange(retryCount, maxRetries);
         int safePage = Math.max(page, 0);
         int safeLimit = Math.min(Math.max(limit, MIN_LIMIT), MAX_LIMIT);
 
-        String requestSort = (sortBy == null || sortBy.isBlank()) ? DEFAULT_SORT_FIELD : sortBy;
-        String safeSort = ALLOWED_SORT_FIELDS.contains(requestSort) ? requestSort : DEFAULT_SORT_FIELD;
+        String safeSort = resolveSortField(sortBy);
 
         Sort.Direction direction = "asc".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
 
         Sort sort = Sort.by(direction, safeSort);
         Pageable pageable = PageRequest.of(safePage, safeLimit, sort);
-        Instant createdAtInstant = createdAt != null ? Instant.parse(createdAt) : null;
+        Instant createdAtInstant = parseCreatedAt(createdAt);
         Page<JobEventModel> result = dlqJobsRepository.searchDqlJobs(
                 jobType,
                 status,
@@ -78,6 +89,40 @@ public class DlqHandlerService {
         log.info("Fetched {} DLQ jobs", result.getContent().size());
 
         return result;
+    }
+
+    private void validateRetryFilterRange(Integer retryCount, Integer maxRetries) {
+        if (retryCount != null && retryCount < 0) {
+            throw new InvalidJobRequestException("retryCount cannot be negative");
+        }
+
+        if (maxRetries != null && maxRetries < 0) {
+            throw new InvalidJobRequestException("maxRetries cannot be negative");
+        }
+    }
+
+    private String resolveSortField(String sortBy) {
+        if (sortBy == null || sortBy.isBlank()) {
+            return DEFAULT_SORT_FIELD;
+        }
+
+        if (!ALLOWED_SORT_FIELDS.contains(sortBy)) {
+            throw new InvalidJobRequestException("Unsupported sortBy field: " + sortBy);
+        }
+
+        return sortBy;
+    }
+
+    private Instant parseCreatedAt(String createdAt) {
+        if (createdAt == null || createdAt.isBlank()) {
+            return null;
+        }
+
+        try {
+            return Instant.parse(createdAt);
+        } catch (DateTimeParseException ex) {
+            throw new InvalidJobRequestException("createdAt must be an ISO-8601 instant", ex);
+        }
     }
 
 }
