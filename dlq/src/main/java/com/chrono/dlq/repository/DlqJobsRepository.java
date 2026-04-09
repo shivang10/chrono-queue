@@ -2,7 +2,7 @@ package com.chrono.dlq.repository;
 
 import com.chrono.common.enums.JobStatus;
 import com.chrono.common.enums.JobType;
-import com.chrono.common.model.JobEventModel;
+import com.chrono.common.model.DlqJobDocumentModel;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -13,7 +13,7 @@ import java.time.Instant;
 import java.util.Optional;
 
 @Repository
-public interface DlqJobsRepository extends MongoRepository<JobEventModel, String> {
+public interface DlqJobsRepository extends MongoRepository<DlqJobDocumentModel, String> {
 
     @Query("""
             {
@@ -26,7 +26,7 @@ public interface DlqJobsRepository extends MongoRepository<JobEventModel, String
               ]
             }
             """)
-    Page<JobEventModel> searchDqlJobs(
+    Page<DlqJobDocumentModel> searchDqlJobs(
             JobType jobType,
             JobStatus status,
             Integer retryCount,
@@ -34,6 +34,6 @@ public interface DlqJobsRepository extends MongoRepository<JobEventModel, String
             Instant createdAt,
             Pageable pageable);
 
-    Optional<JobEventModel> findByJobId(String jobId);
+    Optional<DlqJobDocumentModel> findByJobId(String jobId);
 
 }

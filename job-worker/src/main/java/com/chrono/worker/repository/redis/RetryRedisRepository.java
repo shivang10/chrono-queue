@@ -43,7 +43,7 @@ public class RetryRedisRepository {
                     scheduleScript,
                     List.of(RedisKeys.RETRY_ZSET, RedisKeys.RETRY_DATA),
                     job.getJobId(),
-                    String.valueOf(job.getExecuteAt()),
+                    String.valueOf(job.getExecuteAt().toEpochMilli()),
                     payload);
         } catch (JsonProcessingException ex) {
             throw new JobPayloadSerializationException(

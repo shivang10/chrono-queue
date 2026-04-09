@@ -5,6 +5,8 @@ import com.chrono.worker.repository.redis.RetryRedisRepository;
 import com.chrono.worker.services.dlq.DlqProducer;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
+
 @Component
 public class RetryHandler {
     private final RetryRedisRepository retryRedisRepository;
@@ -33,7 +35,7 @@ public class RetryHandler {
         }
 
         long delay = retryPolicy.nextDelay(nextRetry);
-        long executeAt = System.currentTimeMillis() + delay;
+        Instant executeAt = Instant.now().plusMillis(delay);
         job.setExecuteAt(executeAt);
         job.setRetryCount(nextRetry);
         retryRedisRepository.scheduleRetry(job);

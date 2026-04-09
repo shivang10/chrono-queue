@@ -2,7 +2,7 @@ package com.chrono.dlq.controller;
 
 import com.chrono.common.enums.JobStatus;
 import com.chrono.common.enums.JobType;
-import com.chrono.common.model.JobEventModel;
+import com.chrono.common.model.DlqJobDocumentModel;
 import com.chrono.dlq.service.DlqHandlerService;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -29,15 +29,15 @@ public class DlqController {
     }
 
     @GetMapping("/failed-jobs")
-    public ResponseEntity<Page<JobEventModel>> getDlqJobs(@RequestParam(defaultValue = "0") @Min(0) int page,
-                                                          @RequestParam(defaultValue = "20") @Min(1) @Max(100) int limit,
-                                                          @RequestParam(required = false) JobType jobType,
-                                                          @RequestParam(required = false) JobStatus status,
-                                                          @RequestParam(required = false) Integer retryCount,
-                                                          @RequestParam(required = false) Integer maxRetries,
-                                                          @RequestParam(required = false) String createdAt,
-                                                          @RequestParam(required = false) String sortBy,
-                                                          @RequestParam(defaultValue = "desc") @Pattern(regexp = "asc|desc", flags = Pattern.Flag.CASE_INSENSITIVE, message = "sortDir must be either asc or desc") String sortDir) {
+    public ResponseEntity<Page<DlqJobDocumentModel>> getDlqJobs(@RequestParam(defaultValue = "0") @Min(0) int page,
+                                                                @RequestParam(defaultValue = "20") @Min(1) @Max(100) int limit,
+                                                                @RequestParam(required = false) JobType jobType,
+                                                                @RequestParam(required = false) JobStatus status,
+                                                                @RequestParam(required = false) Integer retryCount,
+                                                                @RequestParam(required = false) Integer maxRetries,
+                                                                @RequestParam(required = false) String createdAt,
+                                                                @RequestParam(required = false) String sortBy,
+                                                                @RequestParam(defaultValue = "desc") @Pattern(regexp = "asc|desc", flags = Pattern.Flag.CASE_INSENSITIVE, message = "sortDir must be either asc or desc") String sortDir) {
         log.info(
                 "Received request to get DLQ jobs with page: {}, limit: {}, jobType: {}, status: {}, retryCount: {}, maxRetries: {}, createdAt: {}, sortBy: {}, sortDir: {}",
                 page, limit, jobType, status, retryCount, maxRetries, createdAt, sortBy, sortDir);

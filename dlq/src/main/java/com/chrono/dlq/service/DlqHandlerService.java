@@ -5,6 +5,7 @@ import com.chrono.common.enums.JobStatus;
 import com.chrono.common.enums.JobType;
 import com.chrono.common.exceptions.InfrastructureException;
 import com.chrono.common.exceptions.InvalidJobRequestException;
+import com.chrono.common.model.DlqJobDocumentModel;
 import com.chrono.common.model.JobEventModel;
 import com.chrono.dlq.repository.DlqJobsRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -12,10 +13,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
+import java.util.Objects;
 import java.util.Set;
 
 @Slf4j
@@ -44,7 +47,10 @@ public class DlqHandlerService {
         }
 
         try {
-            dlqJobsRepository.save(jobEvent);
+            DlqJobDocumentModel dlqJob = Objects.requireNonNull(
+                    convertToDlqJobDocument(jobEvent),
+                    "Converted DLQ document cannot be null");
+            dlqJobsRepository.save(dlqJob);
             log.info("Saved failed job with ID: {} to DLQ repository", jobEvent.getJobId());
         } catch (RuntimeException ex) {
             throw new InfrastructureException(
@@ -54,7 +60,19 @@ public class DlqHandlerService {
         }
     }
 
-    public Page<JobEventModel> getDlqJobs(
+    private @NonNull DlqJobDocumentModel convertToDlqJobDocument(@NonNull JobEventModel jobEvent) {
+        DlqJobDocumentModel dlqJob = new DlqJobDocumentModel();
+        dlqJob.setJobId(jobEvent.getJobId());
+        dlqJob.setJobType(jobEvent.getJobType());
+        dlqJob.setPayload(jobEvent.getPayload());
+        dlqJob.setRetryCount(jobEvent.getRetryCount());
+        dlqJob.setMaxRetries(jobEvent.getMaxRetries());
+        dlqJob.setStatus(JobStatus.FAILED);
+        dlqJob.setExecuteAt(Instant.now());
+        return dlqJob;
+    }
+
+    public Page<DlqJobDocumentModel> getDlqJobs(
             int page,
             int limit,
             JobType jobType,
@@ -78,7 +96,7 @@ public class DlqHandlerService {
         Sort sort = Sort.by(direction, safeSort);
         Pageable pageable = PageRequest.of(safePage, safeLimit, sort);
         Instant createdAtInstant = parseCreatedAt(createdAt);
-        Page<JobEventModel> result = dlqJobsRepository.searchDqlJobs(
+        Page<DlqJobDocumentModel> result = dlqJobsRepository.searchDqlJobs(
                 jobType,
                 status,
                 retryCount,

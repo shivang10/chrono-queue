@@ -5,17 +5,11 @@ import com.chrono.common.enums.JobType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.CompoundIndex;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
-@Document(collection = "dlq_db")
-@CompoundIndex(name = "status_executeAt_idx", def = "{'status': 1, 'executeAt': 1}")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -23,10 +17,8 @@ public class JobEventModel {
 
     private static final int DEFAULT_MAX_RETRIES = 3;
 
-    @Id
     private String jobId;
 
-    @Indexed
     private JobType jobType;
 
     private Instant createdAt;
@@ -36,10 +28,9 @@ public class JobEventModel {
     private int retryCount = 0;
     private int maxRetries = DEFAULT_MAX_RETRIES;
 
-    @Indexed
     private JobStatus status;
 
-    private long executeAt;
+    private Instant executeAt;
 
     public static JobEventModel create(JobType jobType, Map<String, Object> payload) {
         return JobEventModel.builderInternal(jobType, payload);
@@ -54,7 +45,7 @@ public class JobEventModel {
         model.retryCount = 0;
         model.maxRetries = DEFAULT_MAX_RETRIES;
         model.status = JobStatus.PENDING;
-        model.executeAt = System.currentTimeMillis();
+        model.executeAt = Instant.now();
         return model;
     }
 }
