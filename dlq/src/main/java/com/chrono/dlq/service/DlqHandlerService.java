@@ -64,6 +64,7 @@ public class DlqHandlerService {
         DlqJobDocumentModel dlqJob = new DlqJobDocumentModel();
         dlqJob.setJobId(jobEvent.getJobId());
         dlqJob.setJobType(jobEvent.getJobType());
+        dlqJob.setEventVersion(jobEvent.getEventVersion());
         dlqJob.setPayload(jobEvent.getPayload());
         dlqJob.setRetryCount(jobEvent.getRetryCount());
         dlqJob.setMaxRetries(jobEvent.getMaxRetries());

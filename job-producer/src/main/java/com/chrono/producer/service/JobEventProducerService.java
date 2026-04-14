@@ -5,6 +5,7 @@ import com.chrono.common.exceptions.InvalidJobRequestException;
 import com.chrono.common.exceptions.JobPayloadSerializationException;
 import com.chrono.common.exceptions.JobPublishException;
 import com.chrono.common.model.JobEventModel;
+import com.chrono.common.validation.JobPayloadValidator;
 import com.chrono.producer.dto.jobEventDto.JobEventRequestDTO;
 import com.chrono.producer.dto.jobEventDto.JobEventResponseDTO;
 import com.chrono.producer.mapper.JobProducerMapper;
@@ -79,8 +80,14 @@ public class JobEventProducerService {
             throw new InvalidJobRequestException("Job type cannot be null");
         }
 
-        if (jobEventRequestDTO.getPayload() == null || jobEventRequestDTO.getPayload().isEmpty()) {
+        if (jobEventRequestDTO.getPayload() == null) {
             throw new InvalidJobRequestException("Payload cannot be empty");
+        }
+
+        try {
+            JobPayloadValidator.validateCompatibility(jobEventRequestDTO.getJobType(), jobEventRequestDTO.getPayload());
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidJobRequestException(ex.getMessage(), ex);
         }
     }
 

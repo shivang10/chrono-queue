@@ -2,6 +2,7 @@ package com.chrono.common.model;
 
 import com.chrono.common.enums.JobStatus;
 import com.chrono.common.enums.JobType;
+import com.chrono.common.model.payload.JobPayloadModel;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
@@ -10,7 +11,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.Instant;
-import java.util.Map;
 
 @Document(collection = "dlq_db")
 @CompoundIndex(name = "status_executeAt_idx", def = "{'status': 1, 'executeAt': 1}")
@@ -30,7 +30,10 @@ public class DlqJobDocumentModel {
     @Field("created_at")
     private Instant createdAt;
 
-    private Map<String, Object> payload;
+    @Field("event_version")
+    private int eventVersion = 1;
+
+    private JobPayloadModel payload;
 
     @Field("retry_count")
     private int retryCount = 0;

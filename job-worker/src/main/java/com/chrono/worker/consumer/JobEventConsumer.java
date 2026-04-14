@@ -4,6 +4,7 @@ import com.chrono.common.constants.KafkaTopics;
 import com.chrono.common.enums.JobStatus;
 import com.chrono.common.exceptions.JobExecutionException;
 import com.chrono.common.model.JobEventModel;
+import com.chrono.common.validation.JobPayloadValidator;
 import com.chrono.worker.config.WorkerValidationProperties;
 import com.chrono.worker.services.JobProcessingService;
 import com.chrono.worker.services.retry.RetryHandler;
@@ -106,6 +107,13 @@ public class JobEventConsumer {
         if (jobEvent.getRetryCount() > jobEvent.getMaxRetries()) {
             throw new JobExecutionException(false,
                     "Retry count exceeded max retries for job " + jobEvent.getJobId());
+        }
+
+        try {
+            JobPayloadValidator.validateCompatibility(jobEvent.getJobType(), jobEvent.getPayload());
+        } catch (IllegalArgumentException ex) {
+            throw new JobExecutionException(false,
+                    "Invalid payload for job " + jobEvent.getJobId() + ": " + ex.getMessage());
         }
 
         if (simulatedFailureRate < 0.0 || simulatedFailureRate > 1.0) {

@@ -50,7 +50,9 @@ class JobControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of(
                                 "jobType", "EMAIL",
-                                "payload", Map.of("recipient", "user@example.com")))))
+                                "payload", Map.of(
+                                        "recipient", "user@example.com",
+                                        "subject", "Welcome")))))
                 .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.status").value("ACCEPTED"))
                 .andExpect(jsonPath("$.message").value("Job accepted for processing"))
@@ -59,15 +61,17 @@ class JobControllerTest {
     }
 
     @Test
-    void createNewJobReturnsStructuredValidationError() throws Exception {
+    void createNewJobReturnsStructuredInvalidRequestErrorWhenJobTypeMissing() throws Exception {
         mockMvc.perform(post("/api/job/")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of(
-                                "payload", Map.of("recipient", "user@example.com")))))
+                                "payload", Map.of(
+                                        "recipient", "user@example.com",
+                                        "subject", "Welcome")))))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorCode").value("VALIDATION_FAILED"))
+                .andExpect(jsonPath("$.errorCode").value("INVALID_REQUEST"))
                 .andExpect(jsonPath("$.path").value("/api/job/"))
-                .andExpect(jsonPath("$.validationErrors.jobType").value("Job Type cannot be blank"));
+                .andExpect(jsonPath("$.message").value("Malformed request body"));
     }
 
     @Test
@@ -79,7 +83,9 @@ class JobControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of(
                                 "jobType", "EMAIL",
-                                "payload", Map.of("recipient", "user@example.com")))))
+                                "payload", Map.of(
+                                        "recipient", "user@example.com",
+                                        "subject", "Welcome")))))
                 .andExpect(status().isServiceUnavailable())
                 .andExpect(jsonPath("$.errorCode").value("JOB_PUBLISH_FAILED"))
                 .andExpect(jsonPath("$.message").value("Failed to publish job event to Kafka"))
