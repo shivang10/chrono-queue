@@ -11,10 +11,23 @@ spring:
       properties:
         '[enable.idempotence]': true
         '[max.in.flight.requests.per.connection]': 5
-        '[compression.type]': snappy
+        '[compression.type]': gzip
         '[linger.ms]': 10
       batch-size: 16384
       buffer-memory: 33554432
+
+chrono:
+  kafka:
+    topic-management:
+      enabled: ${CHRONO_KAFKA_TOPIC_MANAGEMENT_ENABLED:true}
+      default-partitions: ${CHRONO_KAFKA_TOPIC_DEFAULT_PARTITIONS:3}
+      replication-factor: ${CHRONO_KAFKA_TOPIC_REPLICATION_FACTOR:1}
+      partitions:
+        webhook-jobs: ${CHRONO_KAFKA_TOPIC_WEBHOOK_PARTITIONS:6}
+        email-jobs: ${CHRONO_KAFKA_TOPIC_EMAIL_PARTITIONS:6}
+        payment-processing-jobs: ${CHRONO_KAFKA_TOPIC_PAYMENT_PARTITIONS:12}
+        order-cancellation-jobs: ${CHRONO_KAFKA_TOPIC_ORDER_CANCELLATION_PARTITIONS:3}
+        job-dlq: ${CHRONO_KAFKA_TOPIC_DLQ_PARTITIONS:3}
 
 server:
   port: ${SERVER_PORT:8081}

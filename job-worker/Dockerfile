@@ -14,25 +14,39 @@ COPY retry-dispatcher/pom.xml retry-dispatcher/
 COPY dlq/pom.xml dlq/
 
 # Download dependencies (CACHED if POMs unchanged)
-RUN mvn dependency:go-offline -pl job-worker -am -B
+RUN ["mvn", "dependency:go-offline", "-pl", "job-worker", "-am", "-B"]
 
 # Copy source for modules we need to build
 COPY common/src common/src
 COPY job-worker/src job-worker/src
 
 # Build (dependencies mostly cached, only compiles source)
-RUN mvn clean package -pl job-worker -am -DskipTests
+RUN ["mvn", "clean", "package", "-pl", "job-worker", "-am", "-DskipTests"]
 
 # Runtime stage
 FROM eclipse-temurin:21-jre-alpine
 
+LABEL org.opencontainers.image.source="https://github.com/shivang10/chrono-queue" \
+    org.opencontainers.image.title="chrono-queue-job-worker"
+
+# Create non-root user
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -u 1001 -S appuser -G appgroup
+
 WORKDIR /app
 
-# Copy the built jar from build stage
-COPY --from=build /app/job-worker/target/job-worker-*.jar app.jar
+# Copy the executable Spring Boot jar from build stage
+COPY --from=build --chown=appuser:appgroup /app/job-worker/target/job-worker-0.0.1-SNAPSHOT.jar /app/app.jar
 
-# Expose the application port
+USER appuser
+
+ENV SERVER_PORT=8081
 EXPOSE 8081
 
-# Run the application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:${SERVER_PORT}/actuator/health/liveness || exit 1
+
+ENTRYPOINT ["java", \
+    "-XX:MaxRAMPercentage=75.0", \
+    "-XX:+ExitOnOutOfMemoryError", \
+    "-jar", "/app/app.jar"]

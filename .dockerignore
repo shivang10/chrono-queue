@@ -25,8 +25,18 @@ Thumbs.db
 
 # Ignore documentation
 README.md
+DOCKER_SETUP.md
+PRODUCTION_ENTERPRISE_LEVEL_UP_REPORT.md
+*.drawio
 docs/
 
-# Ignore docker files
 docker-compose.yml
-Dockerfile
+.env
+
+# Ignore load tests and observability configs
+load-tests/
+grafana/
+loki-config.yaml
+loki-data/
+promtail-config.yml
+Makefile
