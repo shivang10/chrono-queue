@@ -1,14 +1,13 @@
 package com.chrono.producer.config;
 
 import com.chrono.common.constants.KafkaTopics;
+import jakarta.annotation.PostConstruct;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.TopicBuilder;
-
-import java.util.Set;
+import org.springframework.kafka.core.KafkaAdmin;
 
 @Configuration
 @EnableConfigurationProperties(KafkaTopicProperties.class)
@@ -16,18 +15,19 @@ import java.util.Set;
 public class KafkaTopicConfig {
 
     private final KafkaTopicProperties kafkaTopicProperties;
+    private final KafkaAdmin kafkaAdmin;
 
-    public KafkaTopicConfig(KafkaTopicProperties kafkaTopicProperties) {
+    public KafkaTopicConfig(KafkaTopicProperties kafkaTopicProperties, KafkaAdmin kafkaAdmin) {
         this.kafkaTopicProperties = kafkaTopicProperties;
+        this.kafkaAdmin = kafkaAdmin;
     }
 
-    @Bean
-    public NewTopic[] kafkaTopics() {
-        Set<String> topicNames = KafkaTopics.getAllTopics();
-
-        return topicNames.stream()
+    @PostConstruct
+    public void createTopics() {
+        NewTopic[] topics = KafkaTopics.getAllTopics().stream()
                 .map(this::buildTopic)
                 .toArray(NewTopic[]::new);
+        kafkaAdmin.createOrModifyTopics(topics);
     }
 
     private NewTopic buildTopic(String topicName) {

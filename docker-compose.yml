@@ -23,11 +23,12 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: ${KAFKA_REPLICATION_FACTOR}
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_NUM_PARTITIONS: ${KAFKA_NUM_PARTITIONS}
     networks:
       - chrono-queue-network
     healthcheck:
-      test:
-        ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "kafka:9092"]
+      test: [ "CMD", "kafka-broker-api-versions", "--bootstrap-server", "kafka:9092" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -42,7 +43,7 @@ services:
     networks:
       - chrono-queue-network
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -56,7 +57,7 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USER}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
-    command: ["--bind_ip_all"]
+    command: [ "--bind_ip_all" ]
     volumes:
       - mongo-data:/data/db
     networks:
@@ -65,7 +66,9 @@ services:
       test:
         [
           "CMD-SHELL",
-          'mongosh --username ${MONGO_INITDB_ROOT_USERNAME} --password ${MONGO_INITDB_ROOT_PASSWORD} --authenticationDatabase admin --eval ''db.adminCommand("ping")''',
+          "mongosh --username ${MONGO_INITDB_ROOT_USERNAME} --password
+            ${MONGO_INITDB_ROOT_PASSWORD} --authenticationDatabase admin --eval
+            'db.adminCommand(\"ping\")'",
         ]
       interval: 10s
       timeout: 5s
@@ -85,6 +88,12 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
+    healthcheck:
+      test: "wget -qO- http://localhost:$$SERVER_PORT/actuator/health"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     networks:
       - chrono-queue-network
     restart: unless-stopped
@@ -106,6 +115,8 @@ services:
       kafka:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      job-producer:
         condition: service_healthy
     networks:
       - chrono-queue-network
@@ -129,6 +140,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      job-producer:
+        condition: service_healthy
     networks:
       - chrono-queue-network
     restart: unless-stopped
@@ -149,6 +162,8 @@ services:
       kafka:
         condition: service_healthy
       mongodb:
+        condition: service_healthy
+      job-producer:
         condition: service_healthy
     networks:
       - chrono-queue-network
