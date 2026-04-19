@@ -157,6 +157,8 @@ services:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       SPRING_DATA_MONGODB_URI: mongodb://${MONGODB_USER}:${MONGODB_PASSWORD}@mongodb:27017/${MONGODB_DATABASE}?authSource=admin
+      MONGODB_USER: ${MONGODB_USER}
+      MONGODB_PASSWORD: ${MONGODB_PASSWORD}
       SERVER_PORT: ${DLQ_PORT}
     depends_on:
       kafka:
@@ -165,6 +167,24 @@ services:
         condition: service_healthy
       job-producer:
         condition: service_healthy
+    networks:
+      - chrono-queue-network
+    restart: unless-stopped
+
+  # Prometheus for metrics scraping
+  prometheus:
+    image: prom/prometheus:v2.49.1
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=15d"
+      - "--web.enable-lifecycle"
     networks:
       - chrono-queue-network
     restart: unless-stopped
@@ -209,6 +229,7 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     depends_on:
       - loki
+      - prometheus
     networks:
       - chrono-queue-network
 
@@ -219,3 +240,4 @@ networks:
 volumes:
   mongo-data:
   redis_data:
+  prometheus_data:

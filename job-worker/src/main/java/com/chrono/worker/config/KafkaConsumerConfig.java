@@ -3,6 +3,8 @@ package com.chrono.worker.config;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.kafka.DefaultKafkaConsumerFactoryCustomizer;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,7 +31,8 @@ public class KafkaConsumerConfig {
 
     @Bean
     @NonNull
-    public ConsumerFactory<String, String> consumerFactory() {
+    public ConsumerFactory<String, String> consumerFactory(
+            ObjectProvider<DefaultKafkaConsumerFactoryCustomizer> customizers) {
         Map<String, Object> properties = new HashMap<>();
 
         properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServers());
@@ -37,7 +40,11 @@ public class KafkaConsumerConfig {
         properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         properties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
-        return new DefaultKafkaConsumerFactory<>(properties);
+        DefaultKafkaConsumerFactory<String, String> factory = new DefaultKafkaConsumerFactory<>(properties);
+        // Apply Spring Boot customizers (includes MicrometerConsumerListener for
+        // kafka_consumer_* metrics)
+        customizers.orderedStream().forEach(c -> c.customize(factory));
+        return factory;
     }
 
     @Bean
@@ -48,6 +55,8 @@ public class KafkaConsumerConfig {
         factory.setConsumerFactory(consumerFactory);
         factory.setCommonErrorHandler(kafkaErrorHandler);
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
+        // Enable Micrometer Observation for spring_kafka_listener_seconds_* metrics
+        factory.getContainerProperties().setObservationEnabled(true);
         return factory;
     }
 

@@ -2,7 +2,7 @@ spring:
   application:
     name: dlq-service
   kafka:
-    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
     consumer:
       group-id: dlq-group
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
@@ -11,13 +11,14 @@ spring:
       enable-auto-commit: false
     listener:
       ack-mode: manual
+      observation-enabled: true
   data:
     mongodb:
       host: ${SPRING_DATA_MONGODB_HOST:mongodb}
       port: ${MONGODB_PORT:27017}
       database: dlq_db
-      username: ${MONGODB_USER}
-      password: ${MONGODB_PASSWORD}
+      username: ${MONGODB_USER:admin}
+      password: ${MONGODB_PASSWORD:password}
 
 server:
   port: ${SERVER_PORT:8084}
@@ -45,6 +46,12 @@ management:
       export:
         enabled: true
   metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+        jvm.gc.pause: true
+        spring.kafka.listener: true
+        mongodb.driver.commands: true
     tags:
       application: ${spring.application.name}
       environment: ${SPRING_PROFILES_ACTIVE:local}

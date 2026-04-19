@@ -16,6 +16,10 @@ spring:
       retries: 3
       properties:
         '[enable.idempotence]': true
+    listener:
+      observation-enabled: true
+    template:
+      observation-enabled: true
   data:
     redis:
       host: ${SPRING_DATA_REDIS_HOST:localhost}
@@ -47,6 +51,12 @@ management:
       export:
         enabled: true
   metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+        jvm.gc.pause: true
+        spring.kafka.listener: true
+        spring.kafka.template: true
     tags:
       application: ${spring.application.name}
       environment: ${SPRING_PROFILES_ACTIVE:local}
