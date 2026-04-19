@@ -19,23 +19,21 @@ public class JobController {
 
     public JobController(JobEventProducerService jobEventProducerService) {
         this.jobEventProducerService = jobEventProducerService;
-        log.info("JobController initialized");
     }
 
     @PostMapping("/")
     @Operation(summary = "Create a new job", description = "Submit a new job to the queue for processing")
     public ResponseEntity<JobEventResponseDTO> createNewJob(@Valid @RequestBody JobEventRequestDTO jobEventRequestDTO) {
-        log.info("API endpoint hit: POST /api/job/");
+        log.info("Job submission request received - jobType: {}", jobEventRequestDTO.getJobType());
         JobEventResponseDTO response = jobEventProducerService.produceJobEvent(jobEventRequestDTO);
-        log.info("API endpoint result: POST /api/job/ -> {}",
-                ResponseEntity.accepted().build().getStatusCode().value());
+        log.info("Job accepted - jobId: {}, jobType: {}", response.getJobId(), jobEventRequestDTO.getJobType());
         return ResponseEntity.accepted().body(response);
     }
 
     @GetMapping("/health")
     @Operation(summary = "Health check", description = "Check if the service is running")
     public ResponseEntity<String> healthCheck() {
-        log.info("API endpoint hit: GET /api/job/health");
+        log.debug("Health check requested");
         return ResponseEntity.ok("Service is up and running");
     }
 

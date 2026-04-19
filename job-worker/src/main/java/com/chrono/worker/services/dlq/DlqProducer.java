@@ -32,13 +32,15 @@ public class DlqProducer {
 
     public void send(JobEventModel job, Exception ex) {
         job.setStatus(JobStatus.FAILED);
+        log.warn("Sending job to DLQ - jobId: {}, jobType: {}, reason: {}",
+                job.getJobId(), job.getJobType(), ex.getMessage());
 
         try {
             String payload = objectMapper.writeValueAsString(job);
             SendResult<String, String> result = kafkaTemplate.send(KafkaTopics.JOB_DLQ, job.getJobId(), payload)
                     .get(SEND_TIMEOUT_SECONDS, TimeUnit.SECONDS);
             RecordMetadata metadata = result.getRecordMetadata();
-            log.info("Job {} sent to DLQ - Topic: {}, Partition: {}, Offset: {}, Reason: {}",
+            log.info("Job sent to DLQ - jobId: {}, topic: {}, partition: {}, offset: {}, reason: {}",
                     job.getJobId(),
                     metadata.topic(),
                     metadata.partition(),

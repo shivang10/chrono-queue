@@ -30,9 +30,9 @@ public class JobEventConsumer {
     private final Random random;
 
     public JobEventConsumer(ObjectMapper objectMapper,
-                            JobProcessingService jobProcessingService,
-                            RetryHandler retryHandler,
-                            WorkerValidationProperties workerValidationProperties) {
+            JobProcessingService jobProcessingService,
+            RetryHandler retryHandler,
+            WorkerValidationProperties workerValidationProperties) {
         this.objectMapper = objectMapper;
         this.jobProcessingService = jobProcessingService;
         this.retryHandler = retryHandler;
@@ -58,31 +58,33 @@ public class JobEventConsumer {
         try {
             jobEvent = objectMapper.readValue(message, JobEventModel.class);
         } catch (Exception e) {
-            log.error("Failed to deserialize message from topic:{} with partition:{} and offset:{} and key:{}",
-                    topic,
-                    partition, offset, key, e);
+            log.error("Failed to deserialize message - topic: {}, partition: {}, offset: {}, key: {}",
+                    topic, partition, offset, key, e);
             throw new IllegalStateException("Deserialization failed: " + e.getMessage(), e);
         }
 
+        log.info("Consuming message - topic: {}, partition: {}, offset: {}, jobId: {}",
+                topic, partition, offset, key);
         try {
             validateJob(jobEvent);
-            log.info("Consuming message - Topic: {}, Partition: {}, Offset: {}, Key: {}",
-                    topic, partition, offset, key);
             jobProcessingService.processJobEvent(jobEvent);
             jobEvent.setStatus(JobStatus.COMPLETED);
             acknowledgment.acknowledge();
-            log.info("Successfully processed job: {} from topic: {}",
-                    jobEvent.getJobId(), topic);
+            log.info("Job processed successfully - jobId: {}, jobType: {}, topic: {}, partition: {}, offset: {}",
+                    jobEvent.getJobId(), jobEvent.getJobType(), topic, partition, offset);
         } catch (Exception processingError) {
-            log.error("Job {} failed: {}", jobEvent.getJobId(), processingError.getMessage());
+            log.error("Job processing failed - jobId: {}, jobType: {}, attempt: {}/{}, reason: {}",
+                    jobEvent.getJobId(), jobEvent.getJobType(),
+                    jobEvent.getRetryCount() + 1, jobEvent.getMaxRetries() + 1,
+                    processingError.getMessage(), processingError);
             jobEvent.setStatus(JobStatus.FAILED);
             try {
                 retryHandler.handleFailure(jobEvent, processingError);
                 acknowledgment.acknowledge();
-                log.info("Job {} handed off to retry/DLQ and acknowledged (attempt {}/{})",
+                log.info("Job failure handled - jobId: {}, attempt: {}/{}, acknowledged",
                         jobEvent.getJobId(), jobEvent.getRetryCount(), jobEvent.getMaxRetries());
             } catch (Exception ex) {
-                log.error("Retry/DLQ handoff failed for the job {}. Record will not be not be acknowledged.",
+                log.error("Retry/DLQ handoff failed for jobId: {} — record will NOT be acknowledged",
                         jobEvent.getJobId(), ex);
                 throw new IllegalStateException(
                         "Failed to handle retry/DLQ for job " + jobEvent.getJobId() + ": " + ex.getMessage(), ex);
@@ -123,7 +125,7 @@ public class JobEventConsumer {
 
         double roll = random.nextDouble();
 
-        log.info("Validation - JobId: {}, SimulatedFailureRate: {}, Roll: {}",
+        log.debug("Simulated failure check - jobId: {}, failureRate: {}, roll: {}",
                 jobEvent.getJobId(), simulatedFailureRate, roll);
 
         if (roll < simulatedFailureRate) {

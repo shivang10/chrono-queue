@@ -17,7 +17,8 @@ public class OrderCancellationJobExecutor implements JobExecutor {
 
     @Override
     public void execute(JobEventModel jobEvent) {
-        log.info("Processing order cancellation - JobId: {}, Payload: {}",
+        log.info("Executing ORDER_CANCELLATION job - jobId: {}", jobEvent.getJobId());
+        log.debug("ORDER_CANCELLATION job payload - jobId: {}, payload: {}",
                 jobEvent.getJobId(), jobEvent.getPayload());
     }
 }

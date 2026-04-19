@@ -17,7 +17,8 @@ public class WebHookJobExecutor implements JobExecutor {
 
     @Override
     public void execute(JobEventModel jobEvent) {
-        log.info("Executing WebHook - JobId: {}, Payload: {}",
+        log.info("Executing WEBHOOK job - jobId: {}", jobEvent.getJobId());
+        log.debug("WEBHOOK job payload - jobId: {}, payload: {}",
                 jobEvent.getJobId(), jobEvent.getPayload());
     }
 

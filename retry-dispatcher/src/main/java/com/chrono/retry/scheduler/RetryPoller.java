@@ -22,14 +22,13 @@ public class RetryPoller {
     private final RetryPollerProperties retryPollerProperties;
 
     public RetryPoller(RetryQueueRepository retryQueueRepository,
-                       JobRequeueProducer jobRequeueProducer,
-                       ObjectMapper objectMapper,
-                       RetryPollerProperties retryPollerProperties) {
+            JobRequeueProducer jobRequeueProducer,
+            ObjectMapper objectMapper,
+            RetryPollerProperties retryPollerProperties) {
         this.retryQueueRepository = retryQueueRepository;
         this.jobRequeueProducer = jobRequeueProducer;
         this.objectMapper = objectMapper;
         this.retryPollerProperties = retryPollerProperties;
-        log.info("RetryPoller initialized successfully.");
     }
 
     @Scheduled(fixedDelayString = "#{@retryPollerProperties.getFixedDelay()}")
@@ -39,10 +38,11 @@ public class RetryPoller {
                 System.currentTimeMillis());
 
         if (dueJobs.isEmpty()) {
+            log.debug("No due jobs to retry at this poll");
             return;
         }
 
-        log.info("Fetched {} due jobs for retry", dueJobs.size());
+        log.info("Polling retry queue - {} due jobs found", dueJobs.size());
 
         for (String jobString : dueJobs) {
             try {
@@ -50,7 +50,9 @@ public class RetryPoller {
                 String jobEventJson = objectMapper.writeValueAsString(job);
                 jobRequeueProducer.requeue(job, jobEventJson);
             } catch (JsonProcessingException e) {
-                log.error("Error processing job JSON: {}", jobString, e);
+                String preview = jobString.length() > 200 ? jobString.substring(0, 200) + "…" : jobString;
+                log.error("Failed to deserialize retry job payload, skipping - payload(truncated): {}, error: {}",
+                        preview, e.getMessage(), e);
             }
         }
     }

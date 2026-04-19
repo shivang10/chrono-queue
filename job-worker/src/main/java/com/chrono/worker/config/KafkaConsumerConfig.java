@@ -62,11 +62,10 @@ public class KafkaConsumerConfig {
 
     @Bean
     public DefaultErrorHandler kafkaErrorHandler() {
-        // Configure the error handler to log exceptions and skip problematic messages
-        FixedBackOff fixedBackOff = new FixedBackOff(1000L, 3L); // Retry every 1 second, up to 3 times
+        FixedBackOff fixedBackOff = new FixedBackOff(1000L, 3L); // 3 container-level retries, 1 s apart
         return new DefaultErrorHandler(
                 (record, ex) -> log.error(
-                        "Record recovery after retries exhausted: topic={}, partition={}, offset={}, key={}",
+                        "Kafka record unrecoverable after retries - topic: {}, partition: {}, offset: {}, key: {}",
                         record.topic(), record.partition(), record.offset(), record.key(), ex),
                 fixedBackOff);
     }

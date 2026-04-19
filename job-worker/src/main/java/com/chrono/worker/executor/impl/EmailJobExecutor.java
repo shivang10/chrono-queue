@@ -17,7 +17,9 @@ public class EmailJobExecutor implements JobExecutor {
 
     @Override
     public void execute(JobEventModel jobEvent) {
-        log.info("Executing Email Job: {}", jobEvent);
+        log.info("Executing EMAIL job - jobId: {}", jobEvent.getJobId());
+        log.debug("EMAIL job payload - jobId: {}, payload: {}",
+                jobEvent.getJobId(), jobEvent.getPayload());
     }
 
 }

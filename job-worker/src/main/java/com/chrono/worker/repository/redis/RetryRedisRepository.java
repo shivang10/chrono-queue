@@ -7,6 +7,7 @@ import com.chrono.common.exceptions.JobPayloadSerializationException;
 import com.chrono.common.model.JobEventModel;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+@Slf4j
 @Repository
 public class RetryRedisRepository {
     private final StringRedisTemplate redisTemplate;
@@ -33,7 +35,9 @@ public class RetryRedisRepository {
 
     public int incrementRetryCount(String jobId) {
         Long result = redisTemplate.execute(incrementScript, List.of(RedisKeys.RETRY_COUNT), jobId);
-        return result != null ? result.intValue() : 0;
+        int count = result != null ? result.intValue() : 0;
+        log.debug("Retry count incremented - jobId: {}, newCount: {}", jobId, count);
+        return count;
     }
 
     public void scheduleRetry(JobEventModel job) throws Exception {
@@ -45,6 +49,8 @@ public class RetryRedisRepository {
                     job.getJobId(),
                     String.valueOf(job.getExecuteAt().toEpochMilli()),
                     payload);
+            log.debug("Retry scheduled in Redis - jobId: {}, executeAt: {}",
+                    job.getJobId(), job.getExecuteAt());
         } catch (JsonProcessingException ex) {
             throw new JobPayloadSerializationException(
                     "Failed to serialize job " + job.getJobId() + " for retry scheduling",

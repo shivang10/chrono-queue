@@ -39,21 +39,21 @@ public class DlqConsumer {
         try {
             jobEvent = objectMapper.readValue(message, JobEventModel.class);
         } catch (Exception ex) {
-            log.error("Failed to deserialize DLQ message from topic:{} partition:{} offset:{} key:{}",
+            log.error("Failed to deserialize DLQ message - topic: {}, partition: {}, offset: {}, key: {}",
                     topic, partition, offset, key, ex);
             throw new IllegalStateException("DLQ message deserialization failed", ex);
         }
 
         try {
-            log.info("Consuming failed job DLQ - Topic: {}, Partition: {}, Offset: {}, Key: {}",
+            log.info("Consuming DLQ message - topic: {}, partition: {}, offset: {}, jobId: {}",
                     topic, partition, offset, key);
             dlqHandlerService.handleDlqMessage(jobEvent, topic);
             dlqHandlerService.saveFailedJob(jobEvent);
-            log.info("Successfully consumed the failed job: {} from topic: {}",
-                    jobEvent.getJobId(), topic);
             acknowledgment.acknowledge();
+            log.info("DLQ job persisted and acknowledged - jobId: {}, topic: {}",
+                    jobEvent.getJobId(), topic);
         } catch (Exception ex) {
-            log.error("Failed to persist DLQ job {} from topic {}",
+            log.error("Failed to persist DLQ job - jobId: {}, topic: {}",
                     jobEvent.getJobId(), topic, ex);
             throw ex;
         }

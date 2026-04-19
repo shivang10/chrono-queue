@@ -2,6 +2,7 @@ package com.chrono.producer.config;
 
 import com.chrono.common.constants.KafkaTopics;
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -9,6 +10,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.KafkaAdmin;
 
+@Slf4j
 @Configuration
 @EnableConfigurationProperties(KafkaTopicProperties.class)
 @ConditionalOnProperty(prefix = "chrono.kafka.topic-management", name = "enabled", havingValue = "true", matchIfMissing = true)
@@ -28,6 +30,8 @@ public class KafkaTopicConfig {
                 .map(this::buildTopic)
                 .toArray(NewTopic[]::new);
         kafkaAdmin.createOrModifyTopics(topics);
+        log.info("Kafka topics initialized - count: {}, topics: {}",
+                topics.length, KafkaTopics.getAllTopics());
     }
 
     private NewTopic buildTopic(String topicName) {

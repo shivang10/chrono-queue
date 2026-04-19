@@ -20,16 +20,17 @@ public class JobRequeueProducer {
         String topicName = KafkaTopics.getTopicForJobType(job.getJobType());
 
         if (topicName == null || jobEventJson == null) {
-            log.error("Cannot send to Kafka: topicName or value is null for job: {}", job.getJobId());
+            log.warn("Cannot requeue job: topicName or serialized payload is null - jobId: {}", job.getJobId());
             return;
         }
 
         kafkaTemplate.send(topicName, job.getJobId(), jobEventJson)
                 .whenComplete((result, exception) -> {
                     if (exception != null) {
-                        log.error("Failed to requeue job {} to topic {}", job.getJobId(), topicName, exception);
+                        log.error("Failed to requeue job - jobId: {}, topic: {}", job.getJobId(), topicName, exception);
                     } else {
-                        log.info("Requeued job {} - Topic: {}, Partition: {}, Offset: {}, RetryCount: {}",
+                        log.info(
+                                "Job requeued successfully - jobId: {}, topic: {}, partition: {}, offset: {}, retryCount: {}",
                                 job.getJobId(),
                                 result.getRecordMetadata().topic(),
                                 result.getRecordMetadata().partition(),

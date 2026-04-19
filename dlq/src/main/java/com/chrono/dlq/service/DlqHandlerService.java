@@ -37,8 +37,8 @@ public class DlqHandlerService {
     }
 
     public void handleDlqMessage(JobEventModel jobEvent, String topic) {
-        log.info("Handling DLQ message for job: {} from topic: {}",
-                jobEvent.getJobId(), topic);
+        log.debug("Processing DLQ message payload - jobId: {}, jobType: {}, topic: {}",
+                jobEvent.getJobId(), jobEvent.getJobType(), topic);
     }
 
     public void saveFailedJob(JobEventModel jobEvent) {
@@ -51,7 +51,9 @@ public class DlqHandlerService {
                     convertToDlqJobDocument(jobEvent),
                     "Converted DLQ document cannot be null");
             dlqJobsRepository.save(dlqJob);
-            log.info("Saved failed job with ID: {} to DLQ repository", jobEvent.getJobId());
+            log.info("Failed job persisted to DLQ repository - jobId: {}, jobType: {}, retryCount: {}/{}",
+                    jobEvent.getJobId(), jobEvent.getJobType(),
+                    jobEvent.getRetryCount(), jobEvent.getMaxRetries());
         } catch (RuntimeException ex) {
             throw new InfrastructureException(
                     ErrorCode.DLQ_PERSISTENCE_FAILED,
@@ -83,8 +85,8 @@ public class DlqHandlerService {
             String createdAt,
             String sortBy,
             String sortDir) {
-        log.info(
-                "Fetching DLQ jobs with filters - page: {}, limit: {}, jobType: {}, status: {}, retryCount: {}, maxRetries: {}, createdAt: {}, sortBy: {}, sortDir: {}",
+        log.debug(
+                "Querying DLQ jobs - page: {}, limit: {}, jobType: {}, status: {}, retryCount: {}, maxRetries: {}, createdAt: {}, sortBy: {}, sortDir: {}",
                 page, limit, jobType, status, retryCount, maxRetries, createdAt, sortBy, sortDir);
         validateRetryFilterRange(retryCount, maxRetries);
         int safePage = Math.max(page, 0);
@@ -105,7 +107,7 @@ public class DlqHandlerService {
                 createdAtInstant,
                 pageable);
 
-        log.info("Fetched {} DLQ jobs", result.getContent().size());
+        log.info("DLQ query returned {} of {} total jobs", result.getContent().size(), result.getTotalElements());
 
         return result;
     }

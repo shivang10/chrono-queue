@@ -31,11 +31,10 @@ public class JobEventProducerService {
     private final ObjectMapper objectMapper;
 
     public JobEventProducerService(KafkaTemplate<String, String> kafkaTemplate, ObjectMapper objectMapper,
-                                   JobProducerMapper jobProducerMapper) {
+            JobProducerMapper jobProducerMapper) {
         this.kafkaTemplate = kafkaTemplate;
         this.objectMapper = objectMapper;
         this.jobProducerMapper = jobProducerMapper;
-        log.info("JobEventProducerService initialized");
     }
 
     public JobEventResponseDTO produceJobEvent(JobEventRequestDTO jobEventRequestDTO) {
@@ -46,7 +45,8 @@ public class JobEventProducerService {
         String topicName = resolveTopic(jobEventModel);
 
         sendToKafka(topicName, jobEventModel.getJobId(), jobEventJson);
-        log.info("Produced Job Event: {}", jobEventModel);
+        log.info("Job event published - jobId: {}, jobType: {}, topic: {}",
+                jobEventModel.getJobId(), jobEventModel.getJobType(), topicName);
         return jobProducerMapper.toJobEventResponse(jobEventModel);
     }
 
@@ -59,10 +59,11 @@ public class JobEventProducerService {
             SendResult<String, String> result = kafkaTemplate.send(topicName, key, value)
                     .get(PUBLISH_TIMEOUT_SECONDS, TimeUnit.SECONDS);
             RecordMetadata metadata = result.getRecordMetadata();
-            log.info("Job event sent successfully - Topic: {}, Partition: {}, Offset: {}",
+            log.debug("Kafka send confirmed - topic: {}, partition: {}, offset: {}, key: {}",
                     metadata.topic(),
                     metadata.partition(),
-                    metadata.offset());
+                    metadata.offset(),
+                    key);
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
             throw new JobPublishException("Interrupted while publishing job event", ex);

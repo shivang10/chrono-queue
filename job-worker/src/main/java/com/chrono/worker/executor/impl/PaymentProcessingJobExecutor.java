@@ -17,7 +17,8 @@ public class PaymentProcessingJobExecutor implements JobExecutor {
 
     @Override
     public void execute(JobEventModel jobEvent) {
-        log.info("Processing payment - JobId: {}, Payload: {}",
+        log.info("Executing PAYMENT_PROCESSING job - jobId: {}", jobEvent.getJobId());
+        log.debug("PAYMENT_PROCESSING job payload - jobId: {}, payload: {}",
                 jobEvent.getJobId(), jobEvent.getPayload());
     }
 }

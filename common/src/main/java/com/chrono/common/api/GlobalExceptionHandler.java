@@ -26,7 +26,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleChronoQueueException(
             ChronoQueueException ex,
             WebRequest request) {
-        log.error("Handled business exception [{}]: {}", ex.getErrorCode(), ex.getMessage(), ex);
+        if (ex.getStatus().is5xxServerError()) {
+            log.error("Server-side exception [{}] - status: {}, message: {}",
+                    ex.getErrorCode(), ex.getStatus().value(), ex.getMessage(), ex);
+        } else {
+            log.warn("Client exception [{}] - status: {}, message: {}",
+                    ex.getErrorCode(), ex.getStatus().value(), ex.getMessage());
+        }
         return buildResponse(ex.getStatus(), ex.getErrorCode(), ex.getMessage(), request, null);
     }
 
@@ -39,7 +45,7 @@ public class GlobalExceptionHandler {
             validationErrors.put(fieldError.getField(), fieldError.getDefaultMessage());
         }
 
-        log.error("Request body validation failed: {}", validationErrors, ex);
+        log.warn("Request validation failed - fields: {}", validationErrors);
         return buildResponse(
                 HttpStatus.BAD_REQUEST,
                 ErrorCode.VALIDATION_FAILED,
@@ -56,7 +62,7 @@ public class GlobalExceptionHandler {
         ex.getConstraintViolations().forEach(
                 violation -> validationErrors.put(violation.getPropertyPath().toString(), violation.getMessage()));
 
-        log.error("Request parameter validation failed: {}", validationErrors, ex);
+        log.warn("Request parameter validation failed - violations: {}", validationErrors);
         return buildResponse(
                 HttpStatus.BAD_REQUEST,
                 ErrorCode.VALIDATION_FAILED,
@@ -69,7 +75,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleUnreadableMessage(
             HttpMessageNotReadableException ex,
             WebRequest request) {
-        log.error("Request body is malformed", ex);
+        log.warn("Malformed request body: {}", ex.getMessage());
         return buildResponse(
                 HttpStatus.BAD_REQUEST,
                 ErrorCode.INVALID_REQUEST,
@@ -82,7 +88,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleIllegalArgumentException(
             IllegalArgumentException ex,
             WebRequest request) {
-        log.error("Invalid request: {}", ex.getMessage(), ex);
+        log.warn("Invalid request: {}", ex.getMessage());
         return buildResponse(
                 HttpStatus.BAD_REQUEST,
                 ErrorCode.INVALID_REQUEST,
