@@ -14,6 +14,7 @@ if command -v k6 >/dev/null 2>&1; then
 fi
 
 exec docker run --rm --network host \
+  --user "$(id -u):$(id -g)" \
   -v "$(pwd):/workspace" -w /workspace \
   grafana/k6:latest \
   run "$SCENARIO_FILE" "$@"

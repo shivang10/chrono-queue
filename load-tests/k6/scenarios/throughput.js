@@ -1,4 +1,5 @@
 import { submitJob } from '../lib/http.js';
+import { buildJsonSummary } from '../lib/summary.js';
 
 export const options = {
   scenarios: {
@@ -25,4 +26,11 @@ export const options = {
 
 export default function () {
   submitJob();
+}
+
+export function handleSummary(data) {
+  return {
+    'load-tests/results/throughput-summary.json':
+      JSON.stringify(buildJsonSummary(data, 'throughput'), null, 2),
+  };
 }

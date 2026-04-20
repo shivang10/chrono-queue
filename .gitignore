@@ -89,3 +89,7 @@ Desktop.ini
 !**/src/test/**/build/
 
 loki-data/
+
+# load test results
+results/
+__pycache__/
