@@ -1,13 +1,13 @@
 {
   "EMAIL": {
-    "to": "loadtest@example.com",
+    "recipient": "loadtest@example.com",
     "subject": "Chrono Queue load test",
     "body": "Synthetic load payload"
   },
   "WEBHOOK": {
     "url": "https://example.com/webhook",
     "method": "POST",
-    "event": "load_test_event"
+    "body": "{\"event\":\"load_test_event\"}"
   },
   "PAYMENT_PROCESSING": {
     "paymentId": "pay_load_test",

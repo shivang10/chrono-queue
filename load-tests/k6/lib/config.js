@@ -1,4 +1,4 @@
-export const API_BASE_URL = __ENV.API_BASE_URL || 'http://localhost:8080';
+export const API_BASE_URL = __ENV.API_BASE_URL || 'http://localhost:8081';
 
 export const DEFAULT_HEADERS = {
   'Content-Type': 'application/json',
