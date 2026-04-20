@@ -30,9 +30,9 @@ public class JobEventConsumer {
     private final Random random;
 
     public JobEventConsumer(ObjectMapper objectMapper,
-            JobProcessingService jobProcessingService,
-            RetryHandler retryHandler,
-            WorkerValidationProperties workerValidationProperties) {
+                            JobProcessingService jobProcessingService,
+                            RetryHandler retryHandler,
+                            WorkerValidationProperties workerValidationProperties) {
         this.objectMapper = objectMapper;
         this.jobProcessingService = jobProcessingService;
         this.retryHandler = retryHandler;
@@ -73,7 +73,7 @@ public class JobEventConsumer {
             log.info("Job processed successfully - jobId: {}, jobType: {}, topic: {}, partition: {}, offset: {}",
                     jobEvent.getJobId(), jobEvent.getJobType(), topic, partition, offset);
         } catch (Exception processingError) {
-            log.error("Job processing failed - jobId: {}, jobType: {}, attempt: {}/{}, reason: {}",
+            log.warn("Job processing failed - jobId: {}, jobType: {}, attempt: {}/{}, reason: {}",
                     jobEvent.getJobId(), jobEvent.getJobType(),
                     jobEvent.getRetryCount() + 1, jobEvent.getMaxRetries() + 1,
                     processingError.getMessage(), processingError);

@@ -62,11 +62,11 @@ public class KafkaConsumerConfig {
 
     @Bean
     public DefaultErrorHandler kafkaErrorHandler() {
-        FixedBackOff fixedBackOff = new FixedBackOff(1000L, 3L); // 3 container-level retries, 1 s apart
+        FixedBackOff noRetry = new FixedBackOff(0L, 0L);
         return new DefaultErrorHandler(
                 (record, ex) -> log.error(
-                        "Kafka record unrecoverable after retries - topic: {}, partition: {}, offset: {}, key: {}",
+                        "Kafka record unrecoverable — topic: {}, partition: {}, offset: {}, key: {}",
                         record.topic(), record.partition(), record.offset(), record.key(), ex),
-                fixedBackOff);
+                noRetry);
     }
 }

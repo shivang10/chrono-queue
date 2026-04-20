@@ -17,8 +17,8 @@ public class RetryQueueRepository {
     private final DefaultRedisScript<List<String>> claimDueJobsScript;
 
     public RetryQueueRepository(StringRedisTemplate stringRedisTemplate,
-            @Qualifier("claimDueJobsScript") DefaultRedisScript<List<String>> claimDueJobsScript,
-            ObjectMapper objectMapper) {
+                                @Qualifier("claimDueJobsScript") DefaultRedisScript<List<String>> claimDueJobsScript,
+                                ObjectMapper objectMapper) {
         this.stringRedisTemplate = stringRedisTemplate;
         this.claimDueJobsScript = claimDueJobsScript;
     }

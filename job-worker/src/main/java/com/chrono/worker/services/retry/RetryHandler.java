@@ -26,7 +26,7 @@ public class RetryHandler {
 
     public void handleFailure(JobEventModel job, Exception ex) throws Exception {
         if (!retryPolicy.isRetryable(ex)) {
-            log.warn("Job is non-retryable, routing to DLQ - jobId: {}, reason: {}",
+            log.error("Job is non-retryable, routing to DLQ - jobId: {}, reason: {}",
                     job.getJobId(), ex.getMessage());
             dlqProducer.send(job, ex);
             return;
@@ -34,7 +34,7 @@ public class RetryHandler {
 
         int nextRetry = job.getRetryCount() + 1;
         if (nextRetry > job.getMaxRetries()) {
-            log.warn("Max retries exhausted, routing to DLQ - jobId: {}, retryCount: {}, maxRetries: {}",
+            log.error("Max retries exhausted, routing to DLQ - jobId: {}, retryCount: {}, maxRetries: {}",
                     job.getJobId(), job.getRetryCount(), job.getMaxRetries());
             dlqProducer.send(job, ex);
             return;
