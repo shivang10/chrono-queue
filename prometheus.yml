@@ -30,3 +30,9 @@ scrape_configs:
       - targets: [ "dlq:8084" ]
         labels:
           service: "dlq-service"
+
+  - job_name: "redis-exporter"
+    static_configs:
+      - targets: [ "redis-exporter:9121" ]
+        labels:
+          service: "redis"

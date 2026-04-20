@@ -419,7 +419,7 @@
                         "type": "loki",
                         "uid": "loki"
                     },
-                    "expr": "sum(count_over_time({job=\"dlq\"} |= \"Saved failed job\" [$__range]))",
+                    "expr": "sum(count_over_time({job=\"dlq\"} |= \"Failed job persisted to DLQ repository\" [$__range]))",
                     "editorMode": "code",
                     "queryType": "range",
                     "refId": "A"
@@ -1933,6 +1933,102 @@
         },
         {
             "datasource": {
+                "type": "prometheus",
+                "uid": "prometheus"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "lineWidth": 2,
+                        "fillOpacity": 10,
+                        "showPoints": "never",
+                        "drawStyle": "line",
+                        "spanNulls": false
+                    },
+                    "unit": "short"
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "DLQ received/s (dlq-service)"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "mode": "fixed",
+                                    "fixedColor": "red"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 24,
+                "x": 0,
+                "y": 82
+            },
+            "id": 200,
+            "options": {
+                "legend": {
+                    "calcs": [
+                        "mean",
+                        "max",
+                        "lastNotNull"
+                    ],
+                    "displayMode": "table",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "title": "Job Flow: Produced vs Worker Consumed vs DLQ",
+            "description": "Compares the rate of jobs published by job-producer with the rate consumed by job-worker (first attempt + retries) and the rate landing in the DLQ. A rising DLQ line or growing gap between produced and consumed indicates a problem.",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "prometheus"
+                    },
+                    "expr": "sum(rate(kafka_producer_record_send_total{application=\"job-producer\"}[$__rate_interval]))",
+                    "legendFormat": "Produced/s (job-producer)",
+                    "refId": "A",
+                    "interval": ""
+                },
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "prometheus"
+                    },
+                    "expr": "sum(rate(kafka_consumer_fetch_manager_records_consumed_total{application=\"job-worker\"}[$__rate_interval]))",
+                    "legendFormat": "Worker consumed/s (job-worker)",
+                    "refId": "B",
+                    "interval": ""
+                },
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "prometheus"
+                    },
+                    "expr": "sum(rate(kafka_consumer_fetch_manager_records_consumed_total{application=\"dlq-service\"}[$__rate_interval]))",
+                    "legendFormat": "DLQ received/s (dlq-service)",
+                    "refId": "C",
+                    "interval": ""
+                }
+            ]
+        },
+        {
+            "datasource": {
                 "type": "loki",
                 "uid": "loki"
             },
@@ -1940,7 +2036,7 @@
                 "h": 10,
                 "w": 24,
                 "x": 0,
-                "y": 82
+                "y": 92
             },
             "id": 19,
             "options": {
@@ -1961,7 +2057,7 @@
                         "type": "loki",
                         "uid": "loki"
                     },
-                    "expr": "{job=~\"job-worker|dlq|retry-dispatcher\"} |~ \"(Consuming message|Successfully processed|Job .* failed|Saved failed|Requeued job|Failed to)\"",
+                    "expr": "{job=~\"job-worker|dlq|retry-dispatcher\"} |~ \"(Consuming message|Job processed successfully|Job processing failed|Failed job persisted|Job requeued successfully|Failed to requeue|Failed to persist DLQ)\"",
                     "editorMode": "code",
                     "queryType": "range",
                     "refId": "A"
