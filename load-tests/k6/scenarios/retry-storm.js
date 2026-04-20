@@ -1,4 +1,4 @@
-import { submitJob } from '../lib/http.js';
+import { submitJob, getDlqJobs } from '../lib/http.js';
 import { buildJsonSummary } from '../lib/summary.js';
 
 export const options = {
@@ -11,6 +11,15 @@ export const options = {
       preAllocatedVUs: Number(__ENV.PRE_ALLOCATED_VUS || 200),
       maxVUs: Number(__ENV.MAX_VUS || 600),
     },
+    dlq_polling: {
+      executor: 'constant-arrival-rate',
+      rate: 1,
+      timeUnit: '5s',
+      duration: __ENV.DURATION || '5m',
+      preAllocatedVUs: 1,
+      maxVUs: 2,
+      exec: 'pollDlqApi',
+    },
   },
   thresholds: {
     http_req_failed: ['rate<0.03'],
@@ -21,6 +30,10 @@ export const options = {
 
 export default function () {
   submitJob();
+}
+
+export function pollDlqApi() {
+  getDlqJobs();
 }
 
 export function handleSummary(data) {

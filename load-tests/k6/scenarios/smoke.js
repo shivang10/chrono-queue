@@ -1,5 +1,5 @@
 import { sleep } from 'k6';
-import { submitJob } from '../lib/http.js';
+import { submitJob, getDlqJobs } from '../lib/http.js';
 import { buildJsonSummary } from '../lib/summary.js';
 
 export const options = {
@@ -8,6 +8,15 @@ export const options = {
       executor: 'constant-vus',
       vus: Number(__ENV.VUS || 5),
       duration: __ENV.DURATION || '1m',
+    },
+    dlq_polling: {
+      executor: 'constant-arrival-rate',
+      rate: 1,
+      timeUnit: '5s',
+      duration: __ENV.DURATION || '1m',
+      preAllocatedVUs: 1,
+      maxVUs: 2,
+      exec: 'pollDlqApi',
     },
   },
   thresholds: {
@@ -20,6 +29,10 @@ export const options = {
 export default function () {
   submitJob();
   sleep(Math.random());
+}
+
+export function pollDlqApi() {
+  getDlqJobs();
 }
 
 export function handleSummary(data) {
