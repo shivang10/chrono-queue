@@ -1771,7 +1771,7 @@
                         "type": "loki",
                         "uid": "loki"
                     },
-                    "expr": "sum(count_over_time({job=\"retry-dispatcher\"} |= \"Requeued job\" [$__interval]))",
+                    "expr": "sum(count_over_time({job=\"retry-dispatcher\"} |= \"Job requeued successfully\" [$__interval]))",
                     "editorMode": "code",
                     "queryType": "range",
                     "refId": "A",
@@ -1793,7 +1793,7 @@
                         "type": "loki",
                         "uid": "loki"
                     },
-                    "expr": "sum(count_over_time({job=\"retry-dispatcher\"} |~ \"Fetched .* due jobs\" [$__interval]))",
+                    "expr": "sum(count_over_time({job=\"retry-dispatcher\"} |= \"Polling retry queue\" [$__interval]))",
                     "editorMode": "code",
                     "queryType": "range",
                     "refId": "C",
@@ -2556,7 +2556,7 @@
                         "type": "prometheus",
                         "uid": "prometheus"
                     },
-                    "expr": "process_open_file_descriptors{application=~\"job-producer|job-worker|retry-dispatcher|dlq-service\"}",
+                    "expr": "process_files_open_files{application=~\"job-producer|job-worker|retry-dispatcher|dlq-service\"}",
                     "legendFormat": "{{application}}",
                     "refId": "A",
                     "interval": ""

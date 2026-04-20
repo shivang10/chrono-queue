@@ -1,4 +1,4 @@
-import { submitJob, getDlqJobs } from '../lib/http.js';
+import { submitJob, submitInvalidJob, getDlqJobs } from '../lib/http.js';
 import { buildJsonSummary } from '../lib/summary.js';
 
 export const options = {
@@ -15,6 +15,17 @@ export const options = {
         // { target: Number(__ENV.STAGE3_TARGET || 150), duration: __ENV.STAGE3_DURATION || '3m' },
         { target: 0, duration: __ENV.STAGE4_DURATION || '1m' },
       ],
+    },
+    // Sends intentionally malformed requests at a low rate so the
+    // "4xx / 5xx Error Rate Over Time" Grafana panel has real data.
+    bad_requests: {
+      executor: 'constant-arrival-rate',
+      rate: 2,
+      timeUnit: '1s',
+      duration: __ENV.DURATION || '9m',
+      preAllocatedVUs: 2,
+      maxVUs: 5,
+      exec: 'sendInvalidJob',
     },
     dlq_polling: {
       executor: 'constant-arrival-rate',
@@ -35,6 +46,10 @@ export const options = {
 
 export default function () {
   submitJob();
+}
+
+export function sendInvalidJob() {
+  submitInvalidJob();
 }
 
 export function pollDlqApi() {

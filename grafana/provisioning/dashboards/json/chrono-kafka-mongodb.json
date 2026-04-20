@@ -1618,7 +1618,7 @@
                         "type": "prometheus",
                         "uid": "prometheus"
                     },
-                    "expr": "sum by (command) (rate(mongodb_driver_commands_seconds_count{application=\"dlq-service\", status=\"succeeded\"}[$__rate_interval]))",
+                    "expr": "sum by (command) (rate(mongodb_driver_commands_seconds_count{application=\"dlq-service\", status=\"SUCCESS\"}[$__rate_interval]))",
                     "legendFormat": "ok {{command}}",
                     "refId": "A",
                     "interval": ""
@@ -1628,7 +1628,7 @@
                         "type": "prometheus",
                         "uid": "prometheus"
                     },
-                    "expr": "sum by (command) (rate(mongodb_driver_commands_seconds_count{application=\"dlq-service\", status=\"failed\"}[$__rate_interval]))",
+                    "expr": "sum by (command) (rate(mongodb_driver_commands_seconds_count{application=\"dlq-service\", status=\"FAILED\"}[$__rate_interval]))",
                     "legendFormat": "FAIL {{command}}",
                     "refId": "B",
                     "interval": ""
@@ -1746,7 +1746,7 @@
                         "type": "prometheus",
                         "uid": "prometheus"
                     },
-                    "expr": "sum by (command) (rate(mongodb_driver_commands_seconds_count{application=\"dlq-service\", status=\"failed\"}[$__rate_interval]))",
+                    "expr": "sum by (command) (rate(mongodb_driver_commands_seconds_count{application=\"dlq-service\", status=\"FAILED\"}[$__rate_interval]))",
                     "legendFormat": "failed {{command}}",
                     "refId": "A",
                     "interval": ""
@@ -1901,7 +1901,7 @@
                         "type": "loki",
                         "uid": "loki"
                     },
-                    "expr": "sum(count_over_time({job=\"dlq\"} |= \"Saved failed job\" [$__interval]))",
+                    "expr": "sum(count_over_time({job=\"dlq\"} |= \"Failed job persisted to DLQ repository\" [$__interval]))",
                     "editorMode": "code",
                     "queryType": "range",
                     "refId": "A",
@@ -1912,7 +1912,7 @@
                         "type": "loki",
                         "uid": "loki"
                     },
-                    "expr": "sum(count_over_time({job=\"retry-dispatcher\"} |= \"Requeued job\" [$__interval]))",
+                    "expr": "sum(count_over_time({job=\"retry-dispatcher\"} |= \"Job requeued successfully\" [$__interval]))",
                     "editorMode": "code",
                     "queryType": "range",
                     "refId": "B",
@@ -1923,7 +1923,7 @@
                         "type": "loki",
                         "uid": "loki"
                     },
-                    "expr": "sum(count_over_time({job=\"retry-dispatcher\"} |~ \"Fetched .* due jobs\" [$__interval]))",
+                    "expr": "sum(count_over_time({job=\"retry-dispatcher\"} |= \"Polling retry queue\" [$__interval]))",
                     "editorMode": "code",
                     "queryType": "range",
                     "refId": "C",

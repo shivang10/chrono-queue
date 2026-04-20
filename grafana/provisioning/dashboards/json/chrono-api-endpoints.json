@@ -1289,7 +1289,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "{job=\"job-producer\"} |~ \"API endpoint|Job event sent|Produced Job\"",
+          "expr": "{job=\"job-producer\"} |~ \"Job submission request received|Job accepted|Job event published\"",
           "editorMode": "code",
           "queryType": "range",
           "refId": "A"
@@ -1326,7 +1326,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "{job=\"dlq\"} |~ \"Received request|Fetched .* DLQ jobs|Consuming failed job DLQ|Saved failed job|Failed to persist DLQ\"",
+          "expr": "{job=\"dlq\"} |~ \"GET /api/dlq|DLQ query returned|Consuming DLQ message|DLQ job persisted and acknowledged|Failed to persist DLQ job\"",
           "editorMode": "code",
           "queryType": "range",
           "refId": "A"

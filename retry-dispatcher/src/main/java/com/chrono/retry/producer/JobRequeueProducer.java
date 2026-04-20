@@ -20,7 +20,7 @@ public class JobRequeueProducer {
         String topicName = KafkaTopics.getTopicForJobType(job.getJobType());
 
         if (topicName == null || jobEventJson == null) {
-            log.warn("Cannot requeue job: topicName or serialized payload is null - jobId: {}", job.getJobId());
+            log.error("Failed to requeue job: topicName or serialized payload is null - jobId: {}", job.getJobId());
             return;
         }
 

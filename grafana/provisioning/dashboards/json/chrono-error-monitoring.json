@@ -577,7 +577,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(increase(mongodb_driver_commands_seconds_count{application=~\"$app\", status=\"failed\"}[$__range]))",
+          "expr": "sum(increase(mongodb_driver_commands_seconds_count{application=~\"$app\", status=\"FAILED\"}[$__range]))",
           "legendFormat": "",
           "refId": "A",
           "interval": ""
@@ -938,7 +938,27 @@
           },
           "unit": "short"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "A"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 30
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 8,
@@ -963,7 +983,7 @@
           "sort": "desc"
         }
       },
-      "title": "MongoDB Failed Commands Rate",
+      "title": "MongoDB Commands Rate (Success vs Failed)",
       "type": "timeseries",
       "targets": [
         {
@@ -971,9 +991,19 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (application, command) (rate(mongodb_driver_commands_seconds_count{application=~\"$app\", status=\"failed\"}[$__rate_interval]))",
-          "legendFormat": "failed {{application}}/{{command}}",
+          "expr": "sum by (application, command) (rate(mongodb_driver_commands_seconds_count{application=~\"$app\", status=\"FAILED\"}[$__rate_interval]))",
+          "legendFormat": "FAIL {{application}}/{{command}}",
           "refId": "A",
+          "interval": ""
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (application, command) (rate(mongodb_driver_commands_seconds_count{application=~\"$app\", status=\"SUCCESS\"}[$__rate_interval]))",
+          "legendFormat": "ok {{application}}/{{command}}",
+          "refId": "B",
           "interval": ""
         }
       ]
@@ -1044,7 +1074,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum(count_over_time({job=\"dlq\"} |= \"Consuming failed job DLQ\" [$__interval]))",
+          "expr": "sum(count_over_time({job=\"dlq\"} |= \"Consuming DLQ message\" [$__interval]))",
           "editorMode": "code",
           "queryType": "range",
           "refId": "A"
@@ -1182,7 +1212,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (job) (count_over_time({job=~\"job-worker|dlq\"} |= \"Failed to deserialize\" [$__interval]))",
+          "expr": "sum by (job) (count_over_time({job=~\"job-worker|dlq|retry-dispatcher\"} |= \"Failed to deserialize\" [$__interval]))",
           "editorMode": "code",
           "queryType": "range",
           "legendFormat": "Deser errors \u2014 {{job}}",
@@ -1193,7 +1223,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum(count_over_time({job=\"retry-dispatcher\"} |= \"Failed to requeue job\" [$__interval]))",
+          "expr": "sum(count_over_time({job=\"retry-dispatcher\"} |~ \"Failed to requeue job|Cannot requeue job\" [$__interval]))",
           "editorMode": "code",
           "queryType": "range",
           "legendFormat": "Requeue failures \u2014 retry-dispatcher",
