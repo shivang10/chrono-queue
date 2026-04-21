@@ -10,9 +10,9 @@ export const options = {
       preAllocatedVUs: Number(__ENV.PRE_ALLOCATED_VUS || 100),
       maxVUs: Number(__ENV.MAX_VUS || 500),
       stages: [
-        { target: Number(__ENV.STAGE1_TARGET || 100), duration: __ENV.STAGE1_DURATION || '2m' },
-        // { target: Number(__ENV.STAGE2_TARGET || 100), duration: __ENV.STAGE2_DURATION || '3m' },
-        // { target: Number(__ENV.STAGE3_TARGET || 150), duration: __ENV.STAGE3_DURATION || '3m' },
+        { target: Number(__ENV.STAGE1_TARGET || 50), duration: __ENV.STAGE1_DURATION || '1m' },
+        { target: Number(__ENV.STAGE2_TARGET || 80), duration: __ENV.STAGE2_DURATION || '2m' },
+        { target: Number(__ENV.STAGE3_TARGET || 100), duration: __ENV.STAGE3_DURATION || '3m' },
         { target: 0, duration: __ENV.STAGE4_DURATION || '1m' },
       ],
     },

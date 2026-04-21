@@ -8,7 +8,8 @@ datasources:
     orgId: 1
     url: http://loki:3100
     isDefault: false
-    editable: true
+    # Prevent operators from modifying the provisioned config via the UI.
+    editable: false
     version: 1
     jsonData:
       maxLines: 1000

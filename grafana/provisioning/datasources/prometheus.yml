@@ -8,9 +8,10 @@ datasources:
     orgId: 1
     url: http://prometheus:9090
     isDefault: true
-    editable: true
+    # Prevent operators from modifying the provisioned config via the UI.
+    editable: false
     version: 1
     jsonData:
+      # Must match global.scrape_interval in prometheus.yml (15s).
       timeInterval: "15s"
       httpMethod: POST
-      exemplarTraceIdDestinations: []

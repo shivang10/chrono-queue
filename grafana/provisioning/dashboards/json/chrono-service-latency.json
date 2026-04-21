@@ -18,7 +18,7 @@
   "description": "Per-service latency deep-dive — p50/p90/p95/p99 HTTP, Kafka listener, MongoDB write latency, retry-dispatcher scheduling, JVM heap/GC/threads/CPU, and service health/uptime.",
   "editable": true,
   "fiscalYearStartMonth": 0,
-  "graphTooltip": 1,
+  "graphTooltip": 2,
   "id": null,
   "links": [
     {
@@ -44,9 +44,7 @@
       },
       "id": 100,
       "title": "Service Health & Uptime",
-      "type": "row",
-      "targets": [],
-      "panels": []
+      "type": "row"
     },
     {
       "datasource": {
@@ -75,7 +73,8 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "short",
+          "noValue": "N/A"
         },
         "overrides": []
       },
@@ -89,7 +88,7 @@
       "options": {
         "colorMode": "background",
         "graphMode": "none",
-        "justifyMode": "auto",
+        "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
@@ -113,7 +112,8 @@
           "refId": "A",
           "interval": ""
         }
-      ]
+      ],
+      "description": "Count of services currently healthy (UP) across all 4 chrono-queue services."
     },
     {
       "datasource": {
@@ -138,7 +138,8 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "short",
+          "noValue": "N/A"
         },
         "overrides": []
       },
@@ -152,7 +153,7 @@
       "options": {
         "colorMode": "background",
         "graphMode": "none",
-        "justifyMode": "auto",
+        "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
@@ -176,7 +177,8 @@
           "refId": "A",
           "interval": ""
         }
-      ]
+      ],
+      "description": "job-producer Prometheus scrape target UP status (1 = up, 0 = down)."
     },
     {
       "datasource": {
@@ -201,7 +203,8 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "short",
+          "noValue": "N/A"
         },
         "overrides": []
       },
@@ -215,7 +218,7 @@
       "options": {
         "colorMode": "background",
         "graphMode": "none",
-        "justifyMode": "auto",
+        "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
@@ -239,7 +242,8 @@
           "refId": "A",
           "interval": ""
         }
-      ]
+      ],
+      "description": "job-worker Prometheus scrape target UP status (1 = up, 0 = down)."
     },
     {
       "datasource": {
@@ -264,7 +268,8 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "short",
+          "noValue": "N/A"
         },
         "overrides": []
       },
@@ -278,7 +283,7 @@
       "options": {
         "colorMode": "background",
         "graphMode": "none",
-        "justifyMode": "auto",
+        "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
@@ -302,7 +307,8 @@
           "refId": "A",
           "interval": ""
         }
-      ]
+      ],
+      "description": "dlq-service Prometheus scrape target UP status (1 = up, 0 = down)."
     },
     {
       "datasource": {
@@ -327,7 +333,8 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "short",
+          "noValue": "N/A"
         },
         "overrides": []
       },
@@ -341,7 +348,7 @@
       "options": {
         "colorMode": "background",
         "graphMode": "none",
-        "justifyMode": "auto",
+        "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
@@ -365,7 +372,8 @@
           "refId": "A",
           "interval": ""
         }
-      ]
+      ],
+      "description": "retry-dispatcher Prometheus scrape target UP status (1 = up, 0 = down)."
     },
     {
       "datasource": {
@@ -381,12 +389,21 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "blue",
+                "color": "orange",
                 "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 300
+              },
+              {
+                "color": "green",
+                "value": 3600
               }
             ]
           },
-          "unit": "dtdurations"
+          "unit": "dtdurations",
+          "noValue": "N/A"
         },
         "overrides": []
       },
@@ -400,7 +417,7 @@
       "options": {
         "colorMode": "background",
         "graphMode": "none",
-        "justifyMode": "auto",
+        "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
@@ -424,7 +441,8 @@
           "refId": "A",
           "interval": ""
         }
-      ]
+      ],
+      "description": "job-producer process uptime. Orange < 5 min (recently restarted), yellow < 1 h, green ≥ 1 h."
     },
     {
       "datasource": {
@@ -440,12 +458,21 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "blue",
+                "color": "orange",
                 "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 300
+              },
+              {
+                "color": "green",
+                "value": 3600
               }
             ]
           },
-          "unit": "dtdurations"
+          "unit": "dtdurations",
+          "noValue": "N/A"
         },
         "overrides": []
       },
@@ -459,7 +486,7 @@
       "options": {
         "colorMode": "background",
         "graphMode": "none",
-        "justifyMode": "auto",
+        "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
@@ -483,7 +510,8 @@
           "refId": "A",
           "interval": ""
         }
-      ]
+      ],
+      "description": "job-worker process uptime. Orange < 5 min (recently restarted), yellow < 1 h, green ≥ 1 h."
     },
     {
       "collapsed": false,
@@ -495,9 +523,7 @@
       },
       "id": 101,
       "title": "Service Performance — Headline p99",
-      "type": "row",
-      "targets": [],
-      "panels": []
+      "type": "row"
     },
     {
       "datasource": {
@@ -526,7 +552,8 @@
               }
             ]
           },
-          "unit": "s"
+          "unit": "s",
+          "noValue": "N/A"
         },
         "overrides": []
       },
@@ -540,7 +567,7 @@
       "options": {
         "colorMode": "background",
         "graphMode": "none",
-        "justifyMode": "auto",
+        "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
@@ -559,12 +586,13 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.99, sum by (le) (rate(http_server_requests_seconds_bucket{application=\"job-producer\", uri!~\"/actuator.*\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{application=\"job-producer\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)))",
           "legendFormat": "",
           "refId": "A",
           "interval": ""
         }
-      ]
+      ],
+      "description": "99th percentile HTTP request latency for job-producer (excluding actuator endpoints)."
     },
     {
       "datasource": {
@@ -593,7 +621,8 @@
               }
             ]
           },
-          "unit": "s"
+          "unit": "s",
+          "noValue": "N/A"
         },
         "overrides": []
       },
@@ -607,7 +636,7 @@
       "options": {
         "colorMode": "background",
         "graphMode": "none",
-        "justifyMode": "auto",
+        "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
@@ -631,7 +660,8 @@
           "refId": "A",
           "interval": ""
         }
-      ]
+      ],
+      "description": "99th percentile Kafka listener processing latency for job-worker."
     },
     {
       "datasource": {
@@ -660,7 +690,8 @@
               }
             ]
           },
-          "unit": "s"
+          "unit": "s",
+          "noValue": "N/A"
         },
         "overrides": []
       },
@@ -674,7 +705,7 @@
       "options": {
         "colorMode": "background",
         "graphMode": "none",
-        "justifyMode": "auto",
+        "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
@@ -698,7 +729,8 @@
           "refId": "A",
           "interval": ""
         }
-      ]
+      ],
+      "description": "99th percentile HTTP request latency for dlq-service (excluding actuator endpoints)."
     },
     {
       "datasource": {
@@ -727,7 +759,8 @@
               }
             ]
           },
-          "unit": "s"
+          "unit": "s",
+          "noValue": "N/A"
         },
         "overrides": []
       },
@@ -741,7 +774,7 @@
       "options": {
         "colorMode": "background",
         "graphMode": "none",
-        "justifyMode": "auto",
+        "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
@@ -760,12 +793,13 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.99, sum by (le) (rate(spring_kafka_template_seconds_bucket{application=\"retry-dispatcher\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(spring_kafka_template_seconds_bucket{application=\"retry-dispatcher\"}[$__rate_interval]), 0)))",
           "legendFormat": "",
           "refId": "A",
           "interval": ""
         }
-      ]
+      ],
+      "description": "99th percentile Kafka template send latency for retry-dispatcher."
     },
     {
       "datasource": {
@@ -794,7 +828,8 @@
               }
             ]
           },
-          "unit": "s"
+          "unit": "s",
+          "noValue": "N/A"
         },
         "overrides": []
       },
@@ -808,7 +843,7 @@
       "options": {
         "colorMode": "background",
         "graphMode": "none",
-        "justifyMode": "auto",
+        "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
@@ -832,7 +867,8 @@
           "refId": "A",
           "interval": ""
         }
-      ]
+      ],
+      "description": "99th percentile MongoDB driver command latency for dlq-service."
     },
     {
       "datasource": {
@@ -853,7 +889,8 @@
               }
             ]
           },
-          "unit": "reqps"
+          "unit": "reqps",
+          "noValue": "N/A"
         },
         "overrides": []
       },
@@ -867,7 +904,7 @@
       "options": {
         "colorMode": "background",
         "graphMode": "none",
-        "justifyMode": "auto",
+        "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
@@ -891,7 +928,8 @@
           "refId": "A",
           "interval": ""
         }
-      ]
+      ],
+      "description": "Current HTTP request throughput (requests/second) for job-producer."
     },
     {
       "datasource": {
@@ -908,9 +946,11 @@
             "fillOpacity": 5,
             "showPoints": "never",
             "drawStyle": "line",
-            "spanNulls": false
+            "spanNulls": false,
+            "lineInterpolation": "smooth"
           },
-          "unit": "s"
+          "unit": "s",
+          "min": 0
         },
         "overrides": []
       },
@@ -945,7 +985,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.90, sum by (le, application) (rate(http_server_requests_seconds_bucket{application=~\"job-producer|dlq-service\", uri!~\"/actuator.*\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.90, sum by (le, application) (clamp_min(rate(http_server_requests_seconds_bucket{application=~\"job-producer|dlq-service\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)))",
           "legendFormat": "HTTP p90 {{application}}",
           "refId": "A",
           "interval": ""
@@ -955,7 +995,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.90, sum by (le, application) (rate(spring_kafka_listener_seconds_bucket{application=~\"job-worker|dlq-service\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.90, sum by (le, application) (clamp_min(rate(spring_kafka_listener_seconds_bucket{application=~\"job-worker|dlq-service\"}[$__rate_interval]), 0)))",
           "legendFormat": "Kafka p90 {{application}}",
           "refId": "B",
           "interval": ""
@@ -965,12 +1005,13 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.90, sum by (le) (rate(spring_kafka_template_seconds_bucket{application=\"retry-dispatcher\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.90, sum by (le) (clamp_min(rate(spring_kafka_template_seconds_bucket{application=\"retry-dispatcher\"}[$__rate_interval]), 0)))",
           "legendFormat": "Kafka Template p90 retry-dispatcher",
           "refId": "C",
           "interval": ""
         }
-      ]
+      ],
+      "description": "Cross-service comparison of p90 latency for HTTP (job-producer, dlq-service), Kafka listener (job-worker, dlq-service), and Kafka template (retry-dispatcher)."
     },
     {
       "collapsed": false,
@@ -982,9 +1023,7 @@
       },
       "id": 102,
       "title": "job-producer — API Latency",
-      "type": "row",
-      "targets": [],
-      "panels": []
+      "type": "row"
     },
     {
       "datasource": {
@@ -1001,9 +1040,11 @@
             "fillOpacity": 5,
             "showPoints": "never",
             "drawStyle": "line",
-            "spanNulls": false
+            "spanNulls": false,
+            "lineInterpolation": "smooth"
           },
-          "unit": "s"
+          "unit": "s",
+          "min": 0
         },
         "overrides": []
       },
@@ -1038,7 +1079,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.50, sum by (le) (rate(http_server_requests_seconds_bucket{application=\"job-producer\", uri!~\"/actuator.*\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.50, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{application=\"job-producer\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)))",
           "legendFormat": "p50",
           "refId": "A",
           "interval": ""
@@ -1048,7 +1089,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.90, sum by (le) (rate(http_server_requests_seconds_bucket{application=\"job-producer\", uri!~\"/actuator.*\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.90, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{application=\"job-producer\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)))",
           "legendFormat": "p90",
           "refId": "B",
           "interval": ""
@@ -1058,7 +1099,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{application=\"job-producer\", uri!~\"/actuator.*\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{application=\"job-producer\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)))",
           "legendFormat": "p95",
           "refId": "C",
           "interval": ""
@@ -1068,12 +1109,13 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.99, sum by (le) (rate(http_server_requests_seconds_bucket{application=\"job-producer\", uri!~\"/actuator.*\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{application=\"job-producer\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)))",
           "legendFormat": "p99",
           "refId": "D",
           "interval": ""
         }
-      ]
+      ],
+      "description": "p50 / p90 / p95 / p99 HTTP request latency for job-producer (all endpoints combined)."
     },
     {
       "datasource": {
@@ -1090,9 +1132,11 @@
             "fillOpacity": 5,
             "showPoints": "never",
             "drawStyle": "line",
-            "spanNulls": false
+            "spanNulls": false,
+            "lineInterpolation": "smooth"
           },
-          "unit": "s"
+          "unit": "s",
+          "min": 0
         },
         "overrides": []
       },
@@ -1127,7 +1171,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.50, sum by (le, uri) (rate(http_server_requests_seconds_bucket{application=\"job-producer\", uri!~\"/actuator.*\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.50, sum by (le, uri) (clamp_min(rate(http_server_requests_seconds_bucket{application=\"job-producer\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)))",
           "legendFormat": "p50 {{uri}}",
           "refId": "A",
           "interval": ""
@@ -1137,7 +1181,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.90, sum by (le, uri) (rate(http_server_requests_seconds_bucket{application=\"job-producer\", uri!~\"/actuator.*\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.90, sum by (le, uri) (clamp_min(rate(http_server_requests_seconds_bucket{application=\"job-producer\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)))",
           "legendFormat": "p90 {{uri}}",
           "refId": "B",
           "interval": ""
@@ -1147,12 +1191,13 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.99, sum by (le, uri) (rate(http_server_requests_seconds_bucket{application=\"job-producer\", uri!~\"/actuator.*\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.99, sum by (le, uri) (clamp_min(rate(http_server_requests_seconds_bucket{application=\"job-producer\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)))",
           "legendFormat": "p99 {{uri}}",
           "refId": "C",
           "interval": ""
         }
-      ]
+      ],
+      "description": "Per-endpoint p50 / p90 / p99 HTTP latency for job-producer."
     },
     {
       "datasource": {
@@ -1169,9 +1214,11 @@
             "fillOpacity": 10,
             "showPoints": "never",
             "drawStyle": "line",
-            "spanNulls": false
+            "spanNulls": false,
+            "lineInterpolation": "smooth"
           },
-          "unit": "reqps"
+          "unit": "reqps",
+          "min": 0
         },
         "overrides": []
       },
@@ -1211,7 +1258,8 @@
           "refId": "A",
           "interval": ""
         }
-      ]
+      ],
+      "description": "HTTP request rate broken down by endpoint and HTTP method for job-producer."
     },
     {
       "datasource": {
@@ -1260,7 +1308,8 @@
           "refId": "A",
           "interval": ""
         }
-      ]
+      ],
+      "description": "HTTP response status code distribution for job-producer (bar gauge)."
     },
     {
       "collapsed": false,
@@ -1272,9 +1321,7 @@
       },
       "id": 103,
       "title": "job-worker — Kafka Consumer Latency",
-      "type": "row",
-      "targets": [],
-      "panels": []
+      "type": "row"
     },
     {
       "datasource": {
@@ -1291,9 +1338,11 @@
             "fillOpacity": 5,
             "showPoints": "never",
             "drawStyle": "line",
-            "spanNulls": false
+            "spanNulls": false,
+            "lineInterpolation": "smooth"
           },
-          "unit": "s"
+          "unit": "s",
+          "min": 0
         },
         "overrides": []
       },
@@ -1363,7 +1412,8 @@
           "refId": "D",
           "interval": ""
         }
-      ]
+      ],
+      "description": "p50 / p90 / p95 / p99 Kafka listener processing latency for job-worker."
     },
     {
       "datasource": {
@@ -1380,9 +1430,11 @@
             "fillOpacity": 10,
             "showPoints": "never",
             "drawStyle": "line",
-            "spanNulls": false
+            "spanNulls": false,
+            "lineInterpolation": "smooth"
           },
-          "unit": "short"
+          "unit": "short",
+          "min": 0
         },
         "overrides": []
       },
@@ -1432,7 +1484,8 @@
           "refId": "B",
           "interval": ""
         }
-      ]
+      ],
+      "description": "Kafka consumer lag (unread records) and records consumed per second for job-worker."
     },
     {
       "collapsed": false,
@@ -1444,9 +1497,7 @@
       },
       "id": 104,
       "title": "dlq-service — HTTP & MongoDB Latency",
-      "type": "row",
-      "targets": [],
-      "panels": []
+      "type": "row"
     },
     {
       "datasource": {
@@ -1463,9 +1514,11 @@
             "fillOpacity": 5,
             "showPoints": "never",
             "drawStyle": "line",
-            "spanNulls": false
+            "spanNulls": false,
+            "lineInterpolation": "smooth"
           },
-          "unit": "s"
+          "unit": "s",
+          "min": 0
         },
         "overrides": []
       },
@@ -1535,7 +1588,8 @@
           "refId": "D",
           "interval": ""
         }
-      ]
+      ],
+      "description": "p50 / p90 / p95 / p99 HTTP latency for dlq-service (all endpoints combined)."
     },
     {
       "datasource": {
@@ -1552,9 +1606,11 @@
             "fillOpacity": 5,
             "showPoints": "never",
             "drawStyle": "line",
-            "spanNulls": false
+            "spanNulls": false,
+            "lineInterpolation": "smooth"
           },
-          "unit": "s"
+          "unit": "s",
+          "min": 0
         },
         "overrides": []
       },
@@ -1624,7 +1680,8 @@
           "refId": "D",
           "interval": ""
         }
-      ]
+      ],
+      "description": "p50 / p90 / p95 / p99 MongoDB driver command latency for dlq-service."
     },
     {
       "datasource": {
@@ -1641,9 +1698,11 @@
             "fillOpacity": 5,
             "showPoints": "never",
             "drawStyle": "line",
-            "spanNulls": false
+            "spanNulls": false,
+            "lineInterpolation": "smooth"
           },
-          "unit": "s"
+          "unit": "s",
+          "min": 0
         },
         "overrides": []
       },
@@ -1703,7 +1762,8 @@
           "refId": "C",
           "interval": ""
         }
-      ]
+      ],
+      "description": "Per-endpoint p50 / p90 / p99 HTTP latency for dlq-service."
     },
     {
       "collapsed": false,
@@ -1715,9 +1775,7 @@
       },
       "id": 105,
       "title": "retry-dispatcher — Scheduling & Kafka Produce Latency",
-      "type": "row",
-      "targets": [],
-      "panels": []
+      "type": "row"
     },
     {
       "datasource": {
@@ -1734,9 +1792,11 @@
             "fillOpacity": 10,
             "showPoints": "never",
             "drawStyle": "line",
-            "spanNulls": false
+            "spanNulls": false,
+            "lineInterpolation": "smooth"
           },
-          "unit": "short"
+          "unit": "short",
+          "min": 0
         },
         "overrides": []
       },
@@ -1799,7 +1859,8 @@
           "refId": "C",
           "legendFormat": "Due Jobs Fetched"
         }
-      ]
+      ],
+      "description": "retry-dispatcher requeue success rate, requeue failure rate, and due-job polling rate derived from Loki log queries."
     },
     {
       "datasource": {
@@ -1816,9 +1877,11 @@
             "fillOpacity": 5,
             "showPoints": "never",
             "drawStyle": "line",
-            "spanNulls": false
+            "spanNulls": false,
+            "lineInterpolation": "smooth"
           },
-          "unit": "s"
+          "unit": "s",
+          "min": 0
         },
         "overrides": []
       },
@@ -1853,7 +1916,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.50, sum by (le) (rate(spring_kafka_template_seconds_bucket{application=\"retry-dispatcher\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.50, sum by (le) (clamp_min(rate(spring_kafka_template_seconds_bucket{application=\"retry-dispatcher\"}[$__rate_interval]), 0)))",
           "legendFormat": "p50",
           "refId": "A",
           "interval": ""
@@ -1863,7 +1926,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.90, sum by (le) (rate(spring_kafka_template_seconds_bucket{application=\"retry-dispatcher\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.90, sum by (le) (clamp_min(rate(spring_kafka_template_seconds_bucket{application=\"retry-dispatcher\"}[$__rate_interval]), 0)))",
           "legendFormat": "p90",
           "refId": "B",
           "interval": ""
@@ -1873,7 +1936,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(spring_kafka_template_seconds_bucket{application=\"retry-dispatcher\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (clamp_min(rate(spring_kafka_template_seconds_bucket{application=\"retry-dispatcher\"}[$__rate_interval]), 0)))",
           "legendFormat": "p95",
           "refId": "C",
           "interval": ""
@@ -1883,12 +1946,13 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.99, sum by (le) (rate(spring_kafka_template_seconds_bucket{application=\"retry-dispatcher\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(spring_kafka_template_seconds_bucket{application=\"retry-dispatcher\"}[$__rate_interval]), 0)))",
           "legendFormat": "p99",
           "refId": "D",
           "interval": ""
         }
-      ]
+      ],
+      "description": "p50 / p90 / p95 / p99 Kafka template send latency for retry-dispatcher."
     },
     {
       "collapsed": false,
@@ -1900,9 +1964,7 @@
       },
       "id": 106,
       "title": "JVM & System Metrics — All Services",
-      "type": "row",
-      "targets": [],
-      "panels": []
+      "type": "row"
     },
     {
       "datasource": {
@@ -1919,9 +1981,11 @@
             "fillOpacity": 10,
             "showPoints": "never",
             "drawStyle": "line",
-            "spanNulls": false
+            "spanNulls": false,
+            "lineInterpolation": "smooth"
           },
-          "unit": "bytes"
+          "unit": "bytes",
+          "min": 0
         },
         "overrides": []
       },
@@ -1961,7 +2025,8 @@
           "refId": "A",
           "interval": ""
         }
-      ]
+      ],
+      "description": "JVM heap memory used (bytes) per service."
     },
     {
       "datasource": {
@@ -1978,9 +2043,11 @@
             "fillOpacity": 10,
             "showPoints": "never",
             "drawStyle": "line",
-            "spanNulls": false
+            "spanNulls": false,
+            "lineInterpolation": "smooth"
           },
-          "unit": "percent"
+          "unit": "percent",
+          "min": 0
         },
         "overrides": []
       },
@@ -2020,7 +2087,8 @@
           "refId": "A",
           "interval": ""
         }
-      ]
+      ],
+      "description": "JVM heap used as a percentage of max heap per service."
     },
     {
       "datasource": {
@@ -2037,9 +2105,11 @@
             "fillOpacity": 10,
             "showPoints": "never",
             "drawStyle": "line",
-            "spanNulls": false
+            "spanNulls": false,
+            "lineInterpolation": "smooth"
           },
-          "unit": "short"
+          "unit": "short",
+          "min": 0
         },
         "overrides": []
       },
@@ -2079,7 +2149,8 @@
           "refId": "A",
           "interval": ""
         }
-      ]
+      ],
+      "description": "JVM GC pause event rate (pauses per second) per service."
     },
     {
       "datasource": {
@@ -2096,9 +2167,11 @@
             "fillOpacity": 5,
             "showPoints": "never",
             "drawStyle": "line",
-            "spanNulls": false
+            "spanNulls": false,
+            "lineInterpolation": "smooth"
           },
-          "unit": "s"
+          "unit": "s",
+          "min": 0
         },
         "overrides": []
       },
@@ -2138,7 +2211,8 @@
           "refId": "A",
           "interval": ""
         }
-      ]
+      ],
+      "description": "p99 JVM GC pause latency per service."
     },
     {
       "datasource": {
@@ -2155,9 +2229,11 @@
             "fillOpacity": 5,
             "showPoints": "never",
             "drawStyle": "line",
-            "spanNulls": false
+            "spanNulls": false,
+            "lineInterpolation": "smooth"
           },
-          "unit": "short"
+          "unit": "short",
+          "min": 0
         },
         "overrides": []
       },
@@ -2197,7 +2273,8 @@
           "refId": "A",
           "interval": ""
         }
-      ]
+      ],
+      "description": "JVM live thread count per service."
     },
     {
       "datasource": {
@@ -2214,9 +2291,11 @@
             "fillOpacity": 15,
             "showPoints": "never",
             "drawStyle": "line",
-            "spanNulls": false
+            "spanNulls": false,
+            "lineInterpolation": "smooth"
           },
-          "unit": "percentunit"
+          "unit": "percentunit",
+          "min": 0
         },
         "overrides": []
       },
@@ -2256,7 +2335,8 @@
           "refId": "A",
           "interval": ""
         }
-      ]
+      ],
+      "description": "JVM process CPU usage (0–1 mapped to 0–100 %) per service."
     },
     {
       "datasource": {
@@ -2273,9 +2353,11 @@
             "fillOpacity": 10,
             "showPoints": "never",
             "drawStyle": "line",
-            "spanNulls": false
+            "spanNulls": false,
+            "lineInterpolation": "smooth"
           },
-          "unit": "percentunit"
+          "unit": "percentunit",
+          "min": 0
         },
         "overrides": []
       },
@@ -2315,7 +2397,8 @@
           "refId": "A",
           "interval": ""
         }
-      ]
+      ],
+      "description": "System CPU usage (0–1 mapped to 0–100 %) per service."
     },
     {
       "datasource": {
@@ -2332,9 +2415,11 @@
             "fillOpacity": 10,
             "showPoints": "never",
             "drawStyle": "line",
-            "spanNulls": false
+            "spanNulls": false,
+            "lineInterpolation": "smooth"
           },
-          "unit": "bytes"
+          "unit": "bytes",
+          "min": 0
         },
         "overrides": []
       },
@@ -2374,7 +2459,8 @@
           "refId": "A",
           "interval": ""
         }
-      ]
+      ],
+      "description": "JVM non-heap memory used (bytes) per service."
     },
     {
       "datasource": {
@@ -2391,9 +2477,11 @@
             "fillOpacity": 5,
             "showPoints": "never",
             "drawStyle": "line",
-            "spanNulls": false
+            "spanNulls": false,
+            "lineInterpolation": "smooth"
           },
-          "unit": "short"
+          "unit": "short",
+          "min": 0
         },
         "overrides": []
       },
@@ -2433,7 +2521,8 @@
           "refId": "A",
           "interval": ""
         }
-      ]
+      ],
+      "description": "JVM loaded classes count per service."
     },
     {
       "datasource": {
@@ -2450,9 +2539,11 @@
             "fillOpacity": 5,
             "showPoints": "never",
             "drawStyle": "line",
-            "spanNulls": false
+            "spanNulls": false,
+            "lineInterpolation": "smooth"
           },
-          "unit": "short"
+          "unit": "short",
+          "min": 0
         },
         "overrides": []
       },
@@ -2502,7 +2593,8 @@
           "refId": "B",
           "interval": ""
         }
-      ]
+      ],
+      "description": "JVM daemon and total live thread counts per service."
     },
     {
       "datasource": {
@@ -2519,9 +2611,11 @@
             "fillOpacity": 5,
             "showPoints": "never",
             "drawStyle": "line",
-            "spanNulls": false
+            "spanNulls": false,
+            "lineInterpolation": "smooth"
           },
-          "unit": "short"
+          "unit": "short",
+          "min": 0
         },
         "overrides": []
       },
@@ -2561,7 +2655,8 @@
           "refId": "A",
           "interval": ""
         }
-      ]
+      ],
+      "description": "Process open file descriptor count per service."
     }
   ],
   "refresh": "30s",
@@ -2570,10 +2665,50 @@
     "chrono-queue",
     "latency",
     "jvm",
-    "performance"
+    "performance",
+    "monitoring"
   ],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "Prometheus",
+          "value": "prometheus"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Datasource",
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "Loki",
+          "value": "loki"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Loki Datasource",
+        "multi": false,
+        "name": "loki_datasource",
+        "options": [],
+        "query": "loki",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "datasource"
+      }
+    ]
   },
   "time": {
     "from": "now-1h",
@@ -2581,8 +2716,6 @@
   },
   "timepicker": {
     "refresh_intervals": [
-      "5s",
-      "10s",
       "30s",
       "1m",
       "5m",
@@ -2591,21 +2724,66 @@
       "1h",
       "2h",
       "1d"
-    ],
-    "time_options": [
-      "5m",
-      "15m",
-      "1h",
-      "6h",
-      "12h",
-      "24h",
-      "2d",
-      "7d",
-      "30d"
     ]
   },
   "timezone": "browser",
   "title": "Chrono Queue — Service Latency & System",
   "uid": "chrono-service-latency",
-  "version": 1
+  "version": 3,
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    },
+    {
+      "name": "DS_LOKI",
+      "label": "Loki",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "loki",
+      "pluginName": "Loki"
+    }
+  ],
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "10.0.0"
+    },
+    {
+      "type": "datasource",
+      "id": "prometheus",
+      "name": "Prometheus",
+      "version": "1.0.0"
+    },
+    {
+      "type": "datasource",
+      "id": "loki",
+      "name": "Loki",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "bargauge",
+      "name": "Bar gauge",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
+    }
+  ]
 }

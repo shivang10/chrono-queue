@@ -11,6 +11,7 @@ import com.chrono.producer.dto.jobEventDto.JobEventResponseDTO;
 import com.chrono.producer.mapper.JobProducerMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -29,12 +30,14 @@ public class JobEventProducerService {
     private final JobProducerMapper jobProducerMapper;
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
+    private final MeterRegistry meterRegistry;
 
     public JobEventProducerService(KafkaTemplate<String, String> kafkaTemplate, ObjectMapper objectMapper,
-                                   JobProducerMapper jobProducerMapper) {
+            JobProducerMapper jobProducerMapper, MeterRegistry meterRegistry) {
         this.kafkaTemplate = kafkaTemplate;
         this.objectMapper = objectMapper;
         this.jobProducerMapper = jobProducerMapper;
+        this.meterRegistry = meterRegistry;
     }
 
     public JobEventResponseDTO produceJobEvent(JobEventRequestDTO jobEventRequestDTO) {
@@ -45,6 +48,9 @@ public class JobEventProducerService {
         String topicName = resolveTopic(jobEventModel);
 
         sendToKafka(topicName, jobEventModel.getJobId(), jobEventJson);
+        meterRegistry.counter("chrono.jobs.produced",
+                "job_type", jobEventModel.getJobType().name(),
+                "topic", topicName).increment();
         log.info("Job event published - jobId: {}, jobType: {}, topic: {}",
                 jobEventModel.getJobId(), jobEventModel.getJobType(), topicName);
         return jobProducerMapper.toJobEventResponse(jobEventModel);

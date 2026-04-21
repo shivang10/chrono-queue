@@ -18,7 +18,7 @@
   "description": "Redis health, memory utilisation, keyspace metrics, cache hit rate, persistence status, and eviction rates for chrono-queue.",
   "editable": true,
   "fiscalYearStartMonth": 0,
-  "graphTooltip": 1,
+  "graphTooltip": 2,
   "id": null,
   "links": [
     {
@@ -44,14 +44,12 @@
       },
       "id": 100,
       "title": "Redis Health & Status",
-      "type": "row",
-      "targets": [],
-      "panels": []
+      "type": "row"
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -103,7 +101,7 @@
         "colorMode": "background",
         "graphMode": "none",
         "justifyMode": "center",
-        "orientation": "auto",
+        "orientation": "horizontal",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -119,19 +117,18 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "redis_up",
           "legendFormat": "",
-          "refId": "A",
-          "interval": ""
+          "refId": "A"
         }
       ]
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -143,8 +140,16 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "blue",
+                "color": "orange",
                 "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 300
+              },
+              {
+                "color": "green",
+                "value": 3600
               }
             ]
           },
@@ -162,8 +167,8 @@
       "options": {
         "colorMode": "background",
         "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
+        "justifyMode": "center",
+        "orientation": "horizontal",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -179,19 +184,18 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "redis_uptime_in_seconds",
           "legendFormat": "",
-          "refId": "A",
-          "interval": ""
+          "refId": "A"
         }
       ]
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -230,8 +234,8 @@
       "options": {
         "colorMode": "background",
         "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
+        "justifyMode": "center",
+        "orientation": "horizontal",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -247,19 +251,19 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "redis_connected_clients",
           "legendFormat": "",
-          "refId": "A",
-          "interval": ""
+          "refId": "A"
         }
-      ]
+      ],
+      "description": "Number of active client connections to Redis. Each Spring Boot service (job-worker, retry-dispatcher) maintains a Lettuce connection pool. Values exceeding the configured maxclients limit will cause rejected connections."
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -298,8 +302,8 @@
       "options": {
         "colorMode": "background",
         "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
+        "justifyMode": "center",
+        "orientation": "horizontal",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -315,19 +319,19 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "redis_blocked_clients",
           "legendFormat": "",
-          "refId": "A",
-          "interval": ""
+          "refId": "A"
         }
-      ]
+      ],
+      "description": "Clients blocked on a blocking command (e.g. BLPOP, BRPOP, WAIT). Non-zero values indicate jobs are waiting on blocking reads — expected for BRPOP-based queue patterns, but high counts may indicate stalled consumers."
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "description": "Percentage of Redis key lookups that are served from cache. Values below 90% indicate a potential cache efficiency issue.",
       "fieldConfig": {
@@ -367,8 +371,8 @@
       "options": {
         "colorMode": "background",
         "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
+        "justifyMode": "center",
+        "orientation": "horizontal",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -384,19 +388,18 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "clamp_max(clamp_min(100 * rate(redis_keyspace_hits_total[$__rate_interval]) / clamp_min((rate(redis_keyspace_hits_total[$__rate_interval]) + rate(redis_keyspace_misses_total[$__rate_interval])), 1e-9), 0), 100)",
           "legendFormat": "",
-          "refId": "A",
-          "interval": ""
+          "refId": "A"
         }
       ]
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -427,8 +430,8 @@
       "options": {
         "colorMode": "background",
         "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
+        "justifyMode": "center",
+        "orientation": "horizontal",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -444,19 +447,19 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "sum(redis_db_keys)",
           "legendFormat": "",
-          "refId": "A",
-          "interval": ""
+          "refId": "A"
         }
-      ]
+      ],
+      "description": "Total number of keys across all Redis databases. For chrono-queue this includes deduplication keys and retry metadata."
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "description": "Rate of keys being evicted per second due to maxmemory policy. Any evictions indicate memory pressure.",
       "fieldConfig": {
@@ -496,8 +499,8 @@
       "options": {
         "colorMode": "background",
         "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
+        "justifyMode": "center",
+        "orientation": "horizontal",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -513,19 +516,18 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "rate(redis_evicted_keys_total[$__rate_interval])",
           "legendFormat": "",
-          "refId": "A",
-          "interval": ""
+          "refId": "A"
         }
       ]
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "description": "Status of the last RDB background save. FAILED indicates data persistence is at risk.",
       "fieldConfig": {
@@ -578,7 +580,7 @@
         "colorMode": "background",
         "graphMode": "none",
         "justifyMode": "center",
-        "orientation": "auto",
+        "orientation": "horizontal",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -594,12 +596,11 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "redis_rdb_last_bgsave_status",
           "legendFormat": "",
-          "refId": "A",
-          "interval": ""
+          "refId": "A"
         }
       ]
     },
@@ -613,14 +614,12 @@
       },
       "id": 200,
       "title": "Memory Resources",
-      "type": "row",
-      "targets": [],
-      "panels": []
+      "type": "row"
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -659,8 +658,8 @@
       "options": {
         "colorMode": "background",
         "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
+        "justifyMode": "center",
+        "orientation": "horizontal",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -676,19 +675,19 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "redis_memory_used_bytes",
           "legendFormat": "",
-          "refId": "A",
-          "interval": ""
+          "refId": "A"
         }
-      ]
+      ],
+      "description": "Memory actively used by Redis for data storage. Does not include OS-allocated RSS overhead. Growing usage approaching maxmemory will trigger evictions."
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "description": "Resident Set Size — the amount of memory allocated by the OS for Redis. Higher than 'Memory Used' due to OS overhead.",
       "fieldConfig": {
@@ -720,8 +719,8 @@
       "options": {
         "colorMode": "background",
         "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
+        "justifyMode": "center",
+        "orientation": "horizontal",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -737,19 +736,18 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "redis_memory_used_rss_bytes",
           "legendFormat": "",
-          "refId": "A",
-          "interval": ""
+          "refId": "A"
         }
       ]
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "description": "RSS / Used ratio. >1.5 indicates fragmentation (wasted memory). <1.0 indicates Redis memory is being swapped to disk — critical risk.",
       "fieldConfig": {
@@ -794,8 +792,8 @@
       "options": {
         "colorMode": "background",
         "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
+        "justifyMode": "center",
+        "orientation": "horizontal",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -811,19 +809,18 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "redis_mem_fragmentation_ratio",
           "legendFormat": "",
-          "refId": "A",
-          "interval": ""
+          "refId": "A"
         }
       ]
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "description": "Configured maxmemory limit. 0 means no limit is set (unlimited).",
       "fieldConfig": {
@@ -866,8 +863,8 @@
       "options": {
         "colorMode": "background",
         "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
+        "justifyMode": "center",
+        "orientation": "horizontal",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -883,19 +880,18 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "redis_memory_max_bytes",
           "legendFormat": "",
-          "refId": "A",
-          "interval": ""
+          "refId": "A"
         }
       ]
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "description": "Memory Used, RSS, Peak, and Max configured over time. Growing gap between RSS and Used may indicate fragmentation. Peak approaching Max signals risk of eviction.",
       "fieldConfig": {
@@ -918,7 +914,7 @@
               "viz": false
             },
             "insertNulls": false,
-            "lineInterpolation": "linear",
+            "lineInterpolation": "smooth",
             "lineWidth": 2,
             "pointSize": 5,
             "scaleDistribution": {
@@ -968,7 +964,7 @@
         },
         "tooltip": {
           "mode": "multi",
-          "sort": "none"
+          "sort": "desc"
         }
       },
       "title": "Memory Usage Over Time",
@@ -977,42 +973,38 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "redis_memory_used_bytes",
           "legendFormat": "Memory Used",
-          "refId": "A",
-          "interval": ""
+          "refId": "A"
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "redis_memory_used_rss_bytes",
           "legendFormat": "Memory RSS",
-          "refId": "B",
-          "interval": ""
+          "refId": "B"
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "redis_memory_used_peak_bytes",
           "legendFormat": "Memory Peak (all-time)",
-          "refId": "C",
-          "interval": ""
+          "refId": "C"
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "redis_memory_max_bytes > 0",
           "legendFormat": "Max Memory (configured)",
-          "refId": "D",
-          "interval": ""
+          "refId": "D"
         }
       ]
     },
@@ -1026,14 +1018,12 @@
       },
       "id": 300,
       "title": "Keyspace & Cache Efficiency",
-      "type": "row",
-      "targets": [],
-      "panels": []
+      "type": "row"
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "description": "Cache hit rate over time. A healthy production Redis cache should sustain >90%. Drops below 70% indicate cache misses are causing pressure on upstream data stores.",
       "fieldConfig": {
@@ -1056,7 +1046,7 @@
               "viz": false
             },
             "insertNulls": false,
-            "lineInterpolation": "linear",
+            "lineInterpolation": "smooth",
             "lineWidth": 2,
             "pointSize": 5,
             "scaleDistribution": {
@@ -1069,21 +1059,7 @@
               "mode": "none"
             },
             "thresholdsStyle": {
-              "mode": "line+area",
-              "steps": [
-                {
-                  "color": "transparent",
-                  "value": null
-                },
-                {
-                  "color": "red",
-                  "value": 0
-                },
-                {
-                  "color": "transparent",
-                  "value": 70
-                }
-              ]
+              "mode": "line+area"
             }
           },
           "mappings": [],
@@ -1130,7 +1106,7 @@
         },
         "tooltip": {
           "mode": "multi",
-          "sort": "none"
+          "sort": "desc"
         }
       },
       "title": "Cache Hit Rate Over Time",
@@ -1139,19 +1115,18 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "clamp_max(clamp_min(100 * rate(redis_keyspace_hits_total[$__rate_interval]) / clamp_min((rate(redis_keyspace_hits_total[$__rate_interval]) + rate(redis_keyspace_misses_total[$__rate_interval])), 1e-9), 0), 100)",
           "legendFormat": "Hit Rate %",
-          "refId": "A",
-          "interval": ""
+          "refId": "A"
         }
       ]
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "description": "Total keys and expiring keys per database. A large ratio of expiring-to-total keys indicates heavy TTL usage (expected for deduplication patterns).",
       "fieldConfig": {
@@ -1174,7 +1149,7 @@
               "viz": false
             },
             "insertNulls": false,
-            "lineInterpolation": "linear",
+            "lineInterpolation": "smooth",
             "lineWidth": 2,
             "pointSize": 5,
             "scaleDistribution": {
@@ -1225,7 +1200,7 @@
         },
         "tooltip": {
           "mode": "multi",
-          "sort": "none"
+          "sort": "desc"
         }
       },
       "title": "Keys by Database",
@@ -1234,22 +1209,20 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "redis_db_keys",
           "legendFormat": "{{db}} — total keys",
-          "refId": "A",
-          "interval": ""
+          "refId": "A"
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "redis_db_keys_expiring",
           "legendFormat": "{{db}} — expiring keys",
-          "refId": "B",
-          "interval": ""
+          "refId": "B"
         }
       ]
     },
@@ -1263,14 +1236,12 @@
       },
       "id": 400,
       "title": "Persistence & Evictions",
-      "type": "row",
-      "targets": [],
-      "panels": []
+      "type": "row"
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "description": "Rate of keys being evicted (forced removal due to maxmemory policy) vs keys expiring naturally by TTL. Evictions should be zero in a healthy system; spikes indicate memory pressure.",
       "fieldConfig": {
@@ -1293,7 +1264,7 @@
               "viz": false
             },
             "insertNulls": false,
-            "lineInterpolation": "linear",
+            "lineInterpolation": "smooth",
             "lineWidth": 2,
             "pointSize": 5,
             "scaleDistribution": {
@@ -1322,7 +1293,38 @@
           },
           "unit": "short"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Evictions/s (memory pressure)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Expirations/s (TTL)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 8,
@@ -1344,7 +1346,7 @@
         },
         "tooltip": {
           "mode": "multi",
-          "sort": "none"
+          "sort": "desc"
         }
       },
       "title": "Key Evictions & Expirations/s",
@@ -1353,29 +1355,27 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "rate(redis_evicted_keys_total[$__rate_interval])",
           "legendFormat": "Evictions/s (memory pressure)",
-          "refId": "A",
-          "interval": ""
+          "refId": "A"
         },
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "rate(redis_expired_keys_total[$__rate_interval])",
           "legendFormat": "Expirations/s (TTL)",
-          "refId": "B",
-          "interval": ""
+          "refId": "B"
         }
       ]
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "description": "Number of write operations since the last RDB snapshot. A very high and growing value means more data loss risk if Redis restarts before the next save.",
       "fieldConfig": {
@@ -1398,7 +1398,7 @@
               "viz": false
             },
             "insertNulls": false,
-            "lineInterpolation": "linear",
+            "lineInterpolation": "smooth",
             "lineWidth": 2,
             "pointSize": 5,
             "scaleDistribution": {
@@ -1449,7 +1449,7 @@
         },
         "tooltip": {
           "mode": "multi",
-          "sort": "none"
+          "sort": "desc"
         }
       },
       "title": "RDB Changes Since Last Save",
@@ -1458,12 +1458,11 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "redis_rdb_changes_since_last_save",
           "legendFormat": "Unsaved changes",
-          "refId": "A",
-          "interval": ""
+          "refId": "A"
         }
       ]
     }
@@ -1472,10 +1471,26 @@
   "schemaVersion": 39,
   "tags": [
     "chrono-queue",
-    "redis"
+    "redis",
+    "monitoring"
   ],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "label": "Prometheus",
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "datasource"
+      }
+    ]
   },
   "time": {
     "from": "now-1h",
@@ -1483,16 +1498,12 @@
   },
   "timepicker": {
     "refresh_intervals": [
-      "5s",
-      "10s",
       "30s",
       "1m",
       "5m",
       "15m",
       "30m",
-      "1h",
-      "2h",
-      "1d"
+      "1h"
     ],
     "time_options": [
       "5m",
@@ -1502,12 +1513,48 @@
       "12h",
       "24h",
       "2d",
-      "7d",
-      "30d"
+      "7d"
     ]
   },
   "timezone": "browser",
   "title": "Redis — Health & Keyspace",
   "uid": "chrono-redis-overview",
-  "version": 1
+  "version": 2,
+  "liveNow": false,
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    }
+  ],
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "10.0.0"
+    },
+    {
+      "type": "datasource",
+      "id": "prometheus",
+      "name": "Prometheus",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
+    }
+  ]
 }

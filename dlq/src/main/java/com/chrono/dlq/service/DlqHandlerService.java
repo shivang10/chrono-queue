@@ -8,6 +8,7 @@ import com.chrono.common.exceptions.InvalidJobRequestException;
 import com.chrono.common.model.DlqJobDocumentModel;
 import com.chrono.common.model.JobEventModel;
 import com.chrono.dlq.repository.DlqJobsRepository;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -31,9 +32,11 @@ public class DlqHandlerService {
             "createdAt", "retryCount", "jobId", "maxRetries", "status", "jobType");
 
     private final DlqJobsRepository dlqJobsRepository;
+    private final MeterRegistry meterRegistry;
 
-    public DlqHandlerService(DlqJobsRepository dlqJobsRepository) {
+    public DlqHandlerService(DlqJobsRepository dlqJobsRepository, MeterRegistry meterRegistry) {
         this.dlqJobsRepository = dlqJobsRepository;
+        this.meterRegistry = meterRegistry;
     }
 
     public void handleDlqMessage(JobEventModel jobEvent, String topic) {
@@ -51,6 +54,8 @@ public class DlqHandlerService {
                     convertToDlqJobDocument(jobEvent),
                     "Converted DLQ document cannot be null");
             dlqJobsRepository.save(dlqJob);
+            meterRegistry.counter("chrono.jobs.dlq",
+                    "job_type", jobEvent.getJobType().name()).increment();
             log.info("Failed job persisted to DLQ repository - jobId: {}, jobType: {}, retryCount: {}/{}",
                     jobEvent.getJobId(), jobEvent.getJobType(),
                     jobEvent.getRetryCount(), jobEvent.getMaxRetries());

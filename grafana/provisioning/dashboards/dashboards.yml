@@ -5,7 +5,12 @@ providers:
     orgId: 1
     folder: Chrono Queue
     type: file
-    disableDeletion: false
-    allowUiUpdates: true
+    # Prevent provisioned dashboards from being deleted via the UI.
+    disableDeletion: true
+    # Prevent UI edits — changes would be lost on restart and create config drift.
+    # The /dashboards volume is also mounted :ro, so writes would fail anyway.
+    allowUiUpdates: false
+    # Poll for new/changed dashboard JSON files every 30 s (default is 10 s).
+    updateIntervalSeconds: 30
     options:
       path: /etc/grafana/provisioning/dashboards/json

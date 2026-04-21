@@ -15,7 +15,7 @@
       }
     ]
   },
-  "description": "Log volume and exploration — total/ERROR/WARN/INFO counts, log rate per service, level distribution, per-service error breakdown, and live log explorer with full-text search.",
+  "description": "Log volume and exploration \u2014 total/ERROR/WARN/INFO counts, log rate per service, level distribution, per-service error breakdown, and live log explorer with full-text search.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -44,9 +44,7 @@
       },
       "id": 100,
       "title": "Log Volume Overview",
-      "type": "row",
-      "targets": [],
-      "panels": []
+      "type": "row"
     },
     {
       "datasource": {
@@ -67,7 +65,9 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "short",
+          "noValue": "\u2014",
+          "decimals": 0
         },
         "overrides": []
       },
@@ -105,7 +105,8 @@
           "queryType": "range",
           "refId": "A"
         }
-      ]
+      ],
+      "description": "Total log lines across selected services over the dashboard time range."
     },
     {
       "datasource": {
@@ -134,7 +135,9 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "short",
+          "noValue": "\u2014",
+          "decimals": 0
         },
         "overrides": []
       },
@@ -172,7 +175,8 @@
           "queryType": "range",
           "refId": "A"
         }
-      ]
+      ],
+      "description": "Total ERROR-level log lines across selected services over the dashboard time range."
     },
     {
       "datasource": {
@@ -201,7 +205,9 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "short",
+          "noValue": "\u2014",
+          "decimals": 0
         },
         "overrides": []
       },
@@ -239,7 +245,8 @@
           "queryType": "range",
           "refId": "A"
         }
-      ]
+      ],
+      "description": "Total WARN-level log lines across selected services over the dashboard time range."
     },
     {
       "datasource": {
@@ -260,7 +267,9 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "short",
+          "noValue": "\u2014",
+          "decimals": 0
         },
         "overrides": []
       },
@@ -298,7 +307,8 @@
           "queryType": "range",
           "refId": "A"
         }
-      ]
+      ],
+      "description": "Total INFO-level log lines across selected services over the dashboard time range."
     },
     {
       "datasource": {
@@ -319,7 +329,9 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "short",
+          "noValue": "\u2014",
+          "decimals": 0
         },
         "overrides": []
       },
@@ -357,7 +369,8 @@
           "queryType": "range",
           "refId": "A"
         }
-      ]
+      ],
+      "description": "Total DEBUG-level log lines across selected services over the dashboard time range."
     },
     {
       "datasource": {
@@ -386,7 +399,9 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "short",
+          "noValue": "\u2014",
+          "decimals": 0
         },
         "overrides": []
       },
@@ -424,7 +439,8 @@
           "queryType": "range",
           "refId": "A"
         }
-      ]
+      ],
+      "description": "Current ERROR log rate across selected services (lines per minute)."
     },
     {
       "collapsed": false,
@@ -436,9 +452,7 @@
       },
       "id": 101,
       "title": "Log Volume & Level Distribution",
-      "type": "row",
-      "targets": [],
-      "panels": []
+      "type": "row"
     },
     {
       "datasource": {
@@ -457,7 +471,8 @@
             "drawStyle": "line",
             "spanNulls": false
           },
-          "unit": "short"
+          "unit": "short",
+          "min": 0
         },
         "overrides": []
       },
@@ -473,7 +488,8 @@
           "calcs": [
             "mean",
             "max",
-            "lastNotNull"
+            "lastNotNull",
+            "sum"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -498,7 +514,8 @@
           "refId": "A",
           "legendFormat": "{{job}}"
         }
-      ]
+      ],
+      "description": "Log volume per service over time."
     },
     {
       "datasource": {
@@ -506,8 +523,74 @@
         "uid": "loki"
       },
       "fieldConfig": {
-        "defaults": {},
-        "overrides": []
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ERROR"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "WARN"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "INFO"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "DEBUG"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 8,
@@ -579,7 +662,8 @@
           "refId": "D",
           "legendFormat": "DEBUG"
         }
-      ]
+      ],
+      "description": "Proportional breakdown of log levels across selected services over the dashboard time range."
     },
     {
       "collapsed": false,
@@ -591,9 +675,7 @@
       },
       "id": 102,
       "title": "ERROR & WARN Rate Over Time",
-      "type": "row",
-      "targets": [],
-      "panels": []
+      "type": "row"
     },
     {
       "datasource": {
@@ -612,9 +694,26 @@
             "drawStyle": "line",
             "spanNulls": false
           },
-          "unit": "short"
+          "unit": "short",
+          "min": 0
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "ERROR.*"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 8,
@@ -628,7 +727,8 @@
           "calcs": [
             "mean",
             "max",
-            "lastNotNull"
+            "lastNotNull",
+            "sum"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -653,7 +753,8 @@
           "refId": "A",
           "legendFormat": "ERROR {{job}}"
         }
-      ]
+      ],
+      "description": "ERROR log rate per service over time."
     },
     {
       "datasource": {
@@ -672,9 +773,26 @@
             "drawStyle": "line",
             "spanNulls": false
           },
-          "unit": "short"
+          "unit": "short",
+          "min": 0
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "WARN.*"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 8,
@@ -688,7 +806,8 @@
           "calcs": [
             "mean",
             "max",
-            "lastNotNull"
+            "lastNotNull",
+            "sum"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -713,7 +832,8 @@
           "refId": "A",
           "legendFormat": "WARN {{job}}"
         }
-      ]
+      ],
+      "description": "WARN log rate per service over time."
     },
     {
       "datasource": {
@@ -732,7 +852,8 @@
             "drawStyle": "line",
             "spanNulls": false
           },
-          "unit": "short"
+          "unit": "short",
+          "min": 0
         },
         "overrides": []
       },
@@ -748,7 +869,8 @@
           "calcs": [
             "mean",
             "max",
-            "lastNotNull"
+            "lastNotNull",
+            "sum"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -773,7 +895,8 @@
           "refId": "A",
           "legendFormat": "{{job}}"
         }
-      ]
+      ],
+      "description": "Combined ERROR and WARN log rate per service over time."
     },
     {
       "datasource": {
@@ -792,7 +915,9 @@
             "drawStyle": "line",
             "spanNulls": false
           },
-          "unit": "percent"
+          "unit": "percent",
+          "min": 0,
+          "max": 100
         },
         "overrides": []
       },
@@ -827,13 +952,14 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "clamp_max(clamp_min(100 * sum by (job) (count_over_time({job=~\"$service\"} |~ \"(?i) ERROR \" [$__interval])) / clamp_min(sum by (job) (count_over_time({job=~\"$service\"} [$__interval])), 1e-9), 0), 100)",
+          "expr": "100 * sum by (job) (count_over_time({job=~\"$service\"} |~ \"(?i) ERROR \" [$__interval])) / sum by (job) (count_over_time({job=~\"$service\"} [$__interval]))",
           "editorMode": "code",
           "queryType": "range",
           "refId": "A",
           "legendFormat": "{{job}}"
         }
-      ]
+      ],
+      "description": "Percentage of log lines at ERROR level per service over time."
     },
     {
       "collapsed": false,
@@ -845,9 +971,7 @@
       },
       "id": 103,
       "title": "Per-Service Error Counts (Range)",
-      "type": "row",
-      "targets": [],
-      "panels": []
+      "type": "row"
     },
     {
       "datasource": {
@@ -876,13 +1000,15 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "short",
+          "noValue": "\u2014",
+          "decimals": 0
         },
         "overrides": []
       },
       "gridPos": {
         "h": 4,
-        "w": 4,
+        "w": 6,
         "x": 0,
         "y": 32
       },
@@ -914,7 +1040,8 @@
           "queryType": "range",
           "refId": "A"
         }
-      ]
+      ],
+      "description": "Total ERROR-level log lines from job-producer over the dashboard time range."
     },
     {
       "datasource": {
@@ -943,14 +1070,16 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "short",
+          "noValue": "\u2014",
+          "decimals": 0
         },
         "overrides": []
       },
       "gridPos": {
         "h": 4,
-        "w": 4,
-        "x": 4,
+        "w": 6,
+        "x": 6,
         "y": 32
       },
       "id": 15,
@@ -981,7 +1110,8 @@
           "queryType": "range",
           "refId": "A"
         }
-      ]
+      ],
+      "description": "Total ERROR-level log lines from job-worker over the dashboard time range."
     },
     {
       "datasource": {
@@ -1010,14 +1140,16 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "short",
+          "noValue": "\u2014",
+          "decimals": 0
         },
         "overrides": []
       },
       "gridPos": {
         "h": 4,
-        "w": 4,
-        "x": 8,
+        "w": 6,
+        "x": 12,
         "y": 32
       },
       "id": 16,
@@ -1048,7 +1180,8 @@
           "queryType": "range",
           "refId": "A"
         }
-      ]
+      ],
+      "description": "Total ERROR-level log lines from dlq over the dashboard time range."
     },
     {
       "datasource": {
@@ -1077,14 +1210,16 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "short",
+          "noValue": "\u2014",
+          "decimals": 0
         },
         "overrides": []
       },
       "gridPos": {
         "h": 4,
-        "w": 4,
-        "x": 12,
+        "w": 6,
+        "x": 18,
         "y": 32
       },
       "id": 17,
@@ -1115,7 +1250,8 @@
           "queryType": "range",
           "refId": "A"
         }
-      ]
+      ],
+      "description": "Total ERROR-level log lines from retry-dispatcher over the dashboard time range."
     },
     {
       "datasource": {
@@ -1139,18 +1275,20 @@
                 "value": 5
               },
               {
-                "color": "yellow",
+                "color": "orange",
                 "value": 25
               }
             ]
           },
-          "unit": "short"
+          "unit": "short",
+          "noValue": "\u2014",
+          "decimals": 0
         },
         "overrides": []
       },
       "gridPos": {
         "h": 4,
-        "w": 4,
+        "w": 6,
         "x": 0,
         "y": 36
       },
@@ -1182,7 +1320,8 @@
           "queryType": "range",
           "refId": "A"
         }
-      ]
+      ],
+      "description": "Total WARN-level log lines from job-producer over the dashboard time range."
     },
     {
       "datasource": {
@@ -1206,19 +1345,21 @@
                 "value": 5
               },
               {
-                "color": "yellow",
+                "color": "orange",
                 "value": 25
               }
             ]
           },
-          "unit": "short"
+          "unit": "short",
+          "noValue": "\u2014",
+          "decimals": 0
         },
         "overrides": []
       },
       "gridPos": {
         "h": 4,
-        "w": 4,
-        "x": 4,
+        "w": 6,
+        "x": 6,
         "y": 36
       },
       "id": 19,
@@ -1249,7 +1390,8 @@
           "queryType": "range",
           "refId": "A"
         }
-      ]
+      ],
+      "description": "Total WARN-level log lines from job-worker over the dashboard time range."
     },
     {
       "datasource": {
@@ -1273,19 +1415,21 @@
                 "value": 5
               },
               {
-                "color": "yellow",
+                "color": "orange",
                 "value": 25
               }
             ]
           },
-          "unit": "short"
+          "unit": "short",
+          "noValue": "\u2014",
+          "decimals": 0
         },
         "overrides": []
       },
       "gridPos": {
         "h": 4,
-        "w": 4,
-        "x": 8,
+        "w": 6,
+        "x": 12,
         "y": 36
       },
       "id": 20,
@@ -1316,7 +1460,8 @@
           "queryType": "range",
           "refId": "A"
         }
-      ]
+      ],
+      "description": "Total WARN-level log lines from dlq over the dashboard time range."
     },
     {
       "datasource": {
@@ -1340,19 +1485,21 @@
                 "value": 5
               },
               {
-                "color": "yellow",
+                "color": "orange",
                 "value": 25
               }
             ]
           },
-          "unit": "short"
+          "unit": "short",
+          "noValue": "\u2014",
+          "decimals": 0
         },
         "overrides": []
       },
       "gridPos": {
         "h": 4,
-        "w": 4,
-        "x": 12,
+        "w": 6,
+        "x": 18,
         "y": 36
       },
       "id": 21,
@@ -1383,7 +1530,8 @@
           "queryType": "range",
           "refId": "A"
         }
-      ]
+      ],
+      "description": "Total WARN-level log lines from retry-dispatcher over the dashboard time range."
     },
     {
       "collapsed": false,
@@ -1395,9 +1543,7 @@
       },
       "id": 104,
       "title": "Log Explorer",
-      "type": "row",
-      "targets": [],
-      "panels": []
+      "type": "row"
     },
     {
       "datasource": {
@@ -1421,7 +1567,7 @@
         "showLabels": false,
         "sortOrder": "Descending"
       },
-      "title": "Live Logs — All Services (searchable)",
+      "title": "Live Logs \u2014 All Services (searchable)",
       "type": "logs",
       "targets": [
         {
@@ -1434,7 +1580,8 @@
           "queryType": "range",
           "refId": "A"
         }
-      ]
+      ],
+      "description": "Live log stream from all selected services with full-text search via the Filter variable."
     }
   ],
   "refresh": "15s",
@@ -1474,13 +1621,7 @@
         "hide": 0,
         "name": "search",
         "label": "Filter",
-        "options": [
-          {
-            "selected": true,
-            "text": "",
-            "value": ""
-          }
-        ],
+        "options": [],
         "query": "",
         "type": "textbox"
       }
@@ -1516,7 +1657,7 @@
     ]
   },
   "timezone": "browser",
-  "title": "Chrono Queue — Logs Overview",
+  "title": "Chrono Queue \u2014 Logs Overview",
   "uid": "chrono-logs-overview",
   "version": 1
 }

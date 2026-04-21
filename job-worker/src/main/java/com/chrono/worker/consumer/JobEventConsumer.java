@@ -9,6 +9,7 @@ import com.chrono.worker.config.WorkerValidationProperties;
 import com.chrono.worker.services.JobProcessingService;
 import com.chrono.worker.services.retry.RetryHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
@@ -26,16 +27,19 @@ public class JobEventConsumer {
     private final ObjectMapper objectMapper;
     private final JobProcessingService jobProcessingService;
     private final RetryHandler retryHandler;
+    private final MeterRegistry meterRegistry;
     private final double simulatedFailureRate;
     private final Random random;
 
     public JobEventConsumer(ObjectMapper objectMapper,
-                            JobProcessingService jobProcessingService,
-                            RetryHandler retryHandler,
-                            WorkerValidationProperties workerValidationProperties) {
+            JobProcessingService jobProcessingService,
+            RetryHandler retryHandler,
+            WorkerValidationProperties workerValidationProperties,
+            MeterRegistry meterRegistry) {
         this.objectMapper = objectMapper;
         this.jobProcessingService = jobProcessingService;
         this.retryHandler = retryHandler;
+        this.meterRegistry = meterRegistry;
         this.simulatedFailureRate = workerValidationProperties.getSimulatedFailureRate();
         Long randomSeed = workerValidationProperties.getRandomSeed();
         this.random = randomSeed == null ? new Random() : new Random(randomSeed);
@@ -70,6 +74,9 @@ public class JobEventConsumer {
             jobProcessingService.processJobEvent(jobEvent);
             jobEvent.setStatus(JobStatus.COMPLETED);
             acknowledgment.acknowledge();
+            meterRegistry.counter("chrono.jobs.consumed",
+                    "job_type", jobEvent.getJobType().name(),
+                    "result", "success").increment();
             log.info("Job processed successfully - jobId: {}, jobType: {}, topic: {}, partition: {}, offset: {}",
                     jobEvent.getJobId(), jobEvent.getJobType(), topic, partition, offset);
         } catch (Exception processingError) {
