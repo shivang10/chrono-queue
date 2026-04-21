@@ -15,7 +15,7 @@
       }
     ]
   },
-  "description": "HTTP API endpoint monitoring for Chrono Queue \u2014 request rates, status codes, p50/p90/p95/p99 latency, Kafka publish performance, and API log stream.",
+  "description": "HTTP API endpoint monitoring for Chrono Queue — request rates, status codes, p50/p90/p95/p99 latency, Kafka publish performance, and API log stream.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -167,7 +167,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "clamp_min(100 * sum(rate(http_server_requests_seconds_count{application=~\"$app\", outcome=\"SUCCESS\", uri!~\"/actuator.*\"}[$__rate_interval])) / sum(rate(http_server_requests_seconds_count{application=~\"$app\", uri!~\"/actuator.*\"}[$__rate_interval])), 0)",
+          "expr": "clamp_max(clamp_min(100 * sum(rate(http_server_requests_seconds_count{application=~\"$app\", outcome=\"SUCCESS\", uri!~\"/actuator.*\"}[$__rate_interval])) / clamp_min(sum(rate(http_server_requests_seconds_count{application=~\"$app\", uri!~\"/actuator.*\"}[$__rate_interval])), 1e-9), 0), 100)",
           "legendFormat": "",
           "refId": "A",
           "interval": ""
@@ -234,7 +234,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "clamp_min(100 * sum(rate(http_server_requests_seconds_count{application=~\"$app\", status=~\"4..|5..\", uri!~\"/actuator.*\"}[$__rate_interval])) / sum(rate(http_server_requests_seconds_count{application=~\"$app\", uri!~\"/actuator.*\"}[$__rate_interval])), 0)",
+          "expr": "clamp_max(clamp_min(100 * sum(rate(http_server_requests_seconds_count{application=~\"$app\", status=~\"4..|5..\", uri!~\"/actuator.*\"}[$__rate_interval])) / clamp_min(sum(rate(http_server_requests_seconds_count{application=~\"$app\", uri!~\"/actuator.*\"}[$__rate_interval])), 1e-9), 0), 100)",
           "legendFormat": "",
           "refId": "A",
           "interval": ""
@@ -679,7 +679,7 @@
           "sort": "desc"
         }
       },
-      "title": "Request Success vs Error \u2014 Stacked",
+      "title": "Request Success vs Error — Stacked",
       "type": "timeseries",
       "targets": [
         {
@@ -713,7 +713,7 @@
         "y": 22
       },
       "id": 102,
-      "title": "Latency Percentiles \u2014 p50 / p90 / p95 / p99",
+      "title": "Latency Percentiles — p50 / p90 / p95 / p99",
       "type": "row",
       "targets": [],
       "panels": []
@@ -762,7 +762,7 @@
           "sort": "desc"
         }
       },
-      "title": "job-producer \u2014 HTTP Latency Percentiles",
+      "title": "job-producer — HTTP Latency Percentiles",
       "type": "timeseries",
       "targets": [
         {
@@ -851,7 +851,7 @@
           "sort": "desc"
         }
       },
-      "title": "dlq-service \u2014 HTTP Latency Percentiles",
+      "title": "dlq-service — HTTP Latency Percentiles",
       "type": "timeseries",
       "targets": [
         {
@@ -940,7 +940,7 @@
           "sort": "desc"
         }
       },
-      "title": "job-producer \u2014 p50/p90/p99 per Endpoint",
+      "title": "job-producer — p50/p90/p99 per Endpoint",
       "type": "timeseries",
       "targets": [
         {
@@ -1019,7 +1019,7 @@
           "sort": "desc"
         }
       },
-      "title": "dlq-service \u2014 p50/p90/p99 per Endpoint",
+      "title": "dlq-service — p50/p90/p99 per Endpoint",
       "type": "timeseries",
       "targets": [
         {
@@ -1281,7 +1281,7 @@
         "showLabels": false,
         "sortOrder": "Descending"
       },
-      "title": "job-producer \u2014 API Request Logs",
+      "title": "job-producer — API Request Logs",
       "type": "logs",
       "targets": [
         {
@@ -1318,7 +1318,7 @@
         "showLabels": false,
         "sortOrder": "Descending"
       },
-      "title": "dlq-service \u2014 API Request Logs",
+      "title": "dlq-service — API Request Logs",
       "type": "logs",
       "targets": [
         {
@@ -1368,9 +1368,33 @@
     "from": "now-1h",
     "to": "now"
   },
-  "timepicker": {},
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ],
+    "time_options": [
+      "5m",
+      "15m",
+      "1h",
+      "6h",
+      "12h",
+      "24h",
+      "2d",
+      "7d",
+      "30d"
+    ]
+  },
   "timezone": "browser",
-  "title": "Chrono Queue \u2014 API Endpoints",
+  "title": "Chrono Queue — API Endpoints",
   "uid": "chrono-api-endpoints",
   "version": 1
 }

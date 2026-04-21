@@ -7,9 +7,10 @@ datasources:
     access: proxy
     orgId: 1
     url: http://prometheus:9090
-    isDefault: false
+    isDefault: true
     editable: true
     version: 1
     jsonData:
       timeInterval: "15s"
       httpMethod: POST
+      exemplarTraceIdDestinations: []
