@@ -125,6 +125,7 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SERVER_PORT: ${JOB_WORKER_PORT}
+      MANAGEMENT_METRICS_DISTRIBUTION_PERCENTILES-HISTOGRAM_LETTUCE_COMMAND: "true"
     depends_on:
       kafka:
         condition: service_healthy
@@ -149,6 +150,7 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SERVER_PORT: ${RETRY_DISPATCHER_PORT}
+      MANAGEMENT_METRICS_DISTRIBUTION_PERCENTILES-HISTOGRAM_LETTUCE_COMMAND: "true"
     depends_on:
       kafka:
         condition: service_healthy
@@ -193,6 +195,7 @@ services:
       - "9090:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus-recording-rules.yml:/etc/prometheus/prometheus-recording-rules.yml:ro
       - prometheus_data:/prometheus
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"

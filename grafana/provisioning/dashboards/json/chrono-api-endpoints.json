@@ -15,7 +15,7 @@
       }
     ]
   },
-  "description": "HTTP API endpoint monitoring for Chrono Queue \u2014 request rates, status codes, p50/p90/p95/p99 latency, Kafka publish performance, and API log stream.",
+  "description": "HTTP API endpoint monitoring for Chrono Queue — request rates, status codes, p50/p90/p95/p99 latency, Kafka publish performance, and API log stream.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 2,
@@ -74,7 +74,7 @@
             ]
           },
           "unit": "short",
-          "noValue": "\u2014",
+          "noValue": "—",
           "decimals": 0
         },
         "overrides": []
@@ -138,7 +138,7 @@
             ]
           },
           "unit": "short",
-          "noValue": "\u2014",
+          "noValue": "—",
           "decimals": 0
         },
         "overrides": []
@@ -172,7 +172,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(increase(http_server_requests_seconds_count{application=~\"$app\", uri!~\"/actuator.*\"}[$__range]))",
+          "expr": "sum(increase(http_server_requests_seconds_count{service=~\"$app\", uri!~\"/actuator.*\"}[$__range]))",
           "legendFormat": "total",
           "refId": "A",
           "interval": "",
@@ -210,7 +210,7 @@
             ]
           },
           "unit": "percent",
-          "noValue": "\u2014",
+          "noValue": "—",
           "decimals": 1
         },
         "overrides": []
@@ -244,7 +244,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "clamp_max(clamp_min(100 * sum(rate(http_server_requests_seconds_count{application=~\"$app\", outcome=\"SUCCESS\", uri!~\"/actuator.*\"}[$__rate_interval])) / clamp_min(sum(rate(http_server_requests_seconds_count{application=~\"$app\", uri!~\"/actuator.*\"}[$__rate_interval])), 1e-9), 0), 100)",
+          "expr": "clamp_max(clamp_min(100 * sum(rate(http_server_requests_seconds_count{service=~\"$app\", outcome=\"SUCCESS\", uri!~\"/actuator.*\"}[$__rate_interval])) / clamp_min(sum(rate(http_server_requests_seconds_count{service=~\"$app\", uri!~\"/actuator.*\"}[$__rate_interval])), 1e-9), 0), 100)",
           "legendFormat": "",
           "refId": "A",
           "interval": "",
@@ -282,7 +282,7 @@
             ]
           },
           "unit": "percent",
-          "noValue": "\u2014",
+          "noValue": "—",
           "decimals": 1
         },
         "overrides": []
@@ -316,7 +316,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "clamp_max(clamp_min(100 * sum(rate(http_server_requests_seconds_count{application=~\"$app\", status=~\"4..|5..\", uri!~\"/actuator.*\"}[$__rate_interval])) / clamp_min(sum(rate(http_server_requests_seconds_count{application=~\"$app\", uri!~\"/actuator.*\"}[$__rate_interval])), 1e-9), 0), 100)",
+          "expr": "clamp_max(clamp_min(100 * sum(rate(http_server_requests_seconds_count{service=~\"$app\", status=~\"4..|5..\", uri!~\"/actuator.*\"}[$__rate_interval])) / clamp_min(sum(rate(http_server_requests_seconds_count{service=~\"$app\", uri!~\"/actuator.*\"}[$__rate_interval])), 1e-9), 0), 100)",
           "legendFormat": "",
           "refId": "A",
           "interval": "",
@@ -354,7 +354,7 @@
             ]
           },
           "unit": "s",
-          "noValue": "\u2014",
+          "noValue": "—",
           "decimals": 3
         },
         "overrides": []
@@ -388,7 +388,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{application=~\"$app\", uri!~\"/actuator.*\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{service=~\"$app\", uri!~\"/actuator.*\"}[$__rate_interval])))",
           "legendFormat": "p95",
           "refId": "A",
           "interval": "",
@@ -426,7 +426,7 @@
             ]
           },
           "unit": "s",
-          "noValue": "\u2014",
+          "noValue": "—",
           "decimals": 3
         },
         "overrides": []
@@ -460,7 +460,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.99, sum by (le) (rate(http_server_requests_seconds_bucket{application=~\"$app\", uri!~\"/actuator.*\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(http_server_requests_seconds_bucket{service=~\"$app\", uri!~\"/actuator.*\"}[$__rate_interval])))",
           "legendFormat": "p99",
           "refId": "A",
           "interval": "",
@@ -490,7 +490,7 @@
             ]
           },
           "unit": "reqps",
-          "noValue": "\u2014",
+          "noValue": "—",
           "decimals": 1
         },
         "overrides": []
@@ -524,7 +524,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(rate(http_server_requests_seconds_count{application=~\"$app\", uri!~\"/actuator.*\"}[$__rate_interval]))",
+          "expr": "sum(rate(http_server_requests_seconds_count{service=~\"$app\", uri!~\"/actuator.*\"}[$__rate_interval]))",
           "legendFormat": "",
           "refId": "A",
           "interval": "",
@@ -588,7 +588,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "topk(5,sum by (uri)(rate(http_server_requests_seconds_count{status=~\"5..\",uri!~\"/actuator.*\"}[$__rate_interval])))",
+          "expr": "topk(5,sum by (uri)(rate(http_server_requests_seconds_count{service=~\"$app\",status=~\"5..\",uri!~\"/actuator.*\"}[$__rate_interval])))",
           "legendFormat": "{{uri}}",
           "refId": "A",
           "interval": "",
@@ -671,8 +671,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (application) (http_server_requests_active_seconds_active{application=~\"$app\", uri!~\"/actuator.*\"})",
-          "legendFormat": "in-flight \u2014 {{application}}",
+          "expr": "sum by (service) (http_server_requests_active_seconds_gcount{service=~\"$app\", uri!~\"/actuator.*\"})",
+          "legendFormat": "in-flight — {{service}}",
           "refId": "A",
           "interval": "",
           "editorMode": "code"
@@ -682,16 +682,16 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(http_server_requests_active_seconds_active{application=~\"$app\", uri!~\"/actuator.*\"})",
+          "expr": "sum(http_server_requests_active_seconds_gcount{service=~\"$app\", uri!~\"/actuator.*\"})",
           "legendFormat": "total in-flight",
           "refId": "B",
           "interval": "",
           "editorMode": "code"
         }
       ],
-      "title": "HTTP In-Flight Requests \u2014 Active Concurrency",
+      "title": "HTTP In-Flight Requests — Active Concurrency",
       "type": "timeseries",
-      "description": "Number of HTTP requests currently being processed (active / in-flight) per application. Measured via the Micrometer LongTaskTimer (http_server_requests_active_seconds_active). Sustained high values indicate thread-pool saturation or upstream blocking. Sudden spikes coinciding with p99 latency rises confirm concurrency-driven slowdowns."
+      "description": "Number of HTTP requests currently being processed (active / in-flight) per application. Measured via the Micrometer LongTaskTimer (http_server_requests_active_seconds_gcount). Sustained high values indicate thread-pool saturation or upstream blocking. Sudden spikes coinciding with p99 latency rises confirm concurrency-driven slowdowns."
     },
     {
       "collapsed": false,
@@ -759,7 +759,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (application, method, uri) (rate(http_server_requests_seconds_count{application=~\"$app\", uri!~\"/actuator.*\"}[$__rate_interval]))",
+          "expr": "sum by (application, method, uri) (rate(http_server_requests_seconds_count{service=~\"$app\", uri!~\"/actuator.*\"}[$__rate_interval]))",
           "legendFormat": "{{application}} {{method}} {{uri}}",
           "refId": "A",
           "interval": "",
@@ -826,7 +826,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (status) (rate(http_server_requests_seconds_count{application=~\"$app\", uri!~\"/actuator.*\"}[$__rate_interval]))",
+          "expr": "sum by (status) (rate(http_server_requests_seconds_count{service=~\"$app\", uri!~\"/actuator.*\"}[$__rate_interval]))",
           "legendFormat": "HTTP {{status}}",
           "refId": "A",
           "interval": "",
@@ -889,7 +889,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(rate(http_server_requests_seconds_count{status=~\"5..\"}[$__rate_interval])) / sum(rate(http_server_requests_seconds_count[$__rate_interval]))",
+          "expr": "(sum(rate(http_server_requests_seconds_count{status=~\"5..\"}[$__rate_interval])) or vector(0)) / clamp_min(sum(rate(http_server_requests_seconds_count[$__rate_interval])), 1e-9)",
           "legendFormat": "burn rate",
           "refId": "A",
           "interval": "",
@@ -983,7 +983,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (application) (rate(http_server_requests_seconds_count{application=~\"$app\", status=~\"4..\", uri!~\"/actuator.*\"}[$__rate_interval]))",
+          "expr": "sum by (application) (rate(http_server_requests_seconds_count{service=~\"$app\", status=~\"4..\", uri!~\"/actuator.*\"}[$__rate_interval]))",
           "legendFormat": "4xx {{application}}",
           "refId": "A",
           "interval": "",
@@ -994,7 +994,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (application) (rate(http_server_requests_seconds_count{application=~\"$app\", status=~\"5..\", uri!~\"/actuator.*\"}[$__rate_interval]))",
+          "expr": "sum by (application) (rate(http_server_requests_seconds_count{service=~\"$app\", status=~\"5..\", uri!~\"/actuator.*\"}[$__rate_interval]))",
           "legendFormat": "5xx {{application}}",
           "refId": "B",
           "interval": "",
@@ -1084,7 +1084,7 @@
           "sort": "desc"
         }
       },
-      "title": "Request Success vs Error \u2014 Stacked",
+      "title": "Request Success vs Error — Stacked",
       "type": "timeseries",
       "targets": [
         {
@@ -1092,7 +1092,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(rate(http_server_requests_seconds_count{application=~\"$app\", outcome=\"SUCCESS\", uri!~\"/actuator.*\"}[$__rate_interval]))",
+          "expr": "sum(rate(http_server_requests_seconds_count{service=~\"$app\", outcome=\"SUCCESS\", uri!~\"/actuator.*\"}[$__rate_interval]))",
           "legendFormat": "Success",
           "refId": "A",
           "interval": "",
@@ -1103,7 +1103,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(rate(http_server_requests_seconds_count{application=~\"$app\", outcome!=\"SUCCESS\", uri!~\"/actuator.*\"}[$__rate_interval]))",
+          "expr": "sum(rate(http_server_requests_seconds_count{service=~\"$app\", outcome!=\"SUCCESS\", uri!~\"/actuator.*\"}[$__rate_interval]))",
           "legendFormat": "Error",
           "refId": "B",
           "interval": "",
@@ -1121,7 +1121,7 @@
         "y": 50
       },
       "id": 102,
-      "title": "Latency Percentiles \u2014 p50 / p90 / p95 / p99",
+      "title": "Latency Percentiles — p50 / p90 / p95 / p99",
       "type": "row"
     },
     {
@@ -1170,7 +1170,7 @@
           "sort": "desc"
         }
       },
-      "title": "job-producer \u2014 HTTP Latency Percentiles",
+      "title": "job-producer — HTTP Latency Percentiles",
       "type": "timeseries",
       "targets": [
         {
@@ -1178,7 +1178,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.50, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{application=\"job-producer\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)))",
+          "expr": "histogram_quantile(0.50, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)))",
           "legendFormat": "p50",
           "refId": "A",
           "interval": "",
@@ -1189,7 +1189,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.90, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{application=\"job-producer\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)))",
+          "expr": "histogram_quantile(0.90, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)))",
           "legendFormat": "p90",
           "refId": "B",
           "interval": "",
@@ -1200,7 +1200,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.95, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{application=\"job-producer\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)))",
+          "expr": "histogram_quantile(0.95, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)))",
           "legendFormat": "p95",
           "refId": "C",
           "interval": "",
@@ -1211,7 +1211,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{application=\"job-producer\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)))",
+          "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)))",
           "legendFormat": "p99",
           "refId": "D",
           "interval": "",
@@ -1266,7 +1266,7 @@
           "sort": "desc"
         }
       },
-      "title": "dlq-service \u2014 HTTP Latency Percentiles",
+      "title": "dlq-service — HTTP Latency Percentiles",
       "type": "timeseries",
       "targets": [
         {
@@ -1274,7 +1274,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.50, sum by (le) (rate(http_server_requests_seconds_bucket{application=\"dlq-service\", uri!~\"/actuator.*\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(http_server_requests_seconds_bucket{service=\"dlq-service\", uri!~\"/actuator.*\"}[$__rate_interval])))",
           "legendFormat": "p50",
           "refId": "A",
           "interval": "",
@@ -1285,7 +1285,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.90, sum by (le) (rate(http_server_requests_seconds_bucket{application=\"dlq-service\", uri!~\"/actuator.*\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.90, sum by (le) (rate(http_server_requests_seconds_bucket{service=\"dlq-service\", uri!~\"/actuator.*\"}[$__rate_interval])))",
           "legendFormat": "p90",
           "refId": "B",
           "interval": "",
@@ -1296,7 +1296,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{application=\"dlq-service\", uri!~\"/actuator.*\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{service=\"dlq-service\", uri!~\"/actuator.*\"}[$__rate_interval])))",
           "legendFormat": "p95",
           "refId": "C",
           "interval": "",
@@ -1307,7 +1307,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.99, sum by (le) (rate(http_server_requests_seconds_bucket{application=\"dlq-service\", uri!~\"/actuator.*\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(http_server_requests_seconds_bucket{service=\"dlq-service\", uri!~\"/actuator.*\"}[$__rate_interval])))",
           "legendFormat": "p99",
           "refId": "D",
           "interval": "",
@@ -1362,7 +1362,7 @@
           "sort": "desc"
         }
       },
-      "title": "job-producer \u2014 p50/p90/p99 per Endpoint",
+      "title": "job-producer — p50/p90/p99 per Endpoint",
       "type": "timeseries",
       "targets": [
         {
@@ -1370,7 +1370,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.50, sum by (le, uri) (clamp_min(rate(http_server_requests_seconds_bucket{application=\"job-producer\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)))",
+          "expr": "histogram_quantile(0.50, sum by (le, uri) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)))",
           "legendFormat": "p50 {{uri}}",
           "refId": "A",
           "interval": "",
@@ -1381,7 +1381,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.90, sum by (le, uri) (clamp_min(rate(http_server_requests_seconds_bucket{application=\"job-producer\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)))",
+          "expr": "histogram_quantile(0.90, sum by (le, uri) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)))",
           "legendFormat": "p90 {{uri}}",
           "refId": "B",
           "interval": "",
@@ -1392,7 +1392,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.99, sum by (le, uri) (clamp_min(rate(http_server_requests_seconds_bucket{application=\"job-producer\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)))",
+          "expr": "histogram_quantile(0.99, sum by (le, uri) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)))",
           "legendFormat": "p99 {{uri}}",
           "refId": "C",
           "interval": "",
@@ -1447,7 +1447,7 @@
           "sort": "desc"
         }
       },
-      "title": "dlq-service \u2014 p50/p90/p99 per Endpoint",
+      "title": "dlq-service — p50/p90/p99 per Endpoint",
       "type": "timeseries",
       "targets": [
         {
@@ -1455,7 +1455,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.50, sum by (le, uri) (rate(http_server_requests_seconds_bucket{application=\"dlq-service\", uri!~\"/actuator.*\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.50, sum by (le, uri) (rate(http_server_requests_seconds_bucket{service=\"dlq-service\", uri!~\"/actuator.*\"}[$__rate_interval])))",
           "legendFormat": "p50 {{uri}}",
           "refId": "A",
           "interval": "",
@@ -1466,7 +1466,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.90, sum by (le, uri) (rate(http_server_requests_seconds_bucket{application=\"dlq-service\", uri!~\"/actuator.*\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.90, sum by (le, uri) (rate(http_server_requests_seconds_bucket{service=\"dlq-service\", uri!~\"/actuator.*\"}[$__rate_interval])))",
           "legendFormat": "p90 {{uri}}",
           "refId": "B",
           "interval": "",
@@ -1477,7 +1477,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.99, sum by (le, uri) (rate(http_server_requests_seconds_bucket{application=\"dlq-service\", uri!~\"/actuator.*\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.99, sum by (le, uri) (rate(http_server_requests_seconds_bucket{service=\"dlq-service\", uri!~\"/actuator.*\"}[$__rate_interval])))",
           "legendFormat": "p99 {{uri}}",
           "refId": "C",
           "interval": "",
@@ -1495,7 +1495,7 @@
         "y": 67
       },
       "id": 105,
-      "title": "Top Slowest Endpoints \u2014 p99",
+      "title": "Top Slowest Endpoints — p99",
       "type": "row"
     },
     {
@@ -1531,7 +1531,7 @@
           },
           "unit": "s",
           "decimals": 3,
-          "noValue": "\u2014"
+          "noValue": "—"
         },
         "overrides": [
           {
@@ -1608,7 +1608,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "topk(10, histogram_quantile(0.99, sum by (le, application, uri) (clamp_min(rate(http_server_requests_seconds_bucket{application=~\"$app\", uri!~\"/actuator.*\"}[$__rate_interval]), 0))))",
+          "expr": "topk(10, histogram_quantile(0.99, sum by (le, application, uri) (clamp_min(rate(http_server_requests_seconds_bucket{service=~\"$app\", uri!~\"/actuator.*\"}[$__rate_interval]), 0))))",
           "legendFormat": "",
           "refId": "A",
           "interval": "",
@@ -1617,7 +1617,7 @@
           "format": "table"
         }
       ],
-      "title": "Top 10 Slowest Endpoints \u2014 p99 Latency",
+      "title": "Top 10 Slowest Endpoints — p99 Latency",
       "transformations": [
         {
           "id": "filterFieldsByName",
@@ -1718,7 +1718,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (topic) (rate(kafka_producer_record_send_total{application=\"job-producer\"}[$__rate_interval]))",
+          "expr": "sum by (topic) (rate(kafka_producer_record_send_total{service=\"job-producer\"}[$__rate_interval]))",
           "legendFormat": "{{topic}}",
           "refId": "A",
           "interval": "",
@@ -1781,7 +1781,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "kafka_producer_request_latency_avg{application=\"job-producer\"}",
+          "expr": "kafka_producer_request_latency_avg{service=\"job-producer\"}",
           "legendFormat": "{{client_id}}",
           "refId": "A",
           "interval": "",
@@ -1844,7 +1844,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (topic) (rate(kafka_producer_record_error_total{application=\"job-producer\"}[$__rate_interval]))",
+          "expr": "sum by (topic) (rate(kafka_producer_record_error_total{service=\"job-producer\"}[$__rate_interval]))",
           "legendFormat": "errors {{topic}}",
           "refId": "A",
           "interval": "",
@@ -1887,7 +1887,7 @@
         "showLabels": false,
         "sortOrder": "Descending"
       },
-      "title": "job-producer \u2014 API Request Logs",
+      "title": "job-producer — API Request Logs",
       "type": "logs",
       "targets": [
         {
@@ -1925,7 +1925,7 @@
         "showLabels": false,
         "sortOrder": "Descending"
       },
-      "title": "dlq-service \u2014 API Request Logs",
+      "title": "dlq-service — API Request Logs",
       "type": "logs",
       "targets": [
         {
@@ -2006,7 +2006,7 @@
     ]
   },
   "timezone": "browser",
-  "title": "Chrono Queue \u2014 API Endpoints",
+  "title": "Chrono Queue — API Endpoints",
   "uid": "chrono-api-endpoints",
   "version": 5,
   "__inputs": [

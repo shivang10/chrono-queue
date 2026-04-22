@@ -379,7 +379,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "topk(5,sum by (job)(count_over_time({level=\"error\"}[$__range])))",
+          "expr": "topk(5,sum by (job)(count_over_time({job=~\"$service\",level=\"error\"}[$__range])))",
           "editorMode": "code",
           "queryType": "range",
           "refId": "A",

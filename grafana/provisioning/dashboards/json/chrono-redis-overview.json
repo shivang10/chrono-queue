@@ -339,7 +339,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "count(redis_connected_slaves > 0)",
+          "expr": "count(redis_connected_slaves{instance=~\"$instance\"} > 0)",
           "legendFormat": "",
           "refId": "A"
         }
@@ -3899,7 +3899,7 @@
         },
         "textMode": "auto"
       },
-      "title": "AOF Current File Size",
+      "title": "AOF Last COW Size",
       "type": "stat",
       "targets": [
         {
@@ -3907,7 +3907,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "max(redis_aof_current_size{instance=~\"$instance\"})",
+          "expr": "max(redis_aof_last_cow_size_bytes{instance=~\"$instance\"})",
           "legendFormat": "",
           "refId": "A"
         }

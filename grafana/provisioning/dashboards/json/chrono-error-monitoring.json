@@ -15,7 +15,7 @@
       }
     ]
   },
-  "description": "Error and exception monitoring \u2014 HTTP 4xx/5xx rates, DLQ events, worker failures, Kafka producer errors, MongoDB failures, deserialization errors, and error log streams.",
+  "description": "Error and exception monitoring — HTTP 4xx/5xx rates, DLQ events, worker failures, Kafka producer errors, MongoDB failures, deserialization errors, and error log streams.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 2,
@@ -74,7 +74,7 @@
             ]
           },
           "unit": "reqps",
-          "noValue": "\u2014",
+          "noValue": "—",
           "decimals": 2
         },
         "overrides": []
@@ -108,7 +108,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(rate(http_server_requests_seconds_count{application=~\"$app\", status=~\"4..\", uri!~\"/actuator.*\"}[$__rate_interval])) or vector(0)",
+          "expr": "sum(rate(http_server_requests_seconds_count{service=~\"$app\", status=~\"4..\", uri!~\"/actuator.*\"}[$__rate_interval])) or vector(0)",
           "legendFormat": "",
           "refId": "A",
           "interval": "",
@@ -180,7 +180,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(rate(http_server_requests_seconds_count{application=~\"$app\", status=~\"5..\", uri!~\"/actuator.*\"}[$__rate_interval])) or vector(0)",
+          "expr": "sum(rate(http_server_requests_seconds_count{service=~\"$app\", status=~\"5..\", uri!~\"/actuator.*\"}[$__rate_interval])) or vector(0)",
           "legendFormat": "",
           "refId": "A",
           "interval": "",
@@ -218,7 +218,7 @@
             ]
           },
           "unit": "short",
-          "noValue": "\u2014",
+          "noValue": "—",
           "decimals": 0
         },
         "overrides": []
@@ -288,7 +288,7 @@
             ]
           },
           "unit": "short",
-          "noValue": "\u2014",
+          "noValue": "—",
           "decimals": 0
         },
         "overrides": []
@@ -428,7 +428,7 @@
             ]
           },
           "unit": "short",
-          "noValue": "\u2014",
+          "noValue": "—",
           "decimals": 0
         },
         "overrides": []
@@ -462,7 +462,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(increase(kafka_producer_record_error_total{application=~\"$app\"}[$__range])) or vector(0)",
+          "expr": "sum(increase(kafka_producer_record_error_total{service=~\"$app\"}[$__range])) or vector(0)",
           "legendFormat": "",
           "refId": "A",
           "interval": "",
@@ -534,7 +534,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(increase(mongodb_driver_commands_seconds_count{application=~\"$app\", status=\"FAILED\"}[$__range])) or vector(0)",
+          "expr": "sum(increase(mongodb_driver_commands_seconds_count{service=~\"$app\", status=\"FAILED\"}[$__range])) or vector(0)",
           "legendFormat": "",
           "refId": "A",
           "interval": "",
@@ -909,7 +909,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (application) (rate(http_server_requests_seconds_count{application=~\"$app\", status=~\"4..\", uri!~\"/actuator.*\"}[$__rate_interval]))",
+          "expr": "sum by (application) (rate(http_server_requests_seconds_count{service=~\"$app\", status=~\"4..\", uri!~\"/actuator.*\"}[$__rate_interval]))",
           "legendFormat": "4xx {{application}}",
           "refId": "A",
           "interval": "",
@@ -920,7 +920,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (application) (rate(http_server_requests_seconds_count{application=~\"$app\", status=~\"5..\", uri!~\"/actuator.*\"}[$__rate_interval]))",
+          "expr": "sum by (application) (rate(http_server_requests_seconds_count{service=~\"$app\", status=~\"5..\", uri!~\"/actuator.*\"}[$__rate_interval]))",
           "legendFormat": "5xx {{application}}",
           "refId": "B",
           "interval": "",
@@ -1071,7 +1071,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (application, topic) (rate(kafka_producer_record_error_total{application=~\"$app\"}[$__rate_interval]))",
+          "expr": "sum by (application, topic) (rate(kafka_producer_record_error_total{service=~\"$app\"}[$__rate_interval]))",
           "legendFormat": "{{application}} {{topic}}",
           "refId": "A",
           "interval": "",
@@ -1174,7 +1174,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (application, command) (rate(mongodb_driver_commands_seconds_count{application=~\"$app\", status=\"FAILED\"}[$__rate_interval]))",
+          "expr": "sum by (application, command) (rate(mongodb_driver_commands_seconds_count{service=~\"$app\", status=\"FAILED\"}[$__rate_interval]))",
           "legendFormat": "FAIL {{application}}/{{command}}",
           "refId": "A",
           "interval": "",
@@ -1185,7 +1185,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (application, command) (rate(mongodb_driver_commands_seconds_count{application=~\"$app\", status=\"SUCCESS\"}[$__rate_interval]))",
+          "expr": "sum by (application, command) (rate(mongodb_driver_commands_seconds_count{service=~\"$app\", status=\"SUCCESS\"}[$__rate_interval]))",
           "legendFormat": "ok {{application}}/{{command}}",
           "refId": "B",
           "interval": "",
@@ -1288,7 +1288,7 @@
           "sort": "desc"
         }
       },
-      "title": "DLQ Events \u2014 Consumed & Persistence Failures",
+      "title": "DLQ Events — Consumed & Persistence Failures",
       "type": "timeseries",
       "targets": [
         {
@@ -1398,7 +1398,7 @@
           "sort": "desc"
         }
       },
-      "title": "Worker \u2014 Job Failures & Retry Handoff Errors",
+      "title": "Worker — Job Failures & Retry Handoff Errors",
       "type": "timeseries",
       "targets": [
         {
@@ -1466,7 +1466,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Requeue failures \u2014 retry-dispatcher"
+              "options": "Requeue failures — retry-dispatcher"
             },
             "properties": [
               {
@@ -1519,7 +1519,7 @@
           "expr": "sum by (job) (count_over_time({job=~\"job-worker|dlq|retry-dispatcher\"} |= \"Failed to deserialize\" [$__interval]))",
           "editorMode": "code",
           "queryType": "range",
-          "legendFormat": "Deser errors \u2014 {{job}}",
+          "legendFormat": "Deser errors — {{job}}",
           "refId": "A"
         },
         {
@@ -1530,7 +1530,7 @@
           "expr": "sum(count_over_time({job=\"retry-dispatcher\"} |~ \"Failed to requeue job\" [$__interval]))",
           "editorMode": "code",
           "queryType": "range",
-          "legendFormat": "Requeue failures \u2014 retry-dispatcher",
+          "legendFormat": "Requeue failures — retry-dispatcher",
           "refId": "B"
         }
       ],
@@ -1591,7 +1591,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (application, exception) (rate(http_server_requests_seconds_count{application=~\"$app\", exception!=\"None\", uri!~\"/actuator.*\"}[$__rate_interval]))",
+          "expr": "sum by (application, exception) (rate(http_server_requests_seconds_count{service=~\"$app\", exception!=\"None\", uri!~\"/actuator.*\"}[$__rate_interval]))",
           "legendFormat": "{{application}} / {{exception}}",
           "refId": "A",
           "interval": "",
@@ -1698,7 +1698,7 @@
         "showLabels": false,
         "sortOrder": "Descending"
       },
-      "title": "Error & Exception Logs \u2014 All Services",
+      "title": "Error & Exception Logs — All Services",
       "type": "logs",
       "targets": [
         {
@@ -1803,7 +1803,7 @@
     ]
   },
   "timezone": "browser",
-  "title": "Chrono Queue \u2014 Error Monitoring",
+  "title": "Chrono Queue — Error Monitoring",
   "uid": "chrono-error-monitoring",
   "version": 6,
   "__inputs": [

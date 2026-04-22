@@ -57,6 +57,7 @@ management:
         jvm.gc.pause: true
         spring.kafka.listener: true
         spring.kafka.template: true
+        lettuce.command: true
     tags:
       application: ${spring.application.name}
       environment: ${SPRING_PROFILES_ACTIVE:local}

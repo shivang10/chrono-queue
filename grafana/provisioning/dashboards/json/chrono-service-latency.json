@@ -107,7 +107,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "max(process_uptime_seconds{application=\"job-producer\", instance=~\"$instance\", env=~\"$env\"})",
+          "expr": "max(process_uptime_seconds{service=\"job-producer\", instance=~\"$instance\", env=~\"$env\"})",
           "legendFormat": "",
           "refId": "A",
           "interval": ""
@@ -176,7 +176,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "max(process_uptime_seconds{application=\"job-worker\", instance=~\"$instance\", env=~\"$env\"})",
+          "expr": "max(process_uptime_seconds{service=\"job-worker\", instance=~\"$instance\", env=~\"$env\"})",
           "legendFormat": "",
           "refId": "A",
           "interval": ""
@@ -257,7 +257,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{application=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
+          "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "",
           "refId": "A",
           "interval": ""
@@ -326,7 +326,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{application=\"dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
+          "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "",
           "refId": "A",
           "interval": ""
@@ -387,7 +387,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(clamp_min(rate(http_server_requests_seconds_count{application=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0))",
+          "expr": "sum(clamp_min(rate(http_server_requests_seconds_count{service=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0))",
           "legendFormat": "",
           "refId": "A",
           "interval": ""
@@ -449,7 +449,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.90, sum by (le, application) (clamp_min(rate(http_server_requests_seconds_bucket{application=~\"job-producer|dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
+          "expr": "histogram_quantile(0.90, sum by (le, application) (clamp_min(rate(http_server_requests_seconds_bucket{service=~\"job-producer|dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "HTTP p90 {{application}}",
           "refId": "A",
           "interval": ""
@@ -511,7 +511,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.95, sum by (le, application) (clamp_min(rate(http_server_requests_seconds_bucket{application=~\"job-producer|dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
+          "expr": "histogram_quantile(0.95, sum by (le, application) (clamp_min(rate(http_server_requests_seconds_bucket{service=~\"job-producer|dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "p95 {{application}}",
           "refId": "A",
           "interval": ""
@@ -521,7 +521,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.99, sum by (le, application) (clamp_min(rate(http_server_requests_seconds_bucket{application=~\"job-producer|dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
+          "expr": "histogram_quantile(0.99, sum by (le, application) (clamp_min(rate(http_server_requests_seconds_bucket{service=~\"job-producer|dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "p99 {{application}}",
           "refId": "B",
           "interval": ""
@@ -595,7 +595,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.50, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{application=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
+          "expr": "histogram_quantile(0.50, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "p50",
           "refId": "A",
           "interval": ""
@@ -605,7 +605,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.90, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{application=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
+          "expr": "histogram_quantile(0.90, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "p90",
           "refId": "B",
           "interval": ""
@@ -615,7 +615,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.95, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{application=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
+          "expr": "histogram_quantile(0.95, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "p95",
           "refId": "C",
           "interval": ""
@@ -625,7 +625,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{application=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
+          "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "p99",
           "refId": "D",
           "interval": ""
@@ -687,7 +687,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.50, sum by (le, uri) (clamp_min(rate(http_server_requests_seconds_bucket{application=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
+          "expr": "histogram_quantile(0.50, sum by (le, uri) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "p50 {{uri}}",
           "refId": "A",
           "interval": ""
@@ -697,7 +697,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.90, sum by (le, uri) (clamp_min(rate(http_server_requests_seconds_bucket{application=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
+          "expr": "histogram_quantile(0.90, sum by (le, uri) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "p90 {{uri}}",
           "refId": "B",
           "interval": ""
@@ -707,7 +707,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.99, sum by (le, uri) (clamp_min(rate(http_server_requests_seconds_bucket{application=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
+          "expr": "histogram_quantile(0.99, sum by (le, uri) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "p99 {{uri}}",
           "refId": "C",
           "interval": ""
@@ -769,7 +769,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (method, uri) (clamp_min(rate(http_server_requests_seconds_count{application=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0))",
+          "expr": "sum by (method, uri) (clamp_min(rate(http_server_requests_seconds_count{service=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0))",
           "legendFormat": "{{method}} {{uri}}",
           "refId": "A",
           "interval": ""
@@ -819,7 +819,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (status) (clamp_min(rate(http_server_requests_seconds_count{application=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0))",
+          "expr": "sum by (status) (clamp_min(rate(http_server_requests_seconds_count{service=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0))",
           "legendFormat": "HTTP {{status}}",
           "refId": "A",
           "interval": ""
@@ -893,7 +893,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.50, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{application=\"dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
+          "expr": "histogram_quantile(0.50, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "p50",
           "refId": "A",
           "interval": ""
@@ -903,7 +903,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.90, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{application=\"dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
+          "expr": "histogram_quantile(0.90, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "p90",
           "refId": "B",
           "interval": ""
@@ -913,7 +913,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.95, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{application=\"dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
+          "expr": "histogram_quantile(0.95, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "p95",
           "refId": "C",
           "interval": ""
@@ -923,7 +923,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{application=\"dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
+          "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "p99",
           "refId": "D",
           "interval": ""
@@ -985,7 +985,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.50, sum by (le, uri) (clamp_min(rate(http_server_requests_seconds_bucket{application=\"dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
+          "expr": "histogram_quantile(0.50, sum by (le, uri) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "p50 {{uri}}",
           "refId": "A",
           "interval": ""
@@ -995,7 +995,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.90, sum by (le, uri) (clamp_min(rate(http_server_requests_seconds_bucket{application=\"dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
+          "expr": "histogram_quantile(0.90, sum by (le, uri) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "p90 {{uri}}",
           "refId": "B",
           "interval": ""
@@ -1005,7 +1005,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.99, sum by (le, uri) (clamp_min(rate(http_server_requests_seconds_bucket{application=\"dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
+          "expr": "histogram_quantile(0.99, sum by (le, uri) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "p99 {{uri}}",
           "refId": "C",
           "interval": ""
@@ -1079,7 +1079,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (application) (jvm_memory_used_bytes{application=~\"$service\", area=\"heap\", instance=~\"$instance\", env=~\"$env\"})",
+          "expr": "sum by (application) (jvm_memory_used_bytes{service=~\"$service\", area=\"heap\", instance=~\"$instance\", env=~\"$env\"})",
           "legendFormat": "{{application}}",
           "refId": "A",
           "interval": ""
@@ -1141,7 +1141,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "clamp_max(clamp_min(100 * sum by (application) (jvm_memory_used_bytes{application=~\"$service\", area=\"heap\", instance=~\"$instance\", env=~\"$env\"}) / clamp_min(sum by (application) (jvm_memory_max_bytes{application=~\"$service\", area=\"heap\", instance=~\"$instance\", env=~\"$env\"}), 1e-9), 0), 100)",
+          "expr": "clamp_max(clamp_min(100 * sum by (application) (jvm_memory_used_bytes{service=~\"$service\", area=\"heap\", instance=~\"$instance\", env=~\"$env\"}) / clamp_min(sum by (application) (jvm_memory_max_bytes{service=~\"$service\", area=\"heap\", instance=~\"$instance\", env=~\"$env\"}), 1e-9), 0), 100)",
           "legendFormat": "{{application}}",
           "refId": "A",
           "interval": ""
@@ -1203,7 +1203,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (application) (clamp_min(rate(jvm_gc_pause_seconds_count{application=~\"$service\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0))",
+          "expr": "sum by (application) (clamp_min(rate(jvm_gc_pause_seconds_count{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0))",
           "legendFormat": "{{application}}",
           "refId": "A",
           "interval": ""
@@ -1265,7 +1265,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.99, sum by (le, application) (clamp_min(rate(jvm_gc_pause_seconds_bucket{application=~\"$service\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
+          "expr": "histogram_quantile(0.99, sum by (le, application) (clamp_min(rate(jvm_gc_pause_seconds_bucket{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "{{application}}",
           "refId": "A",
           "interval": ""
@@ -1327,7 +1327,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.95, sum by (le, application) (clamp_min(rate(jvm_gc_pause_seconds_bucket{application=~\"$service\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
+          "expr": "histogram_quantile(0.95, sum by (le, application) (clamp_min(rate(jvm_gc_pause_seconds_bucket{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "{{application}}",
           "refId": "A",
           "interval": ""
@@ -1389,7 +1389,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "jvm_threads_live_threads{application=~\"$service\", instance=~\"$instance\", env=~\"$env\"}",
+          "expr": "jvm_threads_live_threads{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}",
           "legendFormat": "{{application}}",
           "refId": "A",
           "interval": ""
@@ -1451,7 +1451,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "process_cpu_usage{application=~\"$service\", instance=~\"$instance\", env=~\"$env\"}",
+          "expr": "process_cpu_usage{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}",
           "legendFormat": "{{application}}",
           "refId": "A",
           "interval": ""
@@ -1513,7 +1513,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "system_cpu_usage{application=~\"$service\", instance=~\"$instance\", env=~\"$env\"}",
+          "expr": "system_cpu_usage{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}",
           "legendFormat": "{{application}}",
           "refId": "A",
           "interval": ""
@@ -1637,7 +1637,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (application) (jvm_memory_used_bytes{application=~\"$service\", area=\"nonheap\", instance=~\"$instance\", env=~\"$env\"})",
+          "expr": "sum by (application) (jvm_memory_used_bytes{service=~\"$service\", area=\"nonheap\", instance=~\"$instance\", env=~\"$env\"})",
           "legendFormat": "{{application}}",
           "refId": "A",
           "interval": ""
@@ -1699,7 +1699,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "jvm_classes_loaded_classes{application=~\"$service\", instance=~\"$instance\", env=~\"$env\"}",
+          "expr": "jvm_classes_loaded_classes{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}",
           "legendFormat": "{{application}}",
           "refId": "A",
           "interval": ""
@@ -1761,7 +1761,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "jvm_threads_live_threads{application=~\"$service\", instance=~\"$instance\", env=~\"$env\"}",
+          "expr": "jvm_threads_live_threads{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}",
           "legendFormat": "total {{application}}",
           "refId": "A",
           "interval": ""
@@ -1771,7 +1771,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "jvm_threads_daemon_threads{application=~\"$service\", instance=~\"$instance\", env=~\"$env\"}",
+          "expr": "jvm_threads_daemon_threads{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}",
           "legendFormat": "daemon {{application}}",
           "refId": "B",
           "interval": ""
@@ -1833,7 +1833,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "process_files_open_files{application=~\"$service\", instance=~\"$instance\", env=~\"$env\"}",
+          "expr": "process_files_open_files{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}",
           "legendFormat": "{{application}}",
           "refId": "A",
           "interval": ""
@@ -1900,7 +1900,7 @@
         "name": "service",
         "options": [],
         "query": {
-          "query": "label_values(up{job=~\"job-producer|job-worker|retry-dispatcher|dlq-service\", env=~\"$env\"}, application)",
+          "query": "label_values(up{job=~\"job-producer|job-worker|retry-dispatcher|dlq-service\", env=~\"$env\"}, service)",
           "refId": "StandardVariableQuery"
         },
         "refresh": 2,
@@ -1928,7 +1928,7 @@
         "name": "instance",
         "options": [],
         "query": {
-          "query": "label_values(up{job=~\"job-producer|job-worker|retry-dispatcher|dlq-service\", env=~\"$env\", application=~\"$service\"}, instance)",
+          "query": "label_values(up{job=~\"job-producer|job-worker|retry-dispatcher|dlq-service\", env=~\"$env\", service=~\"$service\"}, instance)",
           "refId": "StandardVariableQuery"
         },
         "refresh": 2,

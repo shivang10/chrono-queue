@@ -87,7 +87,7 @@
         "y": 0
       },
       "id": 100,
-      "title": "Job Completion Balance \u2014 Range Totals",
+      "title": "Job Completion Balance — Range Totals",
       "type": "row"
     },
     {
@@ -144,7 +144,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "round(sum(increase(chrono_jobs_produced_total{application=\"job-producer\"}[$__range])) or vector(0))",
+          "expr": "round(sum(increase(chrono_jobs_produced_total{service=\"job-producer\"}[$__range])) or vector(0))",
           "legendFormat": "Produced",
           "instant": true
         }
@@ -232,7 +232,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "round((sum(increase(chrono_jobs_produced_total{application=\"job-producer\"}[$__range])) or vector(0)) - (sum(increase(chrono_jobs_consumed_total{application=\"job-worker\", result=\"success\"}[$__range])) or vector(0)) - (sum(increase(chrono_jobs_dlq_total{application=\"dlq-service\"}[$__range])) or vector(0)))",
+          "expr": "round((sum(increase(chrono_jobs_produced_total{service=\"job-producer\"}[$__range])) or vector(0)) - (sum(increase(chrono_jobs_consumed_total{service=\"job-worker\", result=\"success\"}[$__range])) or vector(0)) - (sum(increase(chrono_jobs_dlq_total{service=\"dlq-service\"}[$__range])) or vector(0)))",
           "legendFormat": "Drift",
           "instant": true
         }
@@ -302,7 +302,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "100 * (((sum(increase(chrono_jobs_produced_total{application=\"job-producer\"}[$__range])) or vector(0)) - (sum(increase(chrono_jobs_consumed_total{application=\"job-worker\", result=\"success\"}[$__range])) or vector(0)) - (sum(increase(chrono_jobs_dlq_total{application=\"dlq-service\"}[$__range])) or vector(0))) / clamp_min((sum(increase(chrono_jobs_produced_total{application=\"job-producer\"}[$__range])) or vector(0)), 1))",
+          "expr": "100 * (((sum(increase(chrono_jobs_produced_total{service=\"job-producer\"}[$__range])) or vector(0)) - (sum(increase(chrono_jobs_consumed_total{service=\"job-worker\", result=\"success\"}[$__range])) or vector(0)) - (sum(increase(chrono_jobs_dlq_total{service=\"dlq-service\"}[$__range])) or vector(0))) / clamp_min((sum(increase(chrono_jobs_produced_total{service=\"job-producer\"}[$__range])) or vector(0)), 1))",
           "legendFormat": "Unaccounted %",
           "instant": true
         }
@@ -363,7 +363,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "round(sum(increase(chrono_jobs_consumed_total{application=\"job-worker\", result=\"success\"}[$__range])) or vector(0))",
+          "expr": "round(sum(increase(chrono_jobs_consumed_total{service=\"job-worker\", result=\"success\"}[$__range])) or vector(0))",
           "legendFormat": "Consumed",
           "instant": true
         }
@@ -432,7 +432,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "round(sum(increase(chrono_jobs_dlq_total{application=\"dlq-service\"}[$__range])) or vector(0))",
+          "expr": "round(sum(increase(chrono_jobs_dlq_total{service=\"dlq-service\"}[$__range])) or vector(0))",
           "legendFormat": "DLQ'd",
           "instant": true
         }
@@ -444,7 +444,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Produced \u2212 (Consumed Success + DLQ). Should be 0 when all jobs are accounted for. A positive value means jobs are still in-flight or were lost. A negative value indicates counter drift (reset or double-counting).",
+      "description": "Produced − (Consumed Success + DLQ). Should be 0 when all jobs are accounted for. A positive value means jobs are still in-flight or were lost. A negative value indicates counter drift (reset or double-counting).",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -460,7 +460,7 @@
                 "result": {
                   "color": "orange",
                   "index": 0,
-                  "text": "Counter drift \u26a0"
+                  "text": "Counter drift ⚠"
                 }
               }
             },
@@ -470,7 +470,7 @@
                 "0": {
                   "color": "green",
                   "index": 1,
-                  "text": "Balanced \u2713"
+                  "text": "Balanced ✓"
                 }
               }
             }
@@ -524,7 +524,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "round((sum(increase(chrono_jobs_produced_total{application=\"job-producer\"}[$__range])) or vector(0)) - (sum(increase(chrono_jobs_consumed_total{application=\"job-worker\", result=\"success\"}[$__range])) or vector(0)) - (sum(increase(chrono_jobs_dlq_total{application=\"dlq-service\"}[$__range])) or vector(0)))",
+          "expr": "round((sum(increase(chrono_jobs_produced_total{service=\"job-producer\"}[$__range])) or vector(0)) - (sum(increase(chrono_jobs_consumed_total{service=\"job-worker\", result=\"success\"}[$__range])) or vector(0)) - (sum(increase(chrono_jobs_dlq_total{service=\"dlq-service\"}[$__range])) or vector(0)))",
           "legendFormat": "Delta",
           "instant": true
         }
@@ -536,7 +536,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Job counts per scrape interval using increase() \u2014 shows absolute job volume trend rather than per-second rate. Produced should broadly track Consumed+DLQ'd in steady state. A persistent gap between Produced and (Consumed+DLQ) means jobs are still in-flight or stuck in Kafka lag.",
+      "description": "Job counts per scrape interval using increase() — shows absolute job volume trend rather than per-second rate. Produced should broadly track Consumed+DLQ'd in steady state. A persistent gap between Produced and (Consumed+DLQ) means jobs are still in-flight or stuck in Kafka lag.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -619,7 +619,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "DLQ\u2019d"
+              "options": "DLQ’d"
             },
             "properties": [
               {
@@ -699,7 +699,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(increase(chrono_jobs_produced_total{application=\"job-producer\"}[$__rate_interval]))",
+          "expr": "sum(increase(chrono_jobs_produced_total{service=\"job-producer\"}[$__rate_interval]))",
           "legendFormat": "Produced",
           "refId": "A",
           "editorMode": "code"
@@ -709,7 +709,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(increase(chrono_jobs_consumed_total{application=\"job-worker\", result=\"success\"}[$__rate_interval]))",
+          "expr": "sum(increase(chrono_jobs_consumed_total{service=\"job-worker\", result=\"success\"}[$__rate_interval]))",
           "legendFormat": "Consumed (Success)",
           "refId": "B",
           "editorMode": "code"
@@ -719,8 +719,8 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(increase(chrono_jobs_dlq_total{application=\"dlq-service\"}[$__rate_interval])) or vector(0)",
-          "legendFormat": "DLQ\u2019d",
+          "expr": "sum(increase(chrono_jobs_dlq_total{service=\"dlq-service\"}[$__rate_interval])) or vector(0)",
+          "legendFormat": "DLQ’d",
           "refId": "C",
           "editorMode": "code"
         },
@@ -729,13 +729,13 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "(sum(increase(chrono_jobs_produced_total{application=\"job-producer\"}[$__rate_interval])) or vector(0)) - (sum(increase(chrono_jobs_consumed_total{application=\"job-worker\", result=\"success\"}[$__rate_interval])) or vector(0)) - (sum(increase(chrono_jobs_dlq_total{application=\"dlq-service\"}[$__rate_interval])) or vector(0))",
+          "expr": "(sum(increase(chrono_jobs_produced_total{service=\"job-producer\"}[$__rate_interval])) or vector(0)) - (sum(increase(chrono_jobs_consumed_total{service=\"job-worker\", result=\"success\"}[$__rate_interval])) or vector(0)) - (sum(increase(chrono_jobs_dlq_total{service=\"dlq-service\"}[$__rate_interval])) or vector(0))",
           "legendFormat": "Balance (Unaccounted)",
           "refId": "D",
           "editorMode": "code"
         }
       ],
-      "title": "Produced vs Consumed vs DLQ \u2014 Count Trend",
+      "title": "Produced vs Consumed vs DLQ — Count Trend",
       "type": "timeseries"
     },
     {
@@ -747,7 +747,7 @@
         "y": 17
       },
       "id": 101,
-      "title": "Consumer Lag \u2014 Are All Kafka Records Consumed?",
+      "title": "Consumer Lag — Are All Kafka Records Consumed?",
       "type": "row"
     },
     {
@@ -767,7 +767,7 @@
                 "0": {
                   "color": "green",
                   "index": 0,
-                  "text": "Caught Up \u2713"
+                  "text": "Caught Up ✓"
                 }
               },
               "type": "value"
@@ -816,14 +816,14 @@
         },
         "textMode": "auto"
       },
-      "title": "Worker \u2014 Max Consumer Lag",
+      "title": "Worker — Max Consumer Lag",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "max(kafka_consumer_fetch_manager_records_lag_max{application=\"job-worker\"}) or vector(0)",
+          "expr": "max(kafka_consumer_fetch_manager_records_lag_max{service=\"job-worker\"}) or vector(0)",
           "legendFormat": "Max Lag",
           "instant": true
         }
@@ -847,7 +847,7 @@
                 "0": {
                   "color": "green",
                   "index": 0,
-                  "text": "Caught Up \u2713"
+                  "text": "Caught Up ✓"
                 }
               },
               "type": "value"
@@ -897,14 +897,14 @@
         },
         "textMode": "auto"
       },
-      "title": "DLQ Service \u2014 Max Consumer Lag",
+      "title": "DLQ Service — Max Consumer Lag",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "max(kafka_consumer_fetch_manager_records_lag_max{application=\"dlq-service\"}) or vector(0)",
+          "expr": "max(kafka_consumer_fetch_manager_records_lag_max{service=\"dlq-service\"}) or vector(0)",
           "legendFormat": "DLQ Lag",
           "instant": true
         }
@@ -928,7 +928,7 @@
                 "0": {
                   "color": "green",
                   "index": 0,
-                  "text": "All Consumed \u2713"
+                  "text": "All Consumed ✓"
                 }
               },
               "type": "value"
@@ -985,7 +985,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(kafka_consumer_fetch_manager_records_lag_max{application=~\"job-worker|dlq-service\"}) or vector(0)",
+          "expr": "sum(kafka_consumer_fetch_manager_records_lag_max{service=~\"job-worker|dlq-service\"}) or vector(0)",
           "legendFormat": "Total Lag",
           "instant": true
         }
@@ -1117,14 +1117,14 @@
           "sort": "desc"
         }
       },
-      "title": "Job Flow Rate \u2014 Produced vs Consumed vs DLQ",
+      "title": "Job Flow Rate — Produced vs Consumed vs DLQ",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(rate(chrono_jobs_produced_total{application=\"job-producer\"}[$__rate_interval]))",
+          "expr": "sum(rate(chrono_jobs_produced_total{service=\"job-producer\"}[$__rate_interval]))",
           "legendFormat": "Produced"
         },
         {
@@ -1132,7 +1132,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(rate(chrono_jobs_consumed_total{application=\"job-worker\", result=\"success\"}[$__rate_interval]))",
+          "expr": "sum(rate(chrono_jobs_consumed_total{service=\"job-worker\", result=\"success\"}[$__rate_interval]))",
           "legendFormat": "Consumed (Success)"
         },
         {
@@ -1140,7 +1140,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(rate(chrono_jobs_dlq_total{application=\"dlq-service\"}[$__rate_interval]))",
+          "expr": "sum(rate(chrono_jobs_dlq_total{service=\"dlq-service\"}[$__rate_interval]))",
           "legendFormat": "DLQ'd"
         }
       ],
@@ -1197,14 +1197,14 @@
           "sort": "desc"
         }
       },
-      "title": "Consumer Lag by Topic \u2014 job-worker",
+      "title": "Consumer Lag by Topic — job-worker",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum by (topic) (kafka_consumer_fetch_manager_records_lag{application=\"job-worker\"})",
+          "expr": "sum by (topic) (kafka_consumer_fetch_manager_records_lag{service=\"job-worker\"})",
           "legendFormat": "{{topic}}"
         }
       ],
@@ -1326,7 +1326,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "round(sum by (job_type) (increase(chrono_jobs_produced_total{application=\"job-producer\"}[$__range])))",
+          "expr": "round(sum by (job_type) (increase(chrono_jobs_produced_total{service=\"job-producer\"}[$__range])))",
           "legendFormat": "Produced",
           "instant": true,
           "format": "table",
@@ -1337,7 +1337,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "round(sum by (job_type) (increase(chrono_jobs_consumed_total{application=\"job-worker\", result=\"success\"}[$__range])))",
+          "expr": "round(sum by (job_type) (increase(chrono_jobs_consumed_total{service=\"job-worker\", result=\"success\"}[$__range])))",
           "legendFormat": "Consumed",
           "instant": true,
           "format": "table",
@@ -1348,7 +1348,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "round(sum by (job_type) (increase(chrono_jobs_dlq_total{application=\"dlq-service\"}[$__range])))",
+          "expr": "round(sum by (job_type) (increase(chrono_jobs_dlq_total{service=\"dlq-service\"}[$__range])))",
           "legendFormat": "DLQ",
           "instant": true,
           "format": "table",
@@ -1366,7 +1366,7 @@
         "y": 39
       },
       "id": 103,
-      "title": "Log-Based Verification (Loki \u2014 cross-check)",
+      "title": "Log-Based Verification (Loki — cross-check)",
       "type": "row"
     },
     {
@@ -1374,7 +1374,7 @@
         "type": "loki",
         "uid": "${loki_datasource}"
       },
-      "description": "Log-line counts from Loki to cross-verify the Prometheus counters. All three totals should satisfy: produced \u2248 success + DLQ.",
+      "description": "Log-line counts from Loki to cross-verify the Prometheus counters. All three totals should satisfy: produced ≈ success + DLQ.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1561,7 +1561,7 @@
     ]
   },
   "timezone": "browser",
-  "title": "Chrono Queue \u2014 Job Balance",
+  "title": "Chrono Queue — Job Balance",
   "uid": "chrono-job-balance",
   "version": 4
 }
