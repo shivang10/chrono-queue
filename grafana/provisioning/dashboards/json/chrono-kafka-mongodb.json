@@ -74,7 +74,7 @@
             ]
           },
           "unit": "short",
-          "noValue": "—",
+          "noValue": "\u2014",
           "decimals": 0
         },
         "overrides": []
@@ -100,7 +100,7 @@
         },
         "textMode": "auto"
       },
-      "title": "Consumer Lag — Max",
+      "title": "Consumer Lag \u2014 Max",
       "type": "stat",
       "targets": [
         {
@@ -138,7 +138,7 @@
             ]
           },
           "unit": "cps",
-          "noValue": "—",
+          "noValue": "\u2014",
           "decimals": 1
         },
         "overrides": []
@@ -202,7 +202,7 @@
             ]
           },
           "unit": "cps",
-          "noValue": "—",
+          "noValue": "\u2014",
           "decimals": 1
         },
         "overrides": []
@@ -274,7 +274,7 @@
             ]
           },
           "unit": "s",
-          "noValue": "—",
+          "noValue": "\u2014",
           "decimals": 3
         },
         "overrides": []
@@ -346,7 +346,7 @@
             ]
           },
           "unit": "s",
-          "noValue": "—",
+          "noValue": "\u2014",
           "decimals": 3
         },
         "overrides": []
@@ -410,7 +410,7 @@
             ]
           },
           "unit": "short",
-          "noValue": "—",
+          "noValue": "\u2014",
           "decimals": 0
         },
         "overrides": []
@@ -636,7 +636,7 @@
           "sort": "desc"
         }
       },
-      "title": "Consumer Lag by Topic — Current & Max",
+      "title": "Consumer Lag by Topic \u2014 Current & Max",
       "type": "timeseries",
       "targets": [
         {
@@ -1018,9 +1018,9 @@
           "editorMode": "code"
         }
       ],
-      "title": "Consumer Lag Growth Rate (records/s) — All Services",
+      "title": "Consumer Lag Growth Rate (records/s) \u2014 All Services",
       "type": "timeseries",
-      "description": "Rate of change of consumer lag (deriv of lag_max). Positive → lag growing (consumers falling behind). Negative → lag shrinking (consumers catching up). Near-zero → stable. Alerts should fire when this stays positive for >2 min."
+      "description": "Rate of change of consumer lag (deriv of lag_max). Positive \u2192 lag growing (consumers falling behind). Negative \u2192 lag shrinking (consumers catching up). Near-zero \u2192 stable. Alerts should fire when this stays positive for >2 min."
     },
     {
       "collapsed": false,
@@ -1080,7 +1080,7 @@
           "sort": "desc"
         }
       },
-      "title": "Kafka Listener Latency — p50/p90/p95/p99 (job-worker)",
+      "title": "Kafka Listener Latency \u2014 p50/p90/p95/p99 (job-worker)",
       "type": "timeseries",
       "targets": [
         {
@@ -1176,7 +1176,7 @@
           "sort": "desc"
         }
       },
-      "title": "Kafka Listener Latency — p50/p90/p95/p99 (dlq-service)",
+      "title": "Kafka Listener Latency \u2014 p50/p90/p95/p99 (dlq-service)",
       "type": "timeseries",
       "targets": [
         {
@@ -1252,7 +1252,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 47
+        "y": 55
       },
       "id": 34,
       "options": {
@@ -1315,7 +1315,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 47
+        "y": 55
       },
       "id": 35,
       "options": {
@@ -1335,7 +1335,7 @@
           "sort": "desc"
         }
       },
-      "title": "Kafka Listener Mean Latency — All Consumers",
+      "title": "Kafka Listener Mean Latency \u2014 All Consumers",
       "type": "timeseries",
       "targets": [
         {
@@ -1358,7 +1358,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 55
+        "y": 63
       },
       "id": 103,
       "title": "Kafka Producer (job-producer & retry-dispatcher)",
@@ -1390,7 +1390,7 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 56
+        "y": 64
       },
       "id": 11,
       "options": {
@@ -1453,7 +1453,7 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 56
+        "y": 64
       },
       "id": 12,
       "options": {
@@ -1516,7 +1516,7 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 56
+        "y": 64
       },
       "id": 13,
       "options": {
@@ -1580,7 +1580,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 64
+        "y": 72
       },
       "id": 41,
       "options": {
@@ -1642,7 +1642,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 72
+        "y": 80
       },
       "id": 36,
       "options": {
@@ -1662,7 +1662,7 @@
           "sort": "desc"
         }
       },
-      "title": "Kafka Template Send Latency — retry-dispatcher (p50/p90/p95/p99)",
+      "title": "Kafka Template Send Latency \u2014 retry-dispatcher (p50/p90/p95/p99)",
       "type": "timeseries",
       "targets": [
         {
@@ -1738,7 +1738,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 72
+        "y": 80
       },
       "id": 14,
       "options": {
@@ -1758,7 +1758,7 @@
           "sort": "desc"
         }
       },
-      "title": "Kafka Consumer Bytes Consumed Rate — All Services",
+      "title": "Kafka Consumer Bytes Consumed Rate \u2014 All Services",
       "type": "timeseries",
       "targets": [
         {
@@ -1781,7 +1781,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 80
+        "y": 88
       },
       "id": 104,
       "title": "MongoDB Performance (dlq-service)",
@@ -1813,7 +1813,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 81
+        "y": 89
       },
       "id": 15,
       "options": {
@@ -1833,7 +1833,7 @@
           "sort": "desc"
         }
       },
-      "title": "MongoDB Command Latency — p50/p90/p95/p99",
+      "title": "MongoDB Command Latency \u2014 p50/p90/p95/p99",
       "type": "timeseries",
       "targets": [
         {
@@ -1944,7 +1944,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 81
+        "y": 89
       },
       "id": 16,
       "options": {
@@ -2018,7 +2018,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 89
+        "y": 97
       },
       "id": 37,
       "options": {
@@ -2101,7 +2101,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 89
+        "y": 97
       },
       "id": 38,
       "options": {
@@ -2164,7 +2164,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 97
+        "y": 105
       },
       "id": 201,
       "options": {
@@ -2227,7 +2227,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 97
+        "y": 105
       },
       "id": 202,
       "options": {
@@ -2270,7 +2270,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 105
+        "y": 113
       },
       "id": 105,
       "title": "Processing Activity (Log-based)",
@@ -2334,7 +2334,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "→ Retry"
+              "options": "\u2192 Retry"
             },
             "properties": [
               {
@@ -2352,7 +2352,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 106
+        "y": 114
       },
       "id": 17,
       "options": {
@@ -2372,7 +2372,7 @@
           "sort": "desc"
         }
       },
-      "title": "job-worker — Jobs Processed vs Failed",
+      "title": "job-worker \u2014 Jobs Processed vs Failed",
       "type": "timeseries",
       "targets": [
         {
@@ -2406,7 +2406,7 @@
           "editorMode": "code",
           "queryType": "range",
           "refId": "C",
-          "legendFormat": "→ Retry"
+          "legendFormat": "\u2192 Retry"
         }
       ],
       "description": "Log-based rate of jobs processed, failed, and scheduled for retry by job-worker."
@@ -2483,7 +2483,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 106
+        "y": 114
       },
       "id": 18,
       "options": {
@@ -2614,7 +2614,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 114
+        "y": 122
       },
       "id": 200,
       "options": {
@@ -2682,7 +2682,7 @@
         "h": 10,
         "w": 24,
         "x": 0,
-        "y": 124
+        "y": 132
       },
       "id": 19,
       "options": {
@@ -2774,7 +2774,7 @@
     ]
   },
   "timezone": "browser",
-  "title": "Chrono Queue — Kafka & MongoDB",
+  "title": "Chrono Queue \u2014 Kafka & MongoDB",
   "uid": "chrono-kafka-mongodb",
   "version": 3
 }

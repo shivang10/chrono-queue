@@ -15,7 +15,7 @@
       }
     ]
   },
-  "description": "HTTP latency deep-dive — p50/p90/p95/p99 per service and endpoint, JVM heap/GC/threads, process CPU, and service health/uptime. Kafka listener and MongoDB latency panels live in chrono-kafka-mongodb.",
+  "description": "HTTP latency deep-dive \u2014 p50/p90/p95/p99 per service and endpoint, JVM heap/GC/threads, process CPU, and service health/uptime. Kafka listener and MongoDB latency panels live in chrono-kafka-mongodb.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 2,
@@ -49,7 +49,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -105,7 +105,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "max(process_uptime_seconds{service=\"job-producer\", instance=~\"$instance\", env=~\"$env\"})",
           "legendFormat": "",
@@ -113,12 +113,12 @@
           "interval": ""
         }
       ],
-      "description": "job-producer process uptime. Orange < 5 min (recently restarted), yellow < 1 h, green ≥ 1 h."
+      "description": "job-producer process uptime. Orange < 5 min (recently restarted), yellow < 1 h, green \u2265 1 h."
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -174,7 +174,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "max(process_uptime_seconds{service=\"job-worker\", instance=~\"$instance\", env=~\"$env\"})",
           "legendFormat": "",
@@ -182,7 +182,7 @@
           "interval": ""
         }
       ],
-      "description": "job-worker process uptime. Orange < 5 min (recently restarted), yellow < 1 h, green ≥ 1 h."
+      "description": "job-worker process uptime. Orange < 5 min (recently restarted), yellow < 1 h, green \u2265 1 h."
     },
     {
       "collapsed": false,
@@ -193,13 +193,13 @@
         "y": 5
       },
       "id": 101,
-      "title": "Service Performance — Headline p99",
+      "title": "Service Performance \u2014 Headline p99",
       "type": "row"
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -249,13 +249,13 @@
         },
         "textMode": "auto"
       },
-      "title": "job-producer — p99 HTTP",
+      "title": "job-producer \u2014 p99 HTTP",
       "type": "stat",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "",
@@ -268,7 +268,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -318,13 +318,13 @@
         },
         "textMode": "auto"
       },
-      "title": "dlq-service — p99 HTTP",
+      "title": "dlq-service \u2014 p99 HTTP",
       "type": "stat",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "",
@@ -337,7 +337,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -385,7 +385,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "sum(clamp_min(rate(http_server_requests_seconds_count{service=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0))",
           "legendFormat": "",
@@ -398,7 +398,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -441,13 +441,13 @@
           "sort": "desc"
         }
       },
-      "title": "Cross-Service HTTP p90 Latency — job-producer & dlq-service",
+      "title": "Cross-Service HTTP p90 Latency \u2014 job-producer & dlq-service",
       "type": "timeseries",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "histogram_quantile(0.90, sum by (le, application) (clamp_min(rate(http_server_requests_seconds_bucket{service=~\"job-producer|dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "HTTP p90 {{application}}",
@@ -460,7 +460,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -509,7 +509,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "histogram_quantile(0.95, sum by (le, application) (clamp_min(rate(http_server_requests_seconds_bucket{service=~\"job-producer|dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "p95 {{application}}",
@@ -519,7 +519,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "histogram_quantile(0.99, sum by (le, application) (clamp_min(rate(http_server_requests_seconds_bucket{service=~\"job-producer|dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "p99 {{application}}",
@@ -538,13 +538,13 @@
         "y": 26
       },
       "id": 102,
-      "title": "job-producer — API Latency",
+      "title": "job-producer \u2014 API Latency",
       "type": "row"
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -587,13 +587,13 @@
           "sort": "desc"
         }
       },
-      "title": "job-producer — HTTP Latency p50/p90/p95/p99 (all endpoints)",
+      "title": "job-producer \u2014 HTTP Latency p50/p90/p95/p99 (all endpoints)",
       "type": "timeseries",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "histogram_quantile(0.50, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "p50",
@@ -603,7 +603,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "histogram_quantile(0.90, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "p90",
@@ -613,7 +613,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "histogram_quantile(0.95, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "p95",
@@ -623,7 +623,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "p99",
@@ -636,7 +636,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -679,13 +679,13 @@
           "sort": "desc"
         }
       },
-      "title": "job-producer — p50/p90/p99 per Endpoint",
+      "title": "job-producer \u2014 p50/p90/p99 per Endpoint",
       "type": "timeseries",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "histogram_quantile(0.50, sum by (le, uri) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "p50 {{uri}}",
@@ -695,7 +695,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "histogram_quantile(0.90, sum by (le, uri) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "p90 {{uri}}",
@@ -705,7 +705,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "histogram_quantile(0.99, sum by (le, uri) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "p99 {{uri}}",
@@ -718,7 +718,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -761,13 +761,13 @@
           "sort": "desc"
         }
       },
-      "title": "job-producer — Request Rate by Endpoint",
+      "title": "job-producer \u2014 Request Rate by Endpoint",
       "type": "timeseries",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "sum by (method, uri) (clamp_min(rate(http_server_requests_seconds_count{service=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0))",
           "legendFormat": "{{method}} {{uri}}",
@@ -780,7 +780,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -811,13 +811,13 @@
         "showUnfilled": true,
         "valueMode": "color"
       },
-      "title": "job-producer — Status Code Distribution",
+      "title": "job-producer \u2014 Status Code Distribution",
       "type": "bargauge",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "sum by (status) (clamp_min(rate(http_server_requests_seconds_count{service=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0))",
           "legendFormat": "HTTP {{status}}",
@@ -836,13 +836,13 @@
         "y": 43
       },
       "id": 104,
-      "title": "dlq-service — HTTP Latency",
+      "title": "dlq-service \u2014 HTTP Latency",
       "type": "row"
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -885,13 +885,13 @@
           "sort": "desc"
         }
       },
-      "title": "dlq-service — HTTP Latency p50/p90/p95/p99",
+      "title": "dlq-service \u2014 HTTP Latency p50/p90/p95/p99",
       "type": "timeseries",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "histogram_quantile(0.50, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "p50",
@@ -901,7 +901,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "histogram_quantile(0.90, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "p90",
@@ -911,7 +911,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "histogram_quantile(0.95, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "p95",
@@ -921,7 +921,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "p99",
@@ -934,7 +934,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -977,13 +977,13 @@
           "sort": "desc"
         }
       },
-      "title": "dlq-service — p50/p90/p99 per Endpoint",
+      "title": "dlq-service \u2014 p50/p90/p99 per Endpoint",
       "type": "timeseries",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "histogram_quantile(0.50, sum by (le, uri) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "p50 {{uri}}",
@@ -993,7 +993,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "histogram_quantile(0.90, sum by (le, uri) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "p90 {{uri}}",
@@ -1003,7 +1003,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "histogram_quantile(0.99, sum by (le, uri) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "p99 {{uri}}",
@@ -1022,13 +1022,13 @@
         "y": 60
       },
       "id": 106,
-      "title": "JVM & System Metrics — All Services",
+      "title": "JVM & System Metrics \u2014 All Services",
       "type": "row"
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1071,13 +1071,13 @@
           "sort": "desc"
         }
       },
-      "title": "JVM Heap Used — All Services",
+      "title": "JVM Heap Used \u2014 All Services",
       "type": "timeseries",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "sum by (application) (jvm_memory_used_bytes{service=~\"$service\", area=\"heap\", instance=~\"$instance\", env=~\"$env\"})",
           "legendFormat": "{{application}}",
@@ -1090,7 +1090,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1133,13 +1133,13 @@
           "sort": "desc"
         }
       },
-      "title": "JVM Heap Used % — All Services",
+      "title": "JVM Heap Used % \u2014 All Services",
       "type": "timeseries",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "clamp_max(clamp_min(100 * sum by (application) (jvm_memory_used_bytes{service=~\"$service\", area=\"heap\", instance=~\"$instance\", env=~\"$env\"}) / clamp_min(sum by (application) (jvm_memory_max_bytes{service=~\"$service\", area=\"heap\", instance=~\"$instance\", env=~\"$env\"}), 1e-9), 0), 100)",
           "legendFormat": "{{application}}",
@@ -1152,7 +1152,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1195,13 +1195,13 @@
           "sort": "desc"
         }
       },
-      "title": "JVM GC Pause Rate (pauses/s) — All Services",
+      "title": "JVM GC Pause Rate (pauses/s) \u2014 All Services",
       "type": "timeseries",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "sum by (application) (clamp_min(rate(jvm_gc_pause_seconds_count{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0))",
           "legendFormat": "{{application}}",
@@ -1214,7 +1214,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1257,13 +1257,13 @@
           "sort": "desc"
         }
       },
-      "title": "JVM GC Pause Latency p99 — All Services",
+      "title": "JVM GC Pause Latency p99 \u2014 All Services",
       "type": "timeseries",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "histogram_quantile(0.99, sum by (le, application) (clamp_min(rate(jvm_gc_pause_seconds_bucket{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "{{application}}",
@@ -1276,7 +1276,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1319,13 +1319,13 @@
           "sort": "desc"
         }
       },
-      "title": "JVM GC Pause Latency p95 — All Services",
+      "title": "JVM GC Pause Latency p95 \u2014 All Services",
       "type": "timeseries",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "histogram_quantile(0.95, sum by (le, application) (clamp_min(rate(jvm_gc_pause_seconds_bucket{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "{{application}}",
@@ -1338,7 +1338,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1381,13 +1381,13 @@
           "sort": "desc"
         }
       },
-      "title": "JVM Live Threads — All Services",
+      "title": "JVM Live Threads \u2014 All Services",
       "type": "timeseries",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "jvm_threads_live_threads{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}",
           "legendFormat": "{{application}}",
@@ -1400,7 +1400,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1443,13 +1443,13 @@
           "sort": "desc"
         }
       },
-      "title": "Process CPU Usage — All Services",
+      "title": "Process CPU Usage \u2014 All Services",
       "type": "timeseries",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "process_cpu_usage{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}",
           "legendFormat": "{{application}}",
@@ -1457,12 +1457,12 @@
           "interval": ""
         }
       ],
-      "description": "JVM process CPU usage (0–1 mapped to 0–100 %) per service."
+      "description": "JVM process CPU usage (0\u20131 mapped to 0\u2013100 %) per service."
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1511,7 +1511,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "system_cpu_usage{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}",
           "legendFormat": "{{application}}",
@@ -1519,12 +1519,12 @@
           "interval": ""
         }
       ],
-      "description": "System CPU usage (0–1 mapped to 0–100 %) per service."
+      "description": "System CPU usage (0\u20131 mapped to 0\u2013100 %) per service."
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1573,7 +1573,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "sum by (application)(rate(process_cpu_seconds_total[$__rate_interval]))",
           "legendFormat": "{{application}}",
@@ -1586,7 +1586,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1635,7 +1635,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "sum by (application) (jvm_memory_used_bytes{service=~\"$service\", area=\"nonheap\", instance=~\"$instance\", env=~\"$env\"})",
           "legendFormat": "{{application}}",
@@ -1648,7 +1648,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1697,7 +1697,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "jvm_classes_loaded_classes{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}",
           "legendFormat": "{{application}}",
@@ -1710,7 +1710,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1759,7 +1759,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "jvm_threads_live_threads{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}",
           "legendFormat": "total {{application}}",
@@ -1769,7 +1769,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "jvm_threads_daemon_threads{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}",
           "legendFormat": "daemon {{application}}",
@@ -1782,7 +1782,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1831,7 +1831,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "process_files_open_files{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}",
           "legendFormat": "{{application}}",
@@ -1861,7 +1861,7 @@
         },
         "datasource": {
           "type": "prometheus",
-          "uid": "prometheus"
+          "uid": "${datasource}"
         },
         "definition": "label_values(up{job=~\"job-producer|job-worker|retry-dispatcher|dlq-service\"}, env)",
         "hide": 0,
@@ -1889,9 +1889,9 @@
         },
         "datasource": {
           "type": "prometheus",
-          "uid": "prometheus"
+          "uid": "${datasource}"
         },
-        "definition": "label_values(up{job=~\"job-producer|job-worker|retry-dispatcher|dlq-service\", env=~\"$env\"}, application)",
+        "definition": "label_values(up{job=~\"job-producer|job-worker|retry-dispatcher|dlq-service\", env=~\"$env\"}, service)",
         "hide": 0,
         "includeAll": true,
         "allValue": "job-producer|job-worker|retry-dispatcher|dlq-service",
@@ -1917,9 +1917,9 @@
         },
         "datasource": {
           "type": "prometheus",
-          "uid": "prometheus"
+          "uid": "${datasource}"
         },
-        "definition": "label_values(up{job=~\"job-producer|job-worker|retry-dispatcher|dlq-service\", env=~\"$env\", application=~\"$service\"}, instance)",
+        "definition": "label_values(up{job=~\"job-producer|job-worker|retry-dispatcher|dlq-service\", env=~\"$env\", service=~\"$service\"}, instance)",
         "hide": 0,
         "includeAll": true,
         "allValue": ".*",
@@ -1975,7 +1975,7 @@
     ]
   },
   "timezone": "browser",
-  "title": "Chrono Queue — Service Latency & System",
+  "title": "Chrono Queue \u2014 Service Latency & System",
   "uid": "chrono-service-latency",
   "version": 7,
   "__inputs": [

@@ -146,7 +146,7 @@
             "uid": "${datasource}"
           },
           "expr": "chrono:redis_commands_processed_total:rate5m{instance=~\"$instance\"}",
-          "legendFormat": "commands/s — {{service}} / {{instance}}",
+          "legendFormat": "commands/s \u2014 {{service}} / {{instance}}",
           "refId": "A",
           "interval": ""
         }
@@ -242,7 +242,7 @@
             "uid": "${datasource}"
           },
           "expr": "chrono:redis_net_input_bytes_total:rate5m{instance=~\"$instance\"}",
-          "legendFormat": "bytes in/s — {{service}} / {{instance}}",
+          "legendFormat": "bytes in/s \u2014 {{service}} / {{instance}}",
           "refId": "A",
           "interval": ""
         }
@@ -253,7 +253,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Network bytes sent by Redis per second, per instance. Correlates with GET/HGET/LRANGE response sizes from job-worker and retry-dispatcher read traffic. Output > input ratio signals read-heavy workloads from consumers.",
+      "description": "Network bytes sent by Redis per second, per instance. Correlates with GET/HGET/LRANGE response sizes from job-worker and retry-dispatcher read traffic. Output\u202f>\u202finput ratio signals read-heavy workloads from consumers.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -338,7 +338,7 @@
             "uid": "${datasource}"
           },
           "expr": "chrono:redis_net_output_bytes_total:rate5m{instance=~\"$instance\"}",
-          "legendFormat": "bytes out/s — {{service}} / {{instance}}",
+          "legendFormat": "bytes out/s \u2014 {{service}} / {{instance}}",
           "refId": "A",
           "interval": ""
         }
@@ -610,7 +610,7 @@
             "uid": "${datasource}"
           },
           "expr": "chrono:redis_commands_processed_total:rate5m",
-          "legendFormat": "Commands — {{service}} / {{instance}}",
+          "legendFormat": "Commands \u2014 {{service}} / {{instance}}",
           "refId": "A",
           "interval": ""
         },
@@ -620,7 +620,7 @@
             "uid": "${datasource}"
           },
           "expr": "rate(process_cpu_seconds_total{job=\"redis-exporter\"}[$__rate_interval])",
-          "legendFormat": "CPU — {{job}} / {{instance}}",
+          "legendFormat": "CPU \u2014 {{job}} / {{instance}}",
           "refId": "B",
           "interval": ""
         }
@@ -731,7 +731,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Core-normalized Redis CPU utilization per instance over time. Warn threshold at 50 % (yellow); critical at 80 % (red). Both core-normalized and total CPU series shown for host-context correlation.",
+      "description": "Core-normalized Redis CPU utilization per instance over time. Warn threshold at 50\u202f% (yellow); critical at 80\u202f% (red). Both core-normalized and total CPU series shown for host-context correlation.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -824,7 +824,7 @@
             "uid": "${datasource}"
           },
           "expr": "chrono:redis_cpu_normalized:pct_rate5m{instance=~\"$instance\"}",
-          "legendFormat": "core-norm CPU % — {{service}} / {{instance}}",
+          "legendFormat": "core-norm CPU % \u2014 {{service}} / {{instance}}",
           "refId": "A",
           "interval": ""
         },
@@ -834,7 +834,7 @@
             "uid": "${datasource}"
           },
           "expr": "chrono:redis_cpu_total_seconds:pct_rate5m{instance=~\"$instance\"}",
-          "legendFormat": "total CPU % — {{service}} / {{instance}}",
+          "legendFormat": "total CPU % \u2014 {{service}} / {{instance}}",
           "refId": "B",
           "interval": ""
         }
@@ -1019,7 +1019,7 @@
             "uid": "${datasource}"
           },
           "expr": "chrono:redis_commands_processed_total:rate5m{instance=~\"$instance\"}",
-          "legendFormat": "commands/s — {{service}} / {{instance}}",
+          "legendFormat": "commands/s \u2014 {{service}} / {{instance}}",
           "refId": "A",
           "interval": ""
         }
@@ -1137,7 +1137,7 @@
             "uid": "${datasource}"
           },
           "expr": "chrono:redis_net_input_bytes_total:rate5m{instance=~\"$instance\"}",
-          "legendFormat": "bytes in/s — {{service}} / {{instance}}",
+          "legendFormat": "bytes in/s \u2014 {{service}} / {{instance}}",
           "refId": "A",
           "interval": ""
         }
@@ -1233,7 +1233,7 @@
             "uid": "${datasource}"
           },
           "expr": "chrono:redis_net_output_bytes_total:rate5m{instance=~\"$instance\"}",
-          "legendFormat": "bytes out/s — {{service}} / {{instance}}",
+          "legendFormat": "bytes out/s \u2014 {{service}} / {{instance}}",
           "refId": "A",
           "interval": ""
         }
@@ -1266,7 +1266,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "CPU time-series with SRE SLO threshold lines: warn at 70 % (orange) and critical at 85 % (red) per core. Alert PromQL: 100 * sum by (instance, service) (rate(redis_cpu_sys_seconds_total{instance=~\"$instance\"}[$__rate_interval]) + rate(redis_cpu_user_seconds_total{instance=~\"$instance\"}[$__rate_interval])) > 80. Both total and normalized CPU series shown for correlation with host-level context.",
+      "description": "CPU time-series with SRE SLO threshold lines: warn at 70\u202f% (orange) and critical at 85\u202f% (red) per core. Alert PromQL: 100 * sum by (instance, service) (rate(redis_cpu_sys_seconds_total{instance=~\"$instance\"}[$__rate_interval]) + rate(redis_cpu_user_seconds_total{instance=~\"$instance\"}[$__rate_interval])) > 80. Both total and normalized CPU series shown for correlation with host-level context.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1359,7 +1359,7 @@
             "uid": "${datasource}"
           },
           "expr": "chrono:redis_cpu_total_seconds:pct_rate5m{instance=~\"$instance\"}",
-          "legendFormat": "total CPU % — {{service}} / {{instance}}",
+          "legendFormat": "total CPU % \u2014 {{service}} / {{instance}}",
           "refId": "A",
           "interval": ""
         },
@@ -1369,7 +1369,7 @@
             "uid": "${datasource}"
           },
           "expr": "chrono:redis_cpu_normalized:pct_rate5m{instance=~\"$instance\"}",
-          "legendFormat": "core-normalized CPU % — {{service}} / {{instance}}",
+          "legendFormat": "core-normalized CPU % \u2014 {{service}} / {{instance}}",
           "refId": "B",
           "interval": ""
         },
@@ -1379,7 +1379,7 @@
             "uid": "${datasource}"
           },
           "expr": "chrono:redis_cpu_user_seconds:pct_rate5m{instance=~\"$instance\"}",
-          "legendFormat": "CPU user % — {{service}} / {{instance}}",
+          "legendFormat": "CPU user % \u2014 {{service}} / {{instance}}",
           "refId": "C",
           "interval": ""
         },
@@ -1389,7 +1389,7 @@
             "uid": "${datasource}"
           },
           "expr": "chrono:redis_cpu_sys_seconds:pct_rate5m{instance=~\"$instance\"}",
-          "legendFormat": "CPU sys % — {{service}} / {{instance}}",
+          "legendFormat": "CPU sys % \u2014 {{service}} / {{instance}}",
           "refId": "D",
           "interval": ""
         }
@@ -1422,7 +1422,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Lettuce avg and max command latency split by application, instance, and command. SLO threshold lines: warn at 10 ms (0.010 s, yellow), critical at 50 ms (0.050 s, red). Use the Application and Command variables to isolate noisy callers before attributing latency to Redis itself.",
+      "description": "Lettuce avg and max command latency split by application, instance, and command. SLO threshold lines: warn at 10\u202fms (0.010\u202fs, yellow), critical at 50\u202fms (0.050\u202fs, red). Use the Application and Command variables to isolate noisy callers before attributing latency to Redis itself.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1515,7 +1515,7 @@
             "uid": "${datasource}"
           },
           "expr": "chrono:lettuce_command_completion_seconds_sum:rate5m{application=~\"${application:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"} / clamp_min(chrono:lettuce_command_completion_seconds_count:rate5m{application=~\"${application:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"}, 1e-9)",
-          "legendFormat": "completion avg — {{application}} / {{instance}} / {{command}}",
+          "legendFormat": "completion avg \u2014 {{application}} / {{instance}} / {{command}}",
           "refId": "A",
           "interval": ""
         },
@@ -1525,7 +1525,7 @@
             "uid": "${datasource}"
           },
           "expr": "chrono:lettuce_command_firstresponse_seconds_sum:rate5m{application=~\"${application:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"} / clamp_min(chrono:lettuce_command_firstresponse_seconds_count:rate5m{application=~\"${application:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"}, 1e-9)",
-          "legendFormat": "first-response avg — {{application}} / {{instance}} / {{command}}",
+          "legendFormat": "first-response avg \u2014 {{application}} / {{instance}} / {{command}}",
           "refId": "B",
           "interval": ""
         },
@@ -1535,7 +1535,7 @@
             "uid": "${datasource}"
           },
           "expr": "max by (application, instance, command) (lettuce_command_completion_seconds_max{application=~\"${application:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"})",
-          "legendFormat": "max — {{application}} / {{instance}} / {{command}}",
+          "legendFormat": "max \u2014 {{application}} / {{instance}} / {{command}}",
           "refId": "C",
           "interval": ""
         }
@@ -1546,7 +1546,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Histogram-based Redis client latency percentiles (p50 / p95 / p99) from Lettuce command completion buckets. SLO threshold lines: warn at 50 ms (0.050 s, yellow), critical at 100 ms (0.100 s, red). Latency spike on p99 without p50 movement indicates tail-latency regression rather than global slowdown. Alert PromQL (p95): histogram_quantile(0.95, ...) > 0.100.",
+      "description": "Histogram-based Redis client latency percentiles (p50 / p95 / p99) from Lettuce command completion buckets. SLO threshold lines: warn at 50\u202fms (0.050\u202fs, yellow), critical at 100\u202fms (0.100\u202fs, red). Latency spike on p99 without p50 movement indicates tail-latency regression rather than global slowdown. Alert PromQL (p95): histogram_quantile(0.95, ...) > 0.100.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1639,7 +1639,7 @@
             "uid": "${datasource}"
           },
           "expr": "chrono:lettuce_command_completion_p50_seconds:5m{application=~\"${application:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"}",
-          "legendFormat": "p50 — {{application}} / {{instance}} / {{command}}",
+          "legendFormat": "p50 \u2014 {{application}} / {{instance}} / {{command}}",
           "refId": "A",
           "interval": ""
         },
@@ -1649,7 +1649,7 @@
             "uid": "${datasource}"
           },
           "expr": "chrono:lettuce_command_completion_p95_seconds:5m{application=~\"${application:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"}",
-          "legendFormat": "p95 — {{application}} / {{instance}} / {{command}}",
+          "legendFormat": "p95 \u2014 {{application}} / {{instance}} / {{command}}",
           "refId": "B",
           "interval": ""
         },
@@ -1659,7 +1659,7 @@
             "uid": "${datasource}"
           },
           "expr": "chrono:lettuce_command_completion_p99_seconds:5m{application=~\"${application:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"}",
-          "legendFormat": "p99 — {{application}} / {{instance}} / {{command}}",
+          "legendFormat": "p99 \u2014 {{application}} / {{instance}} / {{command}}",
           "refId": "C",
           "interval": ""
         }
@@ -2230,7 +2230,7 @@
             "uid": "${datasource}"
           },
           "expr": "(max by (application, instance) (lettuce_connections_active{application=~\"${application:regex}\", instance=~\"$instance\"}) or max by (application, instance) (lettuce_pool_allocated{application=~\"${application:regex}\", instance=~\"$instance\"}))",
-          "legendFormat": "active — {{application}} / {{instance}}",
+          "legendFormat": "active \u2014 {{application}} / {{instance}}",
           "refId": "A",
           "interval": ""
         },
@@ -2240,7 +2240,7 @@
             "uid": "${datasource}"
           },
           "expr": "(max by (application, instance) (lettuce_pool_pending{application=~\"${application:regex}\", instance=~\"$instance\"}) or max by (application, instance) (lettuce_connections_pending{application=~\"${application:regex}\", instance=~\"$instance\"}))",
-          "legendFormat": "pending — {{application}} / {{instance}}",
+          "legendFormat": "pending \u2014 {{application}} / {{instance}}",
           "refId": "B",
           "interval": ""
         }
@@ -2357,7 +2357,7 @@
             "uid": "${datasource}"
           },
           "expr": "sum by (instance, service) (deriv(redis_db_keys{instance=~\"$instance\"}[$__rate_interval]))",
-          "legendFormat": "keys/s — {{service}} / {{instance}}",
+          "legendFormat": "keys/s \u2014 {{service}} / {{instance}}",
           "refId": "A",
           "interval": ""
         }
@@ -2452,7 +2452,7 @@
             "uid": "${datasource}"
           },
           "expr": "sum by (instance, service) (deriv(redis_memory_used_bytes{instance=~\"$instance\"}[$__rate_interval]))",
-          "legendFormat": "bytes/s — {{service}} / {{instance}}",
+          "legendFormat": "bytes/s \u2014 {{service}} / {{instance}}",
           "refId": "A",
           "interval": ""
         }
@@ -2547,7 +2547,7 @@
             "uid": "${datasource}"
           },
           "expr": "100 * (chrono:redis_commands_processed_total:rate5m{instance=~\"$instance\"} - chrono:redis_commands_processed_total:rate5m{instance=~\"$instance\"} offset 1h) / clamp_min(chrono:redis_commands_processed_total:rate5m{instance=~\"$instance\"} offset 1h, 1e-9)",
-          "legendFormat": "growth % — {{service}} / {{instance}}",
+          "legendFormat": "growth % \u2014 {{service}} / {{instance}}",
           "refId": "A",
           "interval": ""
         }
@@ -2580,7 +2580,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Correlates Redis command throughput against p95 client latency by instance and application. Right-axis threshold lines: warn at 50 ms (yellow), critical at 100 ms (red) — matching the p95 latency SLO. A latency spike that tracks command rate growth is load-driven; divergence typically indicates a Redis-side regression.",
+      "description": "Correlates Redis command throughput against p95 client latency by instance and application. Right-axis threshold lines: warn at 50\u202fms (yellow), critical at 100\u202fms (red) \u2014 matching the p95 latency SLO. A latency spike that tracks command rate growth is load-driven; divergence typically indicates a Redis-side regression.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -2707,7 +2707,7 @@
             "uid": "${datasource}"
           },
           "expr": "chrono:redis_commands_processed_total:rate5m{instance=~\"$instance\"}",
-          "legendFormat": "commands/s — {{service}} / {{instance}}",
+          "legendFormat": "commands/s \u2014 {{service}} / {{instance}}",
           "refId": "A",
           "interval": ""
         },
@@ -2717,7 +2717,7 @@
             "uid": "${datasource}"
           },
           "expr": "1000 * chrono:lettuce_command_completion_p95_seconds:5m{application=~\"${application:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"}",
-          "legendFormat": "p95 latency (ms) — {{application}} / {{instance}} / {{command}}",
+          "legendFormat": "p95 latency (ms) \u2014 {{application}} / {{instance}} / {{command}}",
           "refId": "B",
           "interval": ""
         }
@@ -2858,7 +2858,7 @@
             "uid": "${datasource}"
           },
           "expr": "sum by (instance, service) (redis_connected_clients{instance=~\"$instance\"})",
-          "legendFormat": "Connected Clients — {{service}} / {{instance}}",
+          "legendFormat": "Connected Clients \u2014 {{service}} / {{instance}}",
           "refId": "A",
           "interval": ""
         },
@@ -2868,7 +2868,7 @@
             "uid": "${datasource}"
           },
           "expr": "chrono:redis_rejected_connections_total:rate5m{instance=~\"$instance\"}",
-          "legendFormat": "Rejected/s — {{service}} / {{instance}}",
+          "legendFormat": "Rejected/s \u2014 {{service}} / {{instance}}",
           "refId": "B",
           "interval": ""
         }
@@ -2988,7 +2988,7 @@
             "uid": "${datasource}"
           },
           "expr": "chrono:redis_cpu_total_seconds:pct_rate5m{instance=~\"$instance\"}",
-          "legendFormat": "CPU % — {{service}} / {{instance}}",
+          "legendFormat": "CPU % \u2014 {{service}} / {{instance}}",
           "refId": "A",
           "interval": ""
         },
@@ -2998,7 +2998,7 @@
             "uid": "${datasource}"
           },
           "expr": "chrono:redis_commands_processed_total:rate5m{instance=~\"$instance\"}",
-          "legendFormat": "cmd/s — {{service}} / {{instance}}",
+          "legendFormat": "cmd/s \u2014 {{service}} / {{instance}}",
           "refId": "B",
           "interval": ""
         }
@@ -3009,7 +3009,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Correlates Redis used-memory growth against eviction rate by instance and service. Right-axis threshold line at > 0 (red): any eviction fires the alert. Alert PromQL: sum by (instance, service) (increase(redis_evicted_keys_total{instance=~\"$instance\"}[$__rate_interval])) > 0. Rising memory with concurrent non-zero evictions confirms hard memory pressure and potential data churn — the primary signal for maxmemory tuning or capacity expansion.",
+      "description": "Correlates Redis used-memory growth against eviction rate by instance and service. Right-axis threshold line at > 0 (red): any eviction fires the alert. Alert PromQL: sum by (instance, service) (increase(redis_evicted_keys_total{instance=~\"$instance\"}[$__rate_interval])) > 0. Rising memory with concurrent non-zero evictions confirms hard memory pressure and potential data churn \u2014 the primary signal for maxmemory tuning or capacity expansion.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -3139,7 +3139,7 @@
             "uid": "${datasource}"
           },
           "expr": "sum by (instance, service) (redis_memory_used_bytes{instance=~\"$instance\"})",
-          "legendFormat": "Memory Used — {{service}} / {{instance}}",
+          "legendFormat": "Memory Used \u2014 {{service}} / {{instance}}",
           "refId": "A",
           "interval": ""
         },
@@ -3149,7 +3149,7 @@
             "uid": "${datasource}"
           },
           "expr": "chrono:redis_evicted_keys_total:rate5m{instance=~\"$instance\"}",
-          "legendFormat": "Evictions/s — {{service}} / {{instance}}",
+          "legendFormat": "Evictions/s \u2014 {{service}} / {{instance}}",
           "refId": "B",
           "interval": ""
         }
@@ -3276,7 +3276,7 @@
             "uid": "${datasource}"
           },
           "expr": "chrono:redis_keyspace_hit_rate:ratio_rate5m{instance=~\"$instance\"}",
-          "legendFormat": "Hit Rate — {{service}} / {{instance}}",
+          "legendFormat": "Hit Rate \u2014 {{service}} / {{instance}}",
           "refId": "A"
         }
       ]
@@ -3612,7 +3612,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Top-10 Redis instances by current command throughput. Surfaces which instance handles the most traffic in a multi-instance fleet — the primary input for load balancing decisions.",
+      "description": "Top-10 Redis instances by current command throughput. Surfaces which instance handles the most traffic in a multi-instance fleet \u2014 the primary input for load balancing decisions.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -3978,7 +3978,7 @@
         "y": 78
       },
       "id": 906,
-      "title": "Alert SLO — Latency",
+      "title": "Alert SLO \u2014 Latency",
       "type": "row",
       "fieldConfig": {
         "defaults": {
@@ -3996,7 +3996,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Count of application × instance combinations where p95 Lettuce latency exceeds the 100 ms SLO threshold. Alert PromQL: histogram_quantile(0.95, sum by (le, application, instance, command) (chrono:lettuce_command_completion_p95_seconds:5m{instance=~\"$instance\", application=~\"$application\"})) > 0.100",
+      "description": "Count of application\u202f\u00d7\u202finstance combinations where p95 Lettuce latency exceeds the 100\u202fms SLO threshold. Alert PromQL: histogram_quantile(0.95, sum by (le, application, instance, command) (chrono:lettuce_command_completion_p95_seconds:5m{instance=~\"$instance\", application=~\"$application\"})) > 0.100",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -4043,7 +4043,7 @@
         },
         "textMode": "auto"
       },
-      "title": "Alert: p95 Latency > 100 ms",
+      "title": "Alert: p95 Latency > 100\u202fms",
       "type": "stat",
       "targets": [
         {
@@ -4063,7 +4063,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Count of application × instance combinations where p99 Lettuce latency exceeds the 250 ms critical SLO threshold. Alert PromQL: histogram_quantile(0.99, sum by (le, application, instance, command) (chrono:lettuce_command_completion_p99_seconds:5m{instance=~\"$instance\", application=~\"$application\"})) > 0.250",
+      "description": "Count of application\u202f\u00d7\u202finstance combinations where p99 Lettuce latency exceeds the 250\u202fms critical SLO threshold. Alert PromQL: histogram_quantile(0.99, sum by (le, application, instance, command) (chrono:lettuce_command_completion_p99_seconds:5m{instance=~\"$instance\", application=~\"$application\"})) > 0.250",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -4110,7 +4110,7 @@
         },
         "textMode": "auto"
       },
-      "title": "Alert: p99 Latency > 250 ms",
+      "title": "Alert: p99 Latency > 250\u202fms",
       "type": "stat",
       "targets": [
         {
@@ -4194,7 +4194,7 @@
           "type": "prometheus",
           "uid": "${datasource}"
         },
-        "definition": "label_values(redis_up{instance=~\"$instance\"}, service)",
+        "definition": "label_values(lettuce_command_completion_seconds_count{instance=~\"$instance\"}, application)",
         "hide": 0,
         "includeAll": true,
         "multi": true,

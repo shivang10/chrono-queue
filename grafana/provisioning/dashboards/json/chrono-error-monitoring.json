@@ -15,7 +15,7 @@
       }
     ]
   },
-  "description": "Error and exception monitoring — HTTP 4xx/5xx rates, DLQ events, worker failures, Kafka producer errors, MongoDB failures, deserialization errors, and error log streams.",
+  "description": "Error and exception monitoring \u2014 HTTP 4xx/5xx rates, DLQ events, worker failures, Kafka producer errors, MongoDB failures, deserialization errors, and error log streams.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 2,
@@ -74,7 +74,7 @@
             ]
           },
           "unit": "reqps",
-          "noValue": "—",
+          "noValue": "\u2014",
           "decimals": 2
         },
         "overrides": []
@@ -218,7 +218,7 @@
             ]
           },
           "unit": "short",
-          "noValue": "—",
+          "noValue": "\u2014",
           "decimals": 0
         },
         "overrides": []
@@ -288,7 +288,7 @@
             ]
           },
           "unit": "short",
-          "noValue": "—",
+          "noValue": "\u2014",
           "decimals": 0
         },
         "overrides": []
@@ -428,7 +428,7 @@
             ]
           },
           "unit": "short",
-          "noValue": "—",
+          "noValue": "\u2014",
           "decimals": 0
         },
         "overrides": []
@@ -1288,7 +1288,7 @@
           "sort": "desc"
         }
       },
-      "title": "DLQ Events — Consumed & Persistence Failures",
+      "title": "DLQ Events \u2014 Consumed & Persistence Failures",
       "type": "timeseries",
       "targets": [
         {
@@ -1398,7 +1398,7 @@
           "sort": "desc"
         }
       },
-      "title": "Worker — Job Failures & Retry Handoff Errors",
+      "title": "Worker \u2014 Job Failures & Retry Handoff Errors",
       "type": "timeseries",
       "targets": [
         {
@@ -1466,7 +1466,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Requeue failures — retry-dispatcher"
+              "options": "Requeue failures \u2014 retry-dispatcher"
             },
             "properties": [
               {
@@ -1519,7 +1519,7 @@
           "expr": "sum by (job) (count_over_time({job=~\"job-worker|dlq|retry-dispatcher\"} |= \"Failed to deserialize\" [$__interval]))",
           "editorMode": "code",
           "queryType": "range",
-          "legendFormat": "Deser errors — {{job}}",
+          "legendFormat": "Deser errors \u2014 {{job}}",
           "refId": "A"
         },
         {
@@ -1530,7 +1530,7 @@
           "expr": "sum(count_over_time({job=\"retry-dispatcher\"} |~ \"Failed to requeue job\" [$__interval]))",
           "editorMode": "code",
           "queryType": "range",
-          "legendFormat": "Requeue failures — retry-dispatcher",
+          "legendFormat": "Requeue failures \u2014 retry-dispatcher",
           "refId": "B"
         }
       ],
@@ -1698,7 +1698,7 @@
         "showLabels": false,
         "sortOrder": "Descending"
       },
-      "title": "Error & Exception Logs — All Services",
+      "title": "Error & Exception Logs \u2014 All Services",
       "type": "logs",
       "targets": [
         {
@@ -1803,7 +1803,7 @@
     ]
   },
   "timezone": "browser",
-  "title": "Chrono Queue — Error Monitoring",
+  "title": "Chrono Queue \u2014 Error Monitoring",
   "uid": "chrono-error-monitoring",
   "version": 6,
   "__inputs": [

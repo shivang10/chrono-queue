@@ -87,7 +87,7 @@
         "y": 0
       },
       "id": 100,
-      "title": "Job Completion Balance — Range Totals",
+      "title": "Job Completion Balance \u2014 Range Totals",
       "type": "row"
     },
     {
@@ -444,7 +444,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Produced − (Consumed Success + DLQ). Should be 0 when all jobs are accounted for. A positive value means jobs are still in-flight or were lost. A negative value indicates counter drift (reset or double-counting).",
+      "description": "Produced \u2212 (Consumed Success + DLQ). Should be 0 when all jobs are accounted for. A positive value means jobs are still in-flight or were lost. A negative value indicates counter drift (reset or double-counting).",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -460,7 +460,7 @@
                 "result": {
                   "color": "orange",
                   "index": 0,
-                  "text": "Counter drift ⚠"
+                  "text": "Counter drift \u26a0"
                 }
               }
             },
@@ -470,7 +470,7 @@
                 "0": {
                   "color": "green",
                   "index": 1,
-                  "text": "Balanced ✓"
+                  "text": "Balanced \u2713"
                 }
               }
             }
@@ -536,7 +536,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Job counts per scrape interval using increase() — shows absolute job volume trend rather than per-second rate. Produced should broadly track Consumed+DLQ'd in steady state. A persistent gap between Produced and (Consumed+DLQ) means jobs are still in-flight or stuck in Kafka lag.",
+      "description": "Job counts per scrape interval using increase() \u2014 shows absolute job volume trend rather than per-second rate. Produced should broadly track Consumed+DLQ'd in steady state. A persistent gap between Produced and (Consumed+DLQ) means jobs are still in-flight or stuck in Kafka lag.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -619,7 +619,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "DLQ’d"
+              "options": "DLQ\u2019d"
             },
             "properties": [
               {
@@ -720,7 +720,7 @@
             "uid": "${datasource}"
           },
           "expr": "sum(increase(chrono_jobs_dlq_total{service=\"dlq-service\"}[$__rate_interval])) or vector(0)",
-          "legendFormat": "DLQ’d",
+          "legendFormat": "DLQ\u2019d",
           "refId": "C",
           "editorMode": "code"
         },
@@ -735,7 +735,7 @@
           "editorMode": "code"
         }
       ],
-      "title": "Produced vs Consumed vs DLQ — Count Trend",
+      "title": "Produced vs Consumed vs DLQ \u2014 Count Trend",
       "type": "timeseries"
     },
     {
@@ -747,7 +747,7 @@
         "y": 17
       },
       "id": 101,
-      "title": "Consumer Lag — Are All Kafka Records Consumed?",
+      "title": "Consumer Lag \u2014 Are All Kafka Records Consumed?",
       "type": "row"
     },
     {
@@ -767,7 +767,7 @@
                 "0": {
                   "color": "green",
                   "index": 0,
-                  "text": "Caught Up ✓"
+                  "text": "Caught Up \u2713"
                 }
               },
               "type": "value"
@@ -816,7 +816,7 @@
         },
         "textMode": "auto"
       },
-      "title": "Worker — Max Consumer Lag",
+      "title": "Worker \u2014 Max Consumer Lag",
       "targets": [
         {
           "datasource": {
@@ -847,7 +847,7 @@
                 "0": {
                   "color": "green",
                   "index": 0,
-                  "text": "Caught Up ✓"
+                  "text": "Caught Up \u2713"
                 }
               },
               "type": "value"
@@ -897,7 +897,7 @@
         },
         "textMode": "auto"
       },
-      "title": "DLQ Service — Max Consumer Lag",
+      "title": "DLQ Service \u2014 Max Consumer Lag",
       "targets": [
         {
           "datasource": {
@@ -928,7 +928,7 @@
                 "0": {
                   "color": "green",
                   "index": 0,
-                  "text": "All Consumed ✓"
+                  "text": "All Consumed \u2713"
                 }
               },
               "type": "value"
@@ -1117,7 +1117,7 @@
           "sort": "desc"
         }
       },
-      "title": "Job Flow Rate — Produced vs Consumed vs DLQ",
+      "title": "Job Flow Rate \u2014 Produced vs Consumed vs DLQ",
       "targets": [
         {
           "datasource": {
@@ -1197,7 +1197,7 @@
           "sort": "desc"
         }
       },
-      "title": "Consumer Lag by Topic — job-worker",
+      "title": "Consumer Lag by Topic \u2014 job-worker",
       "targets": [
         {
           "datasource": {
@@ -1366,7 +1366,7 @@
         "y": 39
       },
       "id": 103,
-      "title": "Log-Based Verification (Loki — cross-check)",
+      "title": "Log-Based Verification (Loki \u2014 cross-check)",
       "type": "row"
     },
     {
@@ -1374,7 +1374,7 @@
         "type": "loki",
         "uid": "${loki_datasource}"
       },
-      "description": "Log-line counts from Loki to cross-verify the Prometheus counters. All three totals should satisfy: produced ≈ success + DLQ.",
+      "description": "Log-line counts from Loki to cross-verify the Prometheus counters. All three totals should satisfy: produced \u2248 success + DLQ.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1576,7 +1576,7 @@
     ]
   },
   "timezone": "browser",
-  "title": "Chrono Queue — Job Balance",
+  "title": "Chrono Queue \u2014 Job Balance",
   "uid": "chrono-job-balance",
   "version": 4
 }

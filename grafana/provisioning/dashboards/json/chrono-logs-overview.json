@@ -15,7 +15,7 @@
       }
     ]
   },
-  "description": "Log volume and exploration — total/ERROR/WARN/INFO counts, log rate per service, level distribution, and live log explorer with full-text search.",
+  "description": "Log volume and exploration \u2014 total/ERROR/WARN/INFO counts, log rate per service, level distribution, and live log explorer with full-text search.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -66,7 +66,7 @@
             ]
           },
           "unit": "short",
-          "noValue": "—",
+          "noValue": "\u2014",
           "decimals": 0
         },
         "overrides": []
@@ -136,7 +136,7 @@
             ]
           },
           "unit": "short",
-          "noValue": "—",
+          "noValue": "\u2014",
           "decimals": 0
         },
         "overrides": []
@@ -198,7 +198,7 @@
             ]
           },
           "unit": "short",
-          "noValue": "—",
+          "noValue": "\u2014",
           "decimals": 0
         },
         "overrides": []
@@ -260,7 +260,7 @@
             ]
           },
           "unit": "short",
-          "noValue": "—",
+          "noValue": "\u2014",
           "decimals": 0
         },
         "overrides": []
@@ -314,7 +314,7 @@
           },
           "unit": "short",
           "decimals": 0,
-          "noValue": "—"
+          "noValue": "\u2014"
         },
         "overrides": [
           {
@@ -974,7 +974,7 @@
         "showLabels": false,
         "sortOrder": "Descending"
       },
-      "title": "Live Logs — All Services (searchable)",
+      "title": "Live Logs \u2014 All Services (searchable)",
       "type": "logs",
       "targets": [
         {
@@ -1012,7 +1012,7 @@
         "showLabels": false,
         "sortOrder": "Descending"
       },
-      "title": "Live Tail — Latest Logs",
+      "title": "Live Tail \u2014 Latest Logs",
       "type": "logs",
       "targets": [
         {
@@ -1102,7 +1102,7 @@
     ]
   },
   "timezone": "browser",
-  "title": "Chrono Queue — Logs Overview",
+  "title": "Chrono Queue \u2014 Logs Overview",
   "uid": "chrono-logs-overview",
   "version": 4
 }
