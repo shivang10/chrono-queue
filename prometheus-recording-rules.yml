@@ -160,12 +160,47 @@ groups:
     interval: 15s
     rules:
 
-      # histogram_quantile input — shape: {le, application, instance, command}
-      - record: chrono:lettuce_command_completion_seconds_bucket:rate5m
+      # Pre-aggregated bucket sums — kept for ad-hoc / custom queries only.
+      # Do NOT feed this into histogram_quantile in dashboard panels; use the
+      # pre-computed p50/p95/p99 rules below instead.  rate() and increase() on
+      # histogram buckets are computed independently per le series, so
+      # floating-point extrapolation at window boundaries can produce
+      # non-monotonic bucket sequences.  Prometheus detects this and emits
+      # "input to histogram_quantile needs to be fixed for monotonicity".
+      # Switching from rate to increase does NOT fix this — they are
+      # proportional (increase = rate × window_seconds) so relative ordering
+      # is identical.  The only true fix is to compute histogram_quantile
+      # inside recording rules, where Prometheus corrects any non-monotonicity
+      # before recording the scalar result.  Dashboard panels then consume
+      # plain time series — no histogram_quantile call survives into Grafana.
+      - record: chrono:lettuce_command_completion_seconds_bucket:increase5m
         expr: >-
           sum by (le, application, instance, command) (
-            rate(lettuce_command_completion_seconds_bucket[5m])
+            increase(lettuce_command_completion_seconds_bucket[5m])
           )
+
+      # Pre-computed Lettuce latency quantiles — USE THESE in dashboard panels.
+      # histogram_quantile is evaluated here inside Prometheus; any monotonicity
+      # correction is applied at rule evaluation time and is invisible to Grafana.
+      # Labels retained: {application, instance, command} — full drilldown still
+      # works via Grafana template variable selectors.
+      - record: chrono:lettuce_command_completion_p50_seconds:5m
+        expr: >-
+          histogram_quantile(0.50, sum by (le, application, instance, command) (
+            rate(lettuce_command_completion_seconds_bucket[5m])
+          ))
+
+      - record: chrono:lettuce_command_completion_p95_seconds:5m
+        expr: >-
+          histogram_quantile(0.95, sum by (le, application, instance, command) (
+            rate(lettuce_command_completion_seconds_bucket[5m])
+          ))
+
+      - record: chrono:lettuce_command_completion_p99_seconds:5m
+        expr: >-
+          histogram_quantile(0.99, sum by (le, application, instance, command) (
+            rate(lettuce_command_completion_seconds_bucket[5m])
+          ))
 
       # Per-command request count (throughput proxy)
       - record: chrono:lettuce_command_completion_seconds_count:rate5m

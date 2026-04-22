@@ -4944,7 +4944,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Count of application × instance combinations where p95 Lettuce latency exceeds the 100 ms SLO threshold. Alert PromQL: histogram_quantile(0.95, sum by (le, application, instance, command) (chrono:lettuce_command_completion_seconds_bucket:rate5m{instance=~\"$instance\"})) > 0.100",
+      "description": "Count of application × instance combinations where p95 Lettuce latency exceeds the 100 ms SLO threshold. Alert PromQL: histogram_quantile(0.95, sum by (le, application, instance, command) (chrono:lettuce_command_completion_seconds_bucket:increase5m{instance=~\"$instance\"})) > 0.100",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -4999,7 +4999,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(  histogram_quantile(0.95, sum by (le, application, instance) (    chrono:lettuce_command_completion_seconds_bucket:rate5m{instance=~\"$instance\"}  )) > bool 0.100 or vector(0))",
+          "expr": "sum(  max by (application, instance) (    chrono:lettuce_command_completion_p95_seconds:5m{instance=~\"$instance\"}  ) > bool 0.100 or vector(0))",
           "legendFormat": "",
           "refId": "A",
           "interval": ""

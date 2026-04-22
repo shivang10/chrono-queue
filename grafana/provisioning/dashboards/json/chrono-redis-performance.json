@@ -719,7 +719,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "max(histogram_quantile(0.99, sum by (le, application, instance, command) (chrono:lettuce_command_completion_seconds_bucket:rate5m{application=~\"${application:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"})))",
+          "expr": "max(chrono:lettuce_command_completion_p99_seconds:5m{application=~\"${application:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"})",
           "legendFormat": "worst-case p99 latency",
           "refId": "A",
           "interval": ""
@@ -1638,7 +1638,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.50, sum by (le, application, instance, command) (chrono:lettuce_command_completion_seconds_bucket:rate5m{application=~\"${application:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"}))",
+          "expr": "chrono:lettuce_command_completion_p50_seconds:5m{application=~\"${application:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"}",
           "legendFormat": "p50 — {{application}} / {{instance}} / {{command}}",
           "refId": "A",
           "interval": ""
@@ -1648,7 +1648,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.95, sum by (le, application, instance, command) (chrono:lettuce_command_completion_seconds_bucket:rate5m{application=~\"${application:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"}))",
+          "expr": "chrono:lettuce_command_completion_p95_seconds:5m{application=~\"${application:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"}",
           "legendFormat": "p95 — {{application}} / {{instance}} / {{command}}",
           "refId": "B",
           "interval": ""
@@ -1658,7 +1658,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.99, sum by (le, application, instance, command) (chrono:lettuce_command_completion_seconds_bucket:rate5m{application=~\"${application:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"}))",
+          "expr": "chrono:lettuce_command_completion_p99_seconds:5m{application=~\"${application:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"}",
           "legendFormat": "p99 — {{application}} / {{instance}} / {{command}}",
           "refId": "C",
           "interval": ""
@@ -2716,7 +2716,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "1000 * histogram_quantile(0.95, sum by (le, application, instance, command) (chrono:lettuce_command_completion_seconds_bucket:rate5m{application=~\"${application:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"}))",
+          "expr": "1000 * chrono:lettuce_command_completion_p95_seconds:5m{application=~\"${application:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"}",
           "legendFormat": "p95 latency (ms) — {{application}} / {{instance}} / {{command}}",
           "refId": "B",
           "interval": ""
@@ -3600,7 +3600,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "topk(10, 1000 * histogram_quantile(0.99, sum by (le, application, instance, command) (chrono:lettuce_command_completion_seconds_bucket:rate5m{application=~\"${application:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"})))",
+          "expr": "topk(10, 1000 * chrono:lettuce_command_completion_p99_seconds:5m{application=~\"${application:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"})",
           "legendFormat": "{{application}} / {{instance}} / {{command}}",
           "refId": "A",
           "interval": ""
@@ -3811,8 +3811,8 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "topk(10, 1000 * histogram_quantile(0.99, sum by (le, application, instance, command) (chrono:lettuce_command_completion_seconds_bucket:rate5m{instance=~\"$instance\"})))",
-          "legendFormat": "{{application}} / {{instance}} — {{command}}",
+          "expr": "topk(10, 1000 * max by (application, instance) (chrono:lettuce_command_completion_p99_seconds:5m{instance=~\"$instance\"}))",
+          "legendFormat": "{{application}} / {{instance}}",
           "refId": "A"
         }
       ]
@@ -3996,7 +3996,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Count of application × instance combinations where p95 Lettuce latency exceeds the 100 ms SLO threshold. Alert PromQL: histogram_quantile(0.95, sum by (le, application, instance, command) (chrono:lettuce_command_completion_seconds_bucket:rate5m{instance=~\"$instance\", application=~\"$application\"})) > 0.100",
+      "description": "Count of application × instance combinations where p95 Lettuce latency exceeds the 100 ms SLO threshold. Alert PromQL: histogram_quantile(0.95, sum by (le, application, instance, command) (chrono:lettuce_command_completion_p95_seconds:5m{instance=~\"$instance\", application=~\"$application\"})) > 0.100",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -4051,7 +4051,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(  histogram_quantile(0.95, sum by (le, application, instance) (    chrono:lettuce_command_completion_seconds_bucket:rate5m{instance=~\"$instance\"}  )) > bool 0.100 or vector(0))",
+          "expr": "sum(  max by (application, instance) (    chrono:lettuce_command_completion_p95_seconds:5m{instance=~\"$instance\"}  ) > bool 0.100 or vector(0))",
           "legendFormat": "",
           "refId": "A",
           "interval": ""
@@ -4063,7 +4063,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Count of application × instance combinations where p99 Lettuce latency exceeds the 250 ms critical SLO threshold. Alert PromQL: histogram_quantile(0.99, sum by (le, application, instance, command) (chrono:lettuce_command_completion_seconds_bucket:rate5m{instance=~\"$instance\", application=~\"$application\"})) > 0.250",
+      "description": "Count of application × instance combinations where p99 Lettuce latency exceeds the 250 ms critical SLO threshold. Alert PromQL: histogram_quantile(0.99, sum by (le, application, instance, command) (chrono:lettuce_command_completion_p99_seconds:5m{instance=~\"$instance\", application=~\"$application\"})) > 0.250",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -4118,7 +4118,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(  histogram_quantile(0.99, sum by (le, application, instance) (    chrono:lettuce_command_completion_seconds_bucket:rate5m{instance=~\"$instance\"}  )) > bool 0.250 or vector(0))",
+          "expr": "sum(  max by (application, instance) (    chrono:lettuce_command_completion_p99_seconds:5m{instance=~\"$instance\"}  ) > bool 0.250 or vector(0))",
           "legendFormat": "",
           "refId": "A",
           "interval": ""

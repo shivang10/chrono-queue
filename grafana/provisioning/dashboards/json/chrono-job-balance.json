@@ -1396,10 +1396,14 @@
         "overrides": [
           {
             "matcher": {
-              "id": "byName",
-              "options": "Jobs Produced (log)"
+              "id": "byFrameRefID",
+              "options": "A"
             },
             "properties": [
+              {
+                "id": "displayName",
+                "value": "Jobs Produced (log)"
+              },
               {
                 "id": "color",
                 "value": {
@@ -1411,10 +1415,14 @@
           },
           {
             "matcher": {
-              "id": "byName",
-              "options": "Worker Success (log)"
+              "id": "byFrameRefID",
+              "options": "B"
             },
             "properties": [
+              {
+                "id": "displayName",
+                "value": "Worker Success (log)"
+              },
               {
                 "id": "color",
                 "value": {
@@ -1426,10 +1434,14 @@
           },
           {
             "matcher": {
-              "id": "byName",
-              "options": "DLQ Persisted (log)"
+              "id": "byFrameRefID",
+              "options": "C"
             },
             "properties": [
+              {
+                "id": "displayName",
+                "value": "DLQ Persisted (log)"
+              },
               {
                 "id": "color",
                 "value": {
@@ -1471,7 +1483,8 @@
           },
           "expr": "sum(count_over_time({job=\"job-producer\"} |= \"Job event published\" [$__range]))",
           "legendFormat": "Jobs Produced (log)",
-          "instant": true
+          "instant": true,
+          "refId": "A"
         },
         {
           "datasource": {
@@ -1480,7 +1493,8 @@
           },
           "expr": "sum(count_over_time({job=\"job-worker\"} |= \"Job processed successfully\" [$__range]))",
           "legendFormat": "Worker Success (log)",
-          "instant": true
+          "instant": true,
+          "refId": "B"
         },
         {
           "datasource": {
@@ -1489,7 +1503,8 @@
           },
           "expr": "sum(count_over_time({job=\"dlq\"} |= \"Failed job persisted to DLQ repository\" [$__range]))",
           "legendFormat": "DLQ Persisted (log)",
-          "instant": true
+          "instant": true,
+          "refId": "C"
         }
       ],
       "type": "stat"

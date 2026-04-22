@@ -1088,7 +1088,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.50, sum by (le) (rate(spring_kafka_listener_seconds_bucket{service=\"job-worker\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.50, sum by (le) (clamp_min(rate(spring_kafka_listener_seconds_bucket{service=\"job-worker\"}[$__rate_interval]), 0)))",
           "legendFormat": "p50",
           "refId": "A",
           "interval": "",
@@ -1099,7 +1099,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.90, sum by (le) (rate(spring_kafka_listener_seconds_bucket{service=\"job-worker\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.90, sum by (le) (clamp_min(rate(spring_kafka_listener_seconds_bucket{service=\"job-worker\"}[$__rate_interval]), 0)))",
           "legendFormat": "p90",
           "refId": "B",
           "interval": "",
@@ -1110,7 +1110,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(spring_kafka_listener_seconds_bucket{service=\"job-worker\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (clamp_min(rate(spring_kafka_listener_seconds_bucket{service=\"job-worker\"}[$__rate_interval]), 0)))",
           "legendFormat": "p95",
           "refId": "C",
           "interval": "",
@@ -1121,7 +1121,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.99, sum by (le) (rate(spring_kafka_listener_seconds_bucket{service=\"job-worker\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(spring_kafka_listener_seconds_bucket{service=\"job-worker\"}[$__rate_interval]), 0)))",
           "legendFormat": "p99",
           "refId": "D",
           "interval": "",
@@ -1670,7 +1670,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.50, sum by (le) (rate(spring_kafka_template_seconds_bucket{service=\"retry-dispatcher\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.50, sum by (le) (clamp_min(rate(spring_kafka_template_seconds_bucket{service=\"retry-dispatcher\"}[$__rate_interval]), 0)))",
           "legendFormat": "p50",
           "refId": "A",
           "interval": "",
@@ -1681,7 +1681,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.90, sum by (le) (rate(spring_kafka_template_seconds_bucket{service=\"retry-dispatcher\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.90, sum by (le) (clamp_min(rate(spring_kafka_template_seconds_bucket{service=\"retry-dispatcher\"}[$__rate_interval]), 0)))",
           "legendFormat": "p90",
           "refId": "B",
           "interval": "",
@@ -1692,7 +1692,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(spring_kafka_template_seconds_bucket{service=\"retry-dispatcher\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (clamp_min(rate(spring_kafka_template_seconds_bucket{service=\"retry-dispatcher\"}[$__rate_interval]), 0)))",
           "legendFormat": "p95",
           "refId": "C",
           "interval": "",
@@ -1703,7 +1703,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.99, sum by (le) (rate(spring_kafka_template_seconds_bucket{service=\"retry-dispatcher\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(spring_kafka_template_seconds_bucket{service=\"retry-dispatcher\"}[$__rate_interval]), 0)))",
           "legendFormat": "p99",
           "refId": "D",
           "interval": "",
@@ -1841,7 +1841,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.50, sum by (le) (rate(mongodb_driver_commands_seconds_bucket{service=\"dlq-service\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.50, sum by (le) (increase(mongodb_driver_commands_seconds_bucket{service=\"dlq-service\"}[$__rate_interval])))",
           "legendFormat": "p50",
           "refId": "A",
           "interval": "",
@@ -1852,7 +1852,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.90, sum by (le) (rate(mongodb_driver_commands_seconds_bucket{service=\"dlq-service\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.90, sum by (le) (increase(mongodb_driver_commands_seconds_bucket{service=\"dlq-service\"}[$__rate_interval])))",
           "legendFormat": "p90",
           "refId": "B",
           "interval": "",
@@ -1863,7 +1863,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(mongodb_driver_commands_seconds_bucket{service=\"dlq-service\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (increase(mongodb_driver_commands_seconds_bucket{service=\"dlq-service\"}[$__rate_interval])))",
           "legendFormat": "p95",
           "refId": "C",
           "interval": "",
@@ -1874,7 +1874,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.99, sum by (le) (rate(mongodb_driver_commands_seconds_bucket{service=\"dlq-service\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.99, sum by (le) (increase(mongodb_driver_commands_seconds_bucket{service=\"dlq-service\"}[$__rate_interval])))",
           "legendFormat": "p99",
           "refId": "D",
           "interval": "",
