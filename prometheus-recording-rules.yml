@@ -1,0 +1,165 @@
+groups:
+  # ============================================================================
+  # chrono-queue · Redis recording rules
+  #
+  # Evaluation interval: matches Prometheus global.evaluation_interval (15s).
+  # Rate window: 5m — chosen to be ≥ 4× scrape_interval (15s) and provide a
+  # stable, low-noise derivative for dashboards and alerts.
+  #
+  # Naming convention: chrono:<metric_basename>:<operation_and_window>
+  # All rules aggregate by (instance, service) to match redis-exporter labels.
+  # ============================================================================
+  - name: chrono_redis_rate5m
+    interval: 15s
+    rules:
+
+      # ── Throughput ────────────────────────────────────────────────────────
+      - record: chrono:redis_commands_processed_total:rate5m
+        expr: >-
+          sum by (instance, service) (
+            rate(redis_commands_processed_total[5m])
+          )
+
+      # ── Network I/O ───────────────────────────────────────────────────────
+      - record: chrono:redis_net_input_bytes_total:rate5m
+        expr: >-
+          sum by (instance, service) (
+            rate(redis_net_input_bytes_total[5m])
+          )
+
+      - record: chrono:redis_net_output_bytes_total:rate5m
+        expr: >-
+          sum by (instance, service) (
+            rate(redis_net_output_bytes_total[5m])
+          )
+
+      # ── CPU utilisation ───────────────────────────────────────────────────
+      # Total CPU % (sys + user) as a fraction of a single core.
+      - record: chrono:redis_cpu_total_seconds:pct_rate5m
+        expr: >-
+          100 * sum by (instance, service) (
+            rate(redis_cpu_sys_seconds_total[5m])
+            + rate(redis_cpu_user_seconds_total[5m])
+          )
+
+      # User-space CPU % (single-core basis).
+      - record: chrono:redis_cpu_user_seconds:pct_rate5m
+        expr: >-
+          100 * sum by (instance, service) (
+            rate(redis_cpu_user_seconds_total[5m])
+          )
+
+      # Kernel-space CPU % (single-core basis).
+      - record: chrono:redis_cpu_sys_seconds:pct_rate5m
+        expr: >-
+          100 * sum by (instance, service) (
+            rate(redis_cpu_sys_seconds_total[5m])
+          )
+
+      # Core-normalised CPU %: falls back to single-core % when
+      # machine_cpu_cores is not available (node_exporter absent).
+      - record: chrono:redis_cpu_normalized:pct_rate5m
+        expr: >-
+          (
+            100 * sum by (instance, service) (
+              rate(redis_cpu_sys_seconds_total[5m])
+              + rate(redis_cpu_user_seconds_total[5m])
+            )
+            / on(instance) group_left(service)
+              clamp_min(max by (instance) (machine_cpu_cores), 1)
+          )
+          or
+          (
+            100 * sum by (instance, service) (
+              rate(redis_cpu_sys_seconds_total[5m])
+              + rate(redis_cpu_user_seconds_total[5m])
+            )
+          )
+
+      # ── Keyspace / cache efficiency ───────────────────────────────────────
+      # Cache hit rate in % — clamped to [0, 100].
+      # Uses clamp_min on the denominator to avoid division by zero on idle.
+      - record: chrono:redis_keyspace_hit_rate:ratio_rate5m
+        expr: >-
+          clamp_max(
+            clamp_min(
+              100 * sum by (instance, service) (
+                rate(redis_keyspace_hits_total[5m])
+              )
+              / clamp_min(
+                  sum by (instance, service) (
+                    rate(redis_keyspace_hits_total[5m])
+                    + rate(redis_keyspace_misses_total[5m])
+                  ),
+                  1e-9
+                ),
+              0
+            ),
+            100
+          )
+
+      # ── Evictions and expirations ─────────────────────────────────────────
+      - record: chrono:redis_evicted_keys_total:rate5m
+        expr: >-
+          sum by (instance, service) (
+            rate(redis_evicted_keys_total[5m])
+          )
+
+      - record: chrono:redis_expired_keys_total:rate5m
+        expr: >-
+          sum by (instance, service) (
+            rate(redis_expired_keys_total[5m])
+          )
+
+      # ── Connection health ─────────────────────────────────────────────────
+      - record: chrono:redis_rejected_connections_total:rate5m
+        expr: >-
+          sum by (instance, service) (
+            rate(redis_rejected_connections_total[5m])
+          )
+
+  # ============================================================================
+  # chrono-queue · Lettuce (Spring Boot Redis client) recording rules
+  #
+  # Labels retained: application, instance, command — preserves full breakdown
+  # for per-command analysis while eliminating repeated per-request rate work.
+  # The _bucket rule keeps "le" so histogram_quantile() continues to work.
+  # ============================================================================
+  - name: chrono_lettuce_rate5m
+    interval: 15s
+    rules:
+
+      # histogram_quantile input — shape: {le, application, instance, command}
+      - record: chrono:lettuce_command_completion_seconds_bucket:rate5m
+        expr: >-
+          sum by (le, application, instance, command) (
+            rate(lettuce_command_completion_seconds_bucket[5m])
+          )
+
+      # Per-command request count (throughput proxy)
+      - record: chrono:lettuce_command_completion_seconds_count:rate5m
+        expr: >-
+          sum by (application, instance, command) (
+            rate(lettuce_command_completion_seconds_count[5m])
+          )
+
+      # Per-command latency sum (divide by count for avg latency)
+      - record: chrono:lettuce_command_completion_seconds_sum:rate5m
+        expr: >-
+          sum by (application, instance, command) (
+            rate(lettuce_command_completion_seconds_sum[5m])
+          )
+
+      # First-response latency sum (time-to-first-byte from Redis)
+      - record: chrono:lettuce_command_firstresponse_seconds_sum:rate5m
+        expr: >-
+          sum by (application, instance, command) (
+            rate(lettuce_command_firstresponse_seconds_sum[5m])
+          )
+
+      # First-response latency count
+      - record: chrono:lettuce_command_firstresponse_seconds_count:rate5m
+        expr: >-
+          sum by (application, instance, command) (
+            rate(lettuce_command_firstresponse_seconds_count[5m])
+          )

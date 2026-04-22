@@ -15,7 +15,7 @@
       }
     ]
   },
-  "description": "Redis health, memory utilisation, keyspace metrics, cache hit rate, persistence status, and eviction rates for chrono-queue.",
+  "description": "Redis health, replication lag & role, memory utilisation, keyspace metrics, persistence status (AOF rewrite, BGSAVE latency), server-side command latency, evictions, per-instance breakdown bar gauges, and Top-N rankings for chrono-queue. High-level signals plus instant multi-instance comparison — see Redis Performance and Latency for detailed time-series and alert analysis.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 2,
@@ -44,7 +44,17 @@
       },
       "id": 100,
       "title": "Redis Health & Status",
-      "type": "row"
+      "type": "row",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "thresholds": {
+            "mode": "absolute",
+            "steps": []
+          }
+        },
+        "overrides": []
+      }
     },
     {
       "datasource": {
@@ -86,7 +96,8 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "short",
+          "custom": {}
         },
         "overrides": []
       },
@@ -119,11 +130,12 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "redis_up",
+          "expr": "min(redis_up{instance=~\"$instance\"})",
           "legendFormat": "",
           "refId": "A"
         }
-      ]
+      ],
+      "description": "Redis exporter availability across the selected Redis instances. Uses the minimum value so any selected down instance turns the stat red."
     },
     {
       "datasource": {
@@ -153,7 +165,8 @@
               }
             ]
           },
-          "unit": "s"
+          "unit": "s",
+          "custom": {}
         },
         "overrides": []
       },
@@ -186,11 +199,12 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "redis_uptime_in_seconds",
+          "expr": "max(redis_uptime_in_seconds{instance=~\"$instance\"})",
           "legendFormat": "",
           "refId": "A"
         }
-      ]
+      ],
+      "description": "Maximum uptime across the selected Redis instances. Useful for spotting recent Redis restarts."
     },
     {
       "datasource": {
@@ -220,7 +234,8 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "short",
+          "custom": {}
         },
         "overrides": []
       },
@@ -253,12 +268,12 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "redis_connected_clients",
+          "expr": "sum(redis_connected_clients{instance=~\"$instance\"})",
           "legendFormat": "",
           "refId": "A"
         }
       ],
-      "description": "Number of active client connections to Redis. Each Spring Boot service (job-worker, retry-dispatcher) maintains a Lettuce connection pool. Values exceeding the configured maxclients limit will cause rejected connections."
+      "description": "Total connected Redis clients summed across the selected Redis instances."
     },
     {
       "datasource": {
@@ -288,7 +303,8 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "short",
+          "custom": {}
         },
         "overrides": []
       },
@@ -321,19 +337,19 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "redis_blocked_clients",
+          "expr": "sum(redis_blocked_clients{instance=~\"$instance\"})",
           "legendFormat": "",
           "refId": "A"
         }
       ],
-      "description": "Clients blocked on a blocking command (e.g. BLPOP, BRPOP, WAIT). Non-zero values indicate jobs are waiting on blocking reads — expected for BRPOP-based queue patterns, but high counts may indicate stalled consumers."
+      "description": "Total blocked clients across the selected Redis instances. Sustained non-zero values usually indicate command stalls or backend contention."
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Percentage of Redis key lookups that are served from cache. Values below 90% indicate a potential cache efficiency issue.",
+      "description": "Fleet cache hit rate: aggregate hits divided by total lookups (hits + misses) across all selected instances. Ratio is computed from combined counters — not an average of per-instance ratios — so high-traffic instances are correctly weighted. Values below 90% indicate a potential cache efficiency issue.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -357,7 +373,9 @@
               }
             ]
           },
-          "unit": "percent"
+          "unit": "percent",
+          "custom": {},
+          "decimals": 1
         },
         "overrides": []
       },
@@ -390,7 +408,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "clamp_max(clamp_min(100 * rate(redis_keyspace_hits_total[$__rate_interval]) / clamp_min((rate(redis_keyspace_hits_total[$__rate_interval]) + rate(redis_keyspace_misses_total[$__rate_interval])), 1e-9), 0), 100)",
+          "expr": "chrono:redis_keyspace_hit_rate:ratio_rate5m{instance=~\"$instance\"}",
           "legendFormat": "",
           "refId": "A"
         }
@@ -416,7 +434,8 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "short",
+          "custom": {}
         },
         "overrides": []
       },
@@ -449,7 +468,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(redis_db_keys)",
+          "expr": "sum(redis_db_keys{instance=~\"$instance\"})",
           "legendFormat": "",
           "refId": "A"
         }
@@ -461,7 +480,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Rate of keys being evicted per second due to maxmemory policy. Any evictions indicate memory pressure.",
+      "description": "Aggregate eviction rate across the selected Redis instances. Any sustained non-zero eviction rate indicates memory pressure and should page an operator if the cache is expected to be lossless.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -485,7 +504,8 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "short",
+          "custom": {}
         },
         "overrides": []
       },
@@ -518,7 +538,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "rate(redis_evicted_keys_total[$__rate_interval])",
+          "expr": "sum(chrono:redis_evicted_keys_total:rate5m{instance=~\"$instance\"})",
           "legendFormat": "",
           "refId": "A"
         }
@@ -565,7 +585,8 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "short",
+          "custom": {}
         },
         "overrides": []
       },
@@ -598,7 +619,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "redis_rdb_last_bgsave_status",
+          "expr": "min(redis_rdb_last_bgsave_status{instance=~\"$instance\"})",
           "legendFormat": "",
           "refId": "A"
         }
@@ -614,7 +635,17 @@
       },
       "id": 200,
       "title": "Memory Resources",
-      "type": "row"
+      "type": "row",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "thresholds": {
+            "mode": "absolute",
+            "steps": []
+          }
+        },
+        "overrides": []
+      }
     },
     {
       "datasource": {
@@ -644,7 +675,8 @@
               }
             ]
           },
-          "unit": "bytes"
+          "unit": "bytes",
+          "custom": {}
         },
         "overrides": []
       },
@@ -677,7 +709,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "redis_memory_used_bytes",
+          "expr": "sum(redis_memory_used_bytes{instance=~\"$instance\"})",
           "legendFormat": "",
           "refId": "A"
         }
@@ -689,23 +721,33 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Resident Set Size — the amount of memory allocated by the OS for Redis. Higher than 'Memory Used' due to OS overhead.",
+      "description": "Current used memory ranked per Redis instance. Replaces the opaque aggregate RSS stat to surface per-instance memory differences at a glance. See Memory Usage Over Time for trends.",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
           "mappings": [],
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "blue",
+                "color": "green",
                 "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 268435456
+              },
+              {
+                "color": "red",
+                "value": 536870912
               }
             ]
           },
-          "unit": "bytes"
+          "unit": "bytes",
+          "custom": {}
         },
         "overrides": []
       },
@@ -717,9 +759,9 @@
       },
       "id": 10,
       "options": {
-        "colorMode": "background",
-        "graphMode": "area",
-        "justifyMode": "center",
+        "displayMode": "gradient",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
         "orientation": "horizontal",
         "reduceOptions": {
           "calcs": [
@@ -728,19 +770,21 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showUnfilled": true,
+        "text": {}
       },
-      "title": "Memory RSS",
-      "type": "stat",
+      "title": "Memory Used per Instance",
+      "type": "bargauge",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "redis_memory_used_rss_bytes",
-          "legendFormat": "",
-          "refId": "A"
+          "expr": "topk(10, redis_memory_used_bytes{instance=~\"$instance\"})",
+          "legendFormat": "{{service}} / {{instance}}",
+          "refId": "A",
+          "interval": ""
         }
       ]
     },
@@ -749,13 +793,14 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "RSS / Used ratio. >1.5 indicates fragmentation (wasted memory). <1.0 indicates Redis memory is being swapped to disk — critical risk.",
+      "description": "Memory fragmentation ratio (RSS/Used) per Redis instance. >1.5 indicates fragmentation waste; <1.0 means Redis memory is being swapped to disk — critical risk. Replaces the single max() aggregate stat which masked per-instance divergence.",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
           "mappings": [],
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -778,7 +823,8 @@
             ]
           },
           "unit": "short",
-          "decimals": 2
+          "decimals": 2,
+          "custom": {}
         },
         "overrides": []
       },
@@ -790,9 +836,9 @@
       },
       "id": 11,
       "options": {
-        "colorMode": "background",
-        "graphMode": "area",
-        "justifyMode": "center",
+        "displayMode": "gradient",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
         "orientation": "horizontal",
         "reduceOptions": {
           "calcs": [
@@ -801,19 +847,21 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showUnfilled": true,
+        "text": {}
       },
-      "title": "Memory Fragmentation Ratio",
-      "type": "stat",
+      "title": "Fragmentation Ratio per Instance",
+      "type": "bargauge",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "redis_mem_fragmentation_ratio",
-          "legendFormat": "",
-          "refId": "A"
+          "expr": "topk(10, redis_mem_fragmentation_ratio{instance=~\"$instance\"})",
+          "legendFormat": "{{service}} / {{instance}}",
+          "refId": "A",
+          "interval": ""
         }
       ]
     },
@@ -849,7 +897,8 @@
               }
             ]
           },
-          "unit": "bytes"
+          "unit": "bytes",
+          "custom": {}
         },
         "overrides": []
       },
@@ -882,7 +931,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "redis_memory_max_bytes",
+          "expr": "sum(redis_memory_max_bytes{instance=~\"$instance\"})",
           "legendFormat": "",
           "refId": "A"
         }
@@ -893,7 +942,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Memory Used, RSS, Peak, and Max configured over time. Growing gap between RSS and Used may indicate fragmentation. Peak approaching Max signals risk of eviction.",
+      "description": "Memory saturation view by Redis instance and application label. Comparing used, RSS, peak, and configured max memory makes memory pressure and fragmentation easier to spot before evictions begin.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -940,7 +989,8 @@
               }
             ]
           },
-          "unit": "bytes"
+          "unit": "bytes",
+          "decimals": 0
         },
         "overrides": []
       },
@@ -975,8 +1025,8 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "redis_memory_used_bytes",
-          "legendFormat": "Memory Used",
+          "expr": "sum by (instance, service) (redis_memory_used_bytes{instance=~\"$instance\"})",
+          "legendFormat": "Used — {{service}} / {{instance}}",
           "refId": "A"
         },
         {
@@ -984,8 +1034,8 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "redis_memory_used_rss_bytes",
-          "legendFormat": "Memory RSS",
+          "expr": "sum by (instance, service) (redis_memory_used_rss_bytes{instance=~\"$instance\"})",
+          "legendFormat": "RSS — {{service}} / {{instance}}",
           "refId": "B"
         },
         {
@@ -993,8 +1043,8 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "redis_memory_used_peak_bytes",
-          "legendFormat": "Memory Peak (all-time)",
+          "expr": "sum by (instance, service) (redis_memory_used_peak_bytes{instance=~\"$instance\"})",
+          "legendFormat": "Peak — {{service}} / {{instance}}",
           "refId": "C"
         },
         {
@@ -1002,30 +1052,18 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "redis_memory_max_bytes > 0",
-          "legendFormat": "Max Memory (configured)",
+          "expr": "sum by (instance, service) (redis_memory_max_bytes{instance=~\"$instance\"})",
+          "legendFormat": "Max Configured — {{service}} / {{instance}}",
           "refId": "D"
         }
       ]
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 18
-      },
-      "id": 300,
-      "title": "Keyspace & Cache Efficiency",
-      "type": "row"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Cache hit rate over time. A healthy production Redis cache should sustain >90%. Drops below 70% indicate cache misses are causing pressure on upstream data stores.",
+      "description": "Memory pressure ratio per Redis instance and application, computed as used memory divided by configured maxmemory. Instances with maxmemory=0 are excluded because they are effectively unlimited and would otherwise distort the ratio.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1063,42 +1101,43 @@
             }
           },
           "mappings": [],
-          "max": 100,
+          "max": 1,
           "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "red",
+                "color": "green",
                 "value": null
               },
               {
                 "color": "yellow",
-                "value": 70
+                "value": 0.7
               },
               {
-                "color": "green",
-                "value": 90
+                "color": "red",
+                "value": 0.85
               }
             ]
           },
-          "unit": "percent"
+          "unit": "percentunit",
+          "decimals": 2
         },
         "overrides": []
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
+        "w": 24,
         "x": 0,
-        "y": 19
+        "y": 18
       },
-      "id": 14,
+      "id": 18,
       "options": {
         "legend": {
           "calcs": [
             "mean",
-            "min",
-            "lastNotNull"
+            "lastNotNull",
+            "max"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -1109,7 +1148,7 @@
           "sort": "desc"
         }
       },
-      "title": "Cache Hit Rate Over Time",
+      "title": "Memory Pressure",
       "type": "timeseries",
       "targets": [
         {
@@ -1117,18 +1156,40 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "clamp_max(clamp_min(100 * rate(redis_keyspace_hits_total[$__rate_interval]) / clamp_min((rate(redis_keyspace_hits_total[$__rate_interval]) + rate(redis_keyspace_misses_total[$__rate_interval])), 1e-9), 0), 100)",
-          "legendFormat": "Hit Rate %",
+          "expr": "sum by (instance, service) (redis_memory_used_bytes{instance=~\"$instance\"} and on(instance, service) (redis_memory_max_bytes{instance=~\"$instance\"} > 0)) / clamp_min(sum by (instance, service) (redis_memory_max_bytes{instance=~\"$instance\"} > 0), 1e-9)",
+          "legendFormat": "{{service}} / {{instance}}",
           "refId": "A"
         }
       ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 26
+      },
+      "id": 300,
+      "title": "Keyspace & Cache Efficiency",
+      "type": "row",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "thresholds": {
+            "mode": "absolute",
+            "steps": []
+          }
+        },
+        "overrides": []
+      }
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Total keys and expiring keys per database. A large ratio of expiring-to-total keys indicates heavy TTL usage (expected for deduplication patterns).",
+      "description": "Key counts by Redis database with explicit instance/application labels for multi-instance or multi-tenant expansion.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1176,15 +1237,16 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "short",
+          "decimals": 1
         },
         "overrides": []
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 19
+        "w": 24,
+        "x": 0,
+        "y": 27
       },
       "id": 15,
       "options": {
@@ -1211,8 +1273,8 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "redis_db_keys",
-          "legendFormat": "{{db}} — total keys",
+          "expr": "sum by (instance, service, db) (redis_db_keys{instance=~\"$instance\"})",
+          "legendFormat": "{{service}} / {{instance}} / {{db}} — total keys",
           "refId": "A"
         },
         {
@@ -1220,8 +1282,8 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "redis_db_keys_expiring",
-          "legendFormat": "{{db}} — expiring keys",
+          "expr": "sum by (instance, service, db) (redis_db_keys_expiring{instance=~\"$instance\"})",
+          "legendFormat": "{{service}} / {{instance}} / {{db}} — expiring keys",
           "refId": "B"
         }
       ]
@@ -1232,18 +1294,28 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 27
+        "y": 35
       },
       "id": 400,
       "title": "Persistence & Evictions",
-      "type": "row"
+      "type": "row",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "thresholds": {
+            "mode": "absolute",
+            "steps": []
+          }
+        },
+        "overrides": []
+      }
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Rate of keys being evicted (forced removal due to maxmemory policy) vs keys expiring naturally by TTL. Evictions should be zero in a healthy system; spikes indicate memory pressure.",
+      "description": "Separates memory-pressure evictions (red) from expected TTL expirations (blue) per instance. Red threshold line at > 0 evictions/s: any sustained eviction fires the alert. Alert PromQL: sum by (instance, service) (increase(redis_evicted_keys_total{instance=~\"$instance\"}[$__rate_interval])) > 0.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1291,7 +1363,8 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "short",
+          "decimals": 1
         },
         "overrides": [
           {
@@ -1305,6 +1378,28 @@
                 "value": {
                   "fixedColor": "red",
                   "mode": "fixed"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 0.001
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.thresholdsStyle",
+                "value": {
+                  "mode": "line"
                 }
               }
             ]
@@ -1330,7 +1425,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 28
+        "y": 36
       },
       "id": 16,
       "options": {
@@ -1357,8 +1452,8 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "rate(redis_evicted_keys_total[$__rate_interval])",
-          "legendFormat": "Evictions/s (memory pressure)",
+          "expr": "chrono:redis_evicted_keys_total:rate5m{instance=~\"$instance\"}",
+          "legendFormat": "Evictions/s — {{service}} / {{instance}}",
           "refId": "A"
         },
         {
@@ -1366,8 +1461,8 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "rate(redis_expired_keys_total[$__rate_interval])",
-          "legendFormat": "Expirations/s (TTL)",
+          "expr": "chrono:redis_expired_keys_total:rate5m{instance=~\"$instance\"}",
+          "legendFormat": "Expirations/s — {{service}} / {{instance}}",
           "refId": "B"
         }
       ]
@@ -1377,7 +1472,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Number of write operations since the last RDB snapshot. A very high and growing value means more data loss risk if Redis restarts before the next save.",
+      "description": "Unsaved write backlog by Redis instance/application label. Sustained growth usually means background saves are failing or not keeping pace with write volume.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1425,7 +1520,8 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "short",
+          "decimals": 1
         },
         "overrides": []
       },
@@ -1433,7 +1529,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 28
+        "y": 36
       },
       "id": 17,
       "options": {
@@ -1460,9 +1556,4113 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "redis_rdb_changes_since_last_save",
-          "legendFormat": "Unsaved changes",
+          "expr": "max by (instance, service) (redis_rdb_changes_since_last_save{instance=~\"$instance\"})",
+          "legendFormat": "Unsaved changes — {{service}} / {{instance}}",
           "refId": "A"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 44
+      },
+      "id": 910,
+      "title": "Replication",
+      "type": "row",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "thresholds": {
+            "mode": "absolute",
+            "steps": []
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Total number of connected Redis replicas across the selected Redis instances. For a single primary this should align with your configured replica count.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "yellow",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "N/A",
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 45
+      },
+      "id": 911,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "title": "Connected Replicas",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(redis_connected_slaves{instance=~\"$instance\"})",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Minimum replication link status over selected instances (1=UP, 0=DOWN). Any broken primary-replica link turns this panel red.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "red",
+                  "index": 0,
+                  "text": "LINK DOWN"
+                },
+                "1": {
+                  "color": "green",
+                  "index": 1,
+                  "text": "LINK UP"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "N/A",
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 45
+      },
+      "id": 912,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "title": "Master Link Status",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "min(redis_master_link_status{instance=~\"$instance\"})",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Replication health trend by instance/application. Connected replicas (left axis) tracks fan-out; master link status highlights broken replication links. Role count series shows instance role distribution — step changes indicate failovers.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "line"
+            }
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short",
+          "decimals": 1
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*Master Link.*"
+            },
+            "properties": [
+              {
+                "id": "max",
+                "value": 1
+              },
+              {
+                "id": "min",
+                "value": 0
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 45
+      },
+      "id": 913,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "Replication Health Over Time",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum by (instance, service) (redis_connected_slaves{instance=~\"$instance\"})",
+          "legendFormat": "Connected Replicas — {{service}} / {{instance}}",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "min by (instance, service) (redis_master_link_status{instance=~\"$instance\"})",
+          "legendFormat": "Master Link — {{service}} / {{instance}}",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count by (role) (redis_instance_info{instance=~\"$instance\"})",
+          "legendFormat": "Role count: {{role}}",
+          "refId": "C",
+          "hide": false
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 53
+      },
+      "id": 940,
+      "title": "Correlation Analysis",
+      "type": "row",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "thresholds": {
+            "mode": "absolute",
+            "steps": []
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Correlates Redis memory growth against eviction rate per instance. Right-axis threshold line at > 0 (red): any eviction fires the alert. Alert PromQL: sum by (instance, service) (increase(redis_evicted_keys_total{instance=~\"$instance\"}[$__rate_interval])) > 0. Rising memory with non-zero evictions indicates hard memory pressure and potential data churn.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "bytes",
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "Evictions/s.*"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 0.001
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.thresholdsStyle",
+                "value": {
+                  "mode": "line"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 54
+      },
+      "id": 941,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "Correlation: Memory Used vs Evictions",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum by (instance, service) (redis_memory_used_bytes{instance=~\"$instance\"})",
+          "legendFormat": "Memory Used — {{service}} / {{instance}}",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "chrono:redis_evicted_keys_total:rate5m{instance=~\"$instance\"}",
+          "legendFormat": "Evictions/s — {{service}} / {{instance}}",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Correlates active client connections against rejected connection rate per instance. Right-axis threshold line at > 0 (red): any rejected connection fires the alert. Alert PromQL: sum by (instance, service) (increase(redis_rejected_connections_total{instance=~\"$instance\"}[$__rate_interval])) > 0. Rejected spikes near the maxclients ceiling indicate upstream pool exhaustion.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short",
+          "decimals": 1
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "Rejected\\/s.*"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 0.001
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.thresholdsStyle",
+                "value": {
+                  "mode": "line"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 62
+      },
+      "id": 942,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "Correlation: Connections vs Rejected Connections",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum by (instance, service) (redis_connected_clients{instance=~\"$instance\"})",
+          "legendFormat": "Connected Clients — {{service}} / {{instance}}",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "chrono:redis_rejected_connections_total:rate5m{instance=~\"$instance\"}",
+          "legendFormat": "Rejected/s — {{service}} / {{instance}}",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Correlates Redis CPU utilization (sys+user, % of one core) against command throughput by instance and application. A rising CPU-per-command ratio flags increasingly expensive workloads. Threshold lines at 70 % and 85 % match SLO alert levels.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "line"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "percent",
+          "decimals": 2
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "cmd\\/s.*"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "reqps"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 70
+      },
+      "id": 943,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "Correlation: CPU Utilization vs Command Rate",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "chrono:redis_cpu_total_seconds:pct_rate5m{instance=~\"$instance\"}",
+          "legendFormat": "CPU % — {{service}} / {{instance}}",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "chrono:redis_commands_processed_total:rate5m{instance=~\"$instance\"}",
+          "legendFormat": "cmd/s — {{service}} / {{instance}}",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Correlates aggregate Redis command throughput against mean Lettuce client latency per instance. Right-axis threshold lines: warn at 10 ms (yellow) and critical at 50 ms (red). A latency spike that tracks command rate growth is load-driven; divergence from command rate typically indicates a Redis-side regression (slowdown, blocking command, GC, swap).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "reqps",
+          "decimals": 1
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "Avg Latency.*"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "ms"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "purple",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 10
+                    },
+                    {
+                      "color": "red",
+                      "value": 50
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.thresholdsStyle",
+                "value": {
+                  "mode": "line"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 78
+      },
+      "id": 944,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "Correlation: Commands Rate vs Lettuce Avg Latency",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "chrono:redis_commands_processed_total:rate5m{instance=~\"$instance\"}",
+          "legendFormat": "cmd/s — {{service}} / {{instance}}",
+          "refId": "A",
+          "interval": ""
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "1000 * sum by (application, instance) (chrono:lettuce_command_completion_seconds_sum:rate5m{instance=~\"$instance\"}) / clamp_min(sum by (application, instance) (chrono:lettuce_command_completion_seconds_count:rate5m{instance=~\"$instance\"}), 1e-9)",
+          "legendFormat": "Avg Latency (ms) — {{application}} / {{instance}}",
+          "refId": "B",
+          "interval": ""
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 86
+      },
+      "id": 600,
+      "title": "Per-Instance Breakdown",
+      "type": "row",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "thresholds": {
+            "mode": "absolute",
+            "steps": []
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Ranked memory consumption per Redis instance. Surface highest-memory instances for targeted investigation before evictions begin.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 268435456
+              },
+              {
+                "color": "red",
+                "value": 536870912
+              }
+            ]
+          },
+          "unit": "bytes",
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 87
+      },
+      "id": 601,
+      "options": {
+        "displayMode": "gradient",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "text": {}
+      },
+      "title": "Memory Usage by Instance (Current)",
+      "type": "bargauge",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "topk(10, redis_memory_used_bytes{instance=~\"$instance\"})",
+          "legendFormat": "{{service}} / {{instance}}",
+          "refId": "A",
+          "interval": ""
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Current CPU utilisation per Redis instance. Use alongside the Correlation section to identify CPU-bound instances and correlate with command rate and latency.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 50
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percent",
+          "max": 100,
+          "decimals": 2,
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 87
+      },
+      "id": 602,
+      "options": {
+        "displayMode": "gradient",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "text": {}
+      },
+      "title": "CPU % by Instance (Current)",
+      "type": "bargauge",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "topk(10, chrono:redis_cpu_total_seconds:pct_rate5m{instance=~\"$instance\"})",
+          "legendFormat": "{{service}} / {{instance}}",
+          "refId": "A",
+          "interval": ""
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Current command throughput per Redis instance, Top-10 ranked. Reveals traffic imbalance across multi-instance deployments.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "reqps",
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 87
+      },
+      "id": 603,
+      "options": {
+        "displayMode": "gradient",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "text": {}
+      },
+      "title": "Command Rate by Instance (Current)",
+      "type": "bargauge",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "topk(10, chrono:redis_commands_processed_total:rate5m{instance=~\"$instance\"})",
+          "legendFormat": "{{service}} / {{instance}}",
+          "refId": "A",
+          "interval": ""
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 95
+      },
+      "id": 700,
+      "title": "Top-N Rankings",
+      "type": "row",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "thresholds": {
+            "mode": "absolute",
+            "steps": []
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Top-10 Redis instances ranked by current memory consumption. Primary capacity planning signal for identifying eviction risk across a multi-instance deployment.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 268435456
+              },
+              {
+                "color": "red",
+                "value": 536870912
+              }
+            ]
+          },
+          "unit": "bytes",
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 96
+      },
+      "id": 701,
+      "options": {
+        "displayMode": "gradient",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "text": {}
+      },
+      "title": "Top-10 Memory Usage Instances",
+      "type": "bargauge",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "topk(10, redis_memory_used_bytes{instance=~\"$instance\"})",
+          "legendFormat": "{{service}} / {{instance}}",
+          "refId": "A",
+          "interval": ""
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Top-10 instances by total key count (all databases summed). High key cardinality correlates with memory growth and SCAN/KEYS latency.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1000000
+              },
+              {
+                "color": "red",
+                "value": 5000000
+              }
+            ]
+          },
+          "unit": "short",
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 96
+      },
+      "id": 702,
+      "options": {
+        "displayMode": "gradient",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "text": {}
+      },
+      "title": "Top-10 Highest Key Count Instances",
+      "type": "bargauge",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "topk(10, sum by (instance, service) (redis_db_keys{instance=~\"$instance\"}))",
+          "legendFormat": "{{service}} / {{instance}}",
+          "refId": "A",
+          "interval": ""
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Top-10 instances by current connected client count. Instances near maxclients risk rejecting new connections from upstream Spring Boot services.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 50
+              },
+              {
+                "color": "red",
+                "value": 100
+              }
+            ]
+          },
+          "unit": "short",
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 96
+      },
+      "id": 703,
+      "options": {
+        "displayMode": "gradient",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "text": {}
+      },
+      "title": "Top-10 Instances by Connected Clients",
+      "type": "bargauge",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "topk(10, redis_connected_clients{instance=~\"$instance\"})",
+          "legendFormat": "{{service}} / {{instance}}",
+          "refId": "A",
+          "interval": ""
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 112
+      },
+      "id": 800,
+      "title": "Replication — Lag & Role",
+      "type": "row",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "thresholds": {
+            "mode": "absolute",
+            "steps": []
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Redis role per instance derived from redis_instance_info{role=...}. Expected values: ‘master’ (primary), ‘slave’ (replica), ‘sentinel’. Any instance unexpectedly showing ‘slave’ where a master is expected indicates a failover or misconfiguration. Use alongside Broken Replication Links and Replication Lag Analysis below.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "master": {
+                  "color": "green",
+                  "index": 0,
+                  "text": "MASTER"
+                },
+                "slave": {
+                  "color": "blue",
+                  "index": 1,
+                  "text": "REPLICA"
+                },
+                "sentinel": {
+                  "color": "orange",
+                  "index": 2,
+                  "text": "SENTINEL"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "string",
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 0,
+        "y": 113
+      },
+      "id": 801,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^role$/",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "title": "Redis Role per Instance",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "redis_instance_info{instance=~\"$instance\"}",
+          "legendFormat": "{{instance}} — {{role}}",
+          "refId": "A",
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "__name__": true,
+              "Time": true,
+              "Value": true,
+              "job": true,
+              "os": true,
+              "redis_version": true,
+              "maxmemory_policy": true,
+              "config_maxmemory": true,
+              "aof_enabled": true,
+              "rdb_bgsave_in_progress": true,
+              "run_id": true,
+              "tcp_port": true,
+              "uptime_in_seconds": true
+            },
+            "renameByName": {
+              "instance": "Instance",
+              "role": "Role",
+              "service": "Service"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Maximum replication lag in bytes across all selected replica instances, current snapshot. Warn at 1 MB (yellow), critical at 10 MB (red). Query: max(redis_master_repl_offset − redis_slave_repl_offset) per instance. See Replication Lag per Instance Over Time below for per-replica trends.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1048576
+              },
+              {
+                "color": "red",
+                "value": 10485760
+              }
+            ]
+          },
+          "unit": "bytes",
+          "noValue": "N/A (standalone)",
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 8,
+        "y": 113
+      },
+      "id": 802,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "title": "Replication Lag (bytes, max across replicas)",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(max by (instance, service) (redis_master_repl_offset{instance=~\"$instance\"}) - on (instance, service) max by (instance, service) (redis_slave_repl_offset{instance=~\"$instance\"}))",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Maximum master replication offset across the selected instances — monotonically increasing counter of bytes written to the replication stream. Stale or non-increasing values on a primary indicate replication has stalled. See 'Replication Offset Advance Rate' for per-instance trend.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "bytes",
+          "noValue": "N/A",
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 16,
+        "y": 113
+      },
+      "id": 803,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "title": "Master Replication Offset",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(redis_master_repl_offset{instance=~\"$instance\"})",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Replication offset advance rate in bytes/s per instance. Master offset rate (solid) shows the write throughput entering the replication stream. Slave offset rate (dashed) should closely track master rate when healthy. A divergence between master and slave advance rates will manifest as growing lag in the panels below.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "bps",
+          "decimals": 1
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "Primary offset rate.*"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "Replica offset rate.*"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    8,
+                    4
+                  ],
+                  "fill": "dash"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 117
+      },
+      "id": 804,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "Replication Offset Advance Rate (bytes/s)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "rate(redis_master_repl_offset{instance=~\"$instance\"}[$__rate_interval])",
+          "legendFormat": "Primary offset rate — {{service}} / {{instance}}",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "rate(redis_slave_repl_offset{instance=~\"$instance\"}[$__rate_interval])",
+          "legendFormat": "Replica offset rate — {{service}} / {{instance}}",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 155
+      },
+      "id": 810,
+      "title": "Persistence Signals — AOF & Latency",
+      "type": "row",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "thresholds": {
+            "mode": "absolute",
+            "steps": []
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Whether an AOF rewrite (BGREWRITEAOF) is currently in progress per instance. Sustained in-progress rewrites indicate the AOF file is large or I/O is slow, and can cause write amplification. Alert reference: redis_aof_rewrite_in_progress{instance=~\"$instance\"} == 1",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "green",
+                  "index": 0,
+                  "text": "IDLE"
+                },
+                "1": {
+                  "color": "orange",
+                  "index": 1,
+                  "text": "REWRITING"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short",
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 156
+      },
+      "id": 811,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "title": "AOF Rewrite In Progress",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(redis_aof_rewrite_in_progress{instance=~\"$instance\"})",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Duration of the last completed AOF background rewrite in seconds. Values consistently above 10 s indicate slow disk I/O or an oversized AOF file — consider tuning auto-aof-rewrite-percentage and auto-aof-rewrite-min-size.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "-1": {
+                  "color": "grey",
+                  "index": 0,
+                  "text": "Never run"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 5
+              },
+              {
+                "color": "red",
+                "value": 30
+              }
+            ]
+          },
+          "unit": "s",
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 156
+      },
+      "id": 812,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "title": "AOF Last Rewrite Duration",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(redis_aof_last_rewrite_duration_sec{instance=~\"$instance\"})",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Duration of the last completed RDB background save (BGSAVE) in seconds. Elevated values indicate large dataset or disk I/O contention. A value of -1 means BGSAVE has never completed successfully.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "-1": {
+                  "color": "grey",
+                  "index": 0,
+                  "text": "Never completed"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 10
+              },
+              {
+                "color": "red",
+                "value": 60
+              }
+            ]
+          },
+          "unit": "s",
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 156
+      },
+      "id": 813,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "title": "RDB Last BGSAVE Duration",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(redis_rdb_last_bgsave_duration_sec{instance=~\"$instance\"})",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Current AOF file size in bytes. Rapid unbounded growth without periodic rewrite indicates the auto-rewrite thresholds may be misconfigured.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 104857600
+              },
+              {
+                "color": "red",
+                "value": 536870912
+              }
+            ]
+          },
+          "unit": "bytes",
+          "noValue": "AOF disabled",
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 156
+      },
+      "id": 814,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "title": "AOF Current File Size",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(redis_aof_current_size{instance=~\"$instance\"})",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "AOF rewrite in-progress flag and persistence operation durations over time by instance/application. Correlate AOF rewrite spikes with key evictions and latency increases to identify write-amplification headroom issues.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "line"
+            }
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 5
+              },
+              {
+                "color": "red",
+                "value": 30
+              }
+            ]
+          },
+          "unit": "s",
+          "decimals": 3
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "AOF Rewriting.*"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "max",
+                "value": 1
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 160
+      },
+      "id": 815,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "Persistence Latency Over Time (AOF Rewrite & RDB BGSAVE)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max by (instance, service) (redis_aof_last_rewrite_duration_sec{instance=~\"$instance\"})",
+          "legendFormat": "AOF Last Rewrite (s) — {{service}} / {{instance}}",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max by (instance, service) (redis_rdb_last_bgsave_duration_sec{instance=~\"$instance\"})",
+          "legendFormat": "RDB BGSAVE (s) — {{service}} / {{instance}}",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max by (instance, service) (redis_aof_rewrite_in_progress{instance=~\"$instance\"})",
+          "legendFormat": "AOF Rewriting (0/1) — {{service}} / {{instance}}",
+          "refId": "C"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 168
+      },
+      "id": 820,
+      "title": "Server-Side Command Latency",
+      "type": "row",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "thresholds": {
+            "mode": "absolute",
+            "steps": []
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Average server-side execution latency per Redis command derived from redis_commands_duration_seconds_total / redis_commands_total counters (available when latency-tracking is enabled or via redis_exporter ≥1.44). Use this to identify expensive commands (e.g., LRANGE, SMEMBERS, KEYS) contributing to tail latency observed by chrono-queue workers. Falls back to zero if the metric is not present.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "line"
+            }
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.001
+              },
+              {
+                "color": "red",
+                "value": 0.01
+              }
+            ]
+          },
+          "unit": "s",
+          "decimals": 3
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 169
+      },
+      "id": 821,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "Avg Server-Side Command Latency by Command",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "rate(redis_commands_duration_seconds_total{instance=~\"$instance\"}[$__rate_interval]) / clamp_min(rate(redis_commands_total{instance=~\"$instance\"}[$__rate_interval]), 1e-9)",
+          "legendFormat": "{{cmd}} — {{service}} / {{instance}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Top-10 Redis commands ranked by call rate (ops/s) over the last 5 minutes. High-frequency commands with elevated avg latency from the panel above are the primary tuning targets.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1000
+              },
+              {
+                "color": "red",
+                "value": 10000
+              }
+            ]
+          },
+          "unit": "reqps",
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 177
+      },
+      "id": 822,
+      "options": {
+        "displayMode": "gradient",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "text": {}
+      },
+      "title": "Top-10 Commands by Call Rate",
+      "type": "bargauge",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "topk(10, sum by (cmd) (rate(redis_commands_total{instance=~\"$instance\"}[$__rate_interval])))",
+          "legendFormat": "{{cmd}}",
+          "refId": "A",
+          "interval": ""
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Top-10 Redis commands ranked by total CPU duration seconds/s (rate of redis_commands_duration_seconds_total). Commands near the top of this list are the primary contributors to Redis CPU saturation regardless of call rate.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.01
+              },
+              {
+                "color": "red",
+                "value": 0.1
+              }
+            ]
+          },
+          "unit": "s",
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 177
+      },
+      "id": 823,
+      "options": {
+        "displayMode": "gradient",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "text": {}
+      },
+      "title": "Top-10 Commands by CPU Duration (s/s)",
+      "type": "bargauge",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "topk(10, sum by (cmd) (rate(redis_commands_duration_seconds_total{instance=~\"$instance\"}[$__rate_interval])))",
+          "legendFormat": "{{cmd}}",
+          "refId": "A",
+          "interval": ""
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Top-10 Redis instances ranked by current key eviction rate (keys/s). Any instance with sustained non-zero evictions is under hard memory pressure and actively discarding data. Cross-reference with 'Top-10 Memory Usage Instances' and 'Memory Pressure' to find the root cause: either maxmemory is too low or the working set has grown unexpectedly.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "index": 0,
+                  "text": "NONE"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "orange",
+                "value": 100
+              },
+              {
+                "color": "red",
+                "value": 1000
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "0",
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 104
+      },
+      "id": 704,
+      "options": {
+        "displayMode": "gradient",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "text": {}
+      },
+      "title": "Top-10 Highest Eviction Rate Instances",
+      "type": "bargauge",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "topk(10, chrono:redis_evicted_keys_total:rate5m{instance=~\"$instance\"})",
+          "legendFormat": "{{service}} / {{instance}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Top-10 Redis instances ranked by rejected connection rate (connections/s). Rejected connections indicate the instance is at or over its maxclients limit. Any non-zero value in production is immediately actionable: either raise maxclients, add pool-side backpressure, or provision additional Redis capacity.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "index": 0,
+                  "text": "NONE"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "connps",
+          "noValue": "0",
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 104
+      },
+      "id": 705,
+      "options": {
+        "displayMode": "gradient",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "text": {}
+      },
+      "title": "Top-10 Highest Rejected Connection Rate",
+      "type": "bargauge",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "topk(10, chrono:redis_rejected_connections_total:rate5m{instance=~\"$instance\"})",
+          "legendFormat": "{{service}} / {{instance}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Top-10 Redis instances ranked by slowlog queue depth. Complements the 'Avg Server-Side Command Latency' time-series. A growing slowlog depth on a specific instance while others remain clean isolates the problem to that instance's workload or configuration rather than a fleet-wide regression.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "index": 0,
+                  "text": "NONE"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "orange",
+                "value": 10
+              },
+              {
+                "color": "red",
+                "value": 50
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "0",
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 104
+      },
+      "id": 706,
+      "options": {
+        "displayMode": "gradient",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "text": {}
+      },
+      "title": "Top-10 Highest Slowlog Depth Instances",
+      "type": "bargauge",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "topk(10, max by (instance, service) (redis_slowlog_length{instance=~\"$instance\"}))",
+          "legendFormat": "{{service}} / {{instance}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 185
+      },
+      "id": 960,
+      "title": "Alert Reference",
+      "type": "row",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "thresholds": {
+            "mode": "absolute",
+            "steps": []
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Firing instance count. Alert PromQL: min by (instance, service) (redis_up{instance=~\"$instance\"}) == 0",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "0",
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 186
+      },
+      "id": 961,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "title": "Alert: Redis Down Instances",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum((min by (instance, service) (redis_up{instance=~\"$instance\"}) == bool 0) or vector(0))",
+          "legendFormat": "",
+          "refId": "A",
+          "interval": ""
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Firing instance count. Alert PromQL: sum by (instance, service) (increase(redis_evicted_keys_total{instance=~\"$instance\"}[$__rate_interval])) > 0",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "0",
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 186
+      },
+      "id": 962,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "title": "Alert: Key Evictions",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum((chrono:redis_evicted_keys_total:rate5m{instance=~\"$instance\"} > bool 0) or vector(0))",
+          "legendFormat": "",
+          "refId": "A",
+          "interval": ""
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Firing instance count. Alert PromQL: sum by (instance, service) (increase(redis_rejected_connections_total{instance=~\"$instance\"}[$__rate_interval])) > 0",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "0",
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 186
+      },
+      "id": 963,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "title": "Alert: Rejected Connections",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum((chrono:redis_rejected_connections_total:rate5m{instance=~\"$instance\"} > bool 0) or vector(0))",
+          "legendFormat": "",
+          "refId": "A",
+          "interval": ""
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Firing instance count. Alert PromQL: 100 * sum by (instance, service) (rate(redis_cpu_sys_seconds_total{instance=~\"$instance\"}[$__rate_interval]) + rate(redis_cpu_user_seconds_total{instance=~\"$instance\"}[$__rate_interval])) > 80",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "0",
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 186
+      },
+      "id": 964,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "title": "Alert: CPU Above 80%",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum((chrono:redis_cpu_total_seconds:pct_rate5m{instance=~\"$instance\"} > bool 80) or vector(0))",
+          "legendFormat": "",
+          "refId": "A",
+          "interval": ""
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Firing instance count. Alert PromQL: max by (instance, service) (redis_slowlog_length{instance=~\"$instance\"}) > 0",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "0",
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 186
+      },
+      "id": 965,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "title": "Alert: Slowlog Activity",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum((max by (instance, service) (redis_slowlog_length{instance=~\"$instance\"}) > bool 0) or vector(0))",
+          "legendFormat": "",
+          "refId": "A",
+          "interval": ""
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Count of application × instance combinations where p95 Lettuce latency exceeds the 100 ms SLO threshold. Alert PromQL: histogram_quantile(0.95, sum by (le, application, instance, command) (chrono:lettuce_command_completion_seconds_bucket:rate5m{instance=~\"$instance\"})) > 0.100",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "0",
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 186
+      },
+      "id": 966,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "title": "Alert: p95 Latency > 100 ms",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(  histogram_quantile(0.95, sum by (le, application, instance) (    chrono:lettuce_command_completion_seconds_bucket:rate5m{instance=~\"$instance\"}  )) > bool 0.100 or vector(0))",
+          "legendFormat": "",
+          "refId": "A",
+          "interval": ""
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 125
+      },
+      "id": 830,
+      "title": "Topology Overview",
+      "type": "row",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Count of Redis instances operating as primary (master) across the selection. A master count of 0 means no primary is reachable — which is a full-service outage signal.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "0"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 126
+      },
+      "id": 831,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "title": "Master Instances",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(redis_instance_info{instance=~\"$instance\", role=\"master\"}) or vector(0)",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Count of Redis instances currently operating as replicas (slaves) across the selection. Use alongside Master Instances to verify the expected topology (e.g., 1 master, 2 replicas).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "0"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 126
+      },
+      "id": 832,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "title": "Replica Instances",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count(redis_instance_info{instance=~\"$instance\", role=\"slave\"}) or vector(0)",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Number of Redis instances with master link DOWN (redis_master_link_status == 0). Any non-zero value indicates broken replication: the replica is not receiving updates from its master. Alert PromQL: min by (instance, service) (redis_master_link_status{instance=~\"$instance\"}) == 0",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "0"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 126
+      },
+      "id": 833,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "title": "Broken Replication Links",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum((min by (instance, service) (redis_master_link_status{instance=~\"$instance\"}) == bool 0) or vector(0))",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Maximum replication lag in bytes across all replica instances. Computed as redis_master_repl_offset − redis_slave_repl_offset on each slave instance. Warn at 1 MB (yellow), critical at 10 MB (red). Sustained lag under normal write rate indicates a stalled or slow replica.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1048576
+              },
+              {
+                "color": "red",
+                "value": 10485760
+              }
+            ]
+          },
+          "unit": "bytes",
+          "noValue": "0"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 126
+      },
+      "id": 834,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "title": "Max Replication Lag (bytes)",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max(clamp_min(  max by (instance, service) (redis_master_repl_offset{instance=~\"$instance\"})  - max by (instance, service) (redis_slave_repl_offset{instance=~\"$instance\"}),  0) or vector(0))",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 130
+      },
+      "id": 840,
+      "title": "Replication Lag Analysis",
+      "type": "row",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Per-replica replication lag in bytes over time. Computed as redis_master_repl_offset − redis_slave_repl_offset per slave instance. SLO threshold lines: warn at 1 MB (1048576 bytes, yellow), critical at 10 MB (10485760, red). A growing lag without a corresponding increase in write throughput indicates a struggling replica or network degradation between master and replica.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "line"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1048576
+              },
+              {
+                "color": "red",
+                "value": 10485760
+              }
+            ]
+          },
+          "unit": "bytes",
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "Link.*"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": null
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 131
+      },
+      "id": 841,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "bottom",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "Replication Lag per Instance Over Time (bytes)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "clamp_min(  max by (instance, service) (redis_master_repl_offset{instance=~\"$instance\"})  - max by (instance, service) (redis_slave_repl_offset{instance=~\"$instance\"}),  0)",
+          "legendFormat": "Lag — {{service}} / {{instance}}",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "min by (instance, service) (redis_master_link_status{instance=~\"$instance\"})",
+          "legendFormat": "Link — {{service}} / {{instance}}",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Instance count per Redis role (master / slave / sentinel) over time. Step changes indicate role transitions: a failover shows as master count dropping by 1 then recovering, while slave count may briefly drop 1 then rise. Use this alongside the Broken Replication Links stat to distinguish planned failovers from failures. Labeled and color-coded by role label from redis_instance_info.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short",
+          "decimals": 1
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "Role: master"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "displayName",
+                "value": "Primary (master)"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "Role: slave"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "displayName",
+                "value": "Replica (slave)"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "Role: sentinel"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "purple",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "displayName",
+                "value": "Sentinel"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 139
+      },
+      "id": 842,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "bottom",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "Role Distribution Over Time",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "count by (role) (redis_instance_info{instance=~\"$instance\"})",
+          "legendFormat": "Role: {{role}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Ranked replication lag per slave instance, current snapshot. Surfaces the most-lagging replica instantly. Warn threshold at 1 MB (yellow), critical at 10 MB (red). Only slave instances compute a non-zero lag; master instances emit 0 and will rank last.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1048576
+              },
+              {
+                "color": "red",
+                "value": 10485760
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 139
+      },
+      "id": 843,
+      "options": {
+        "displayMode": "gradient",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "valueMode": "color"
+      },
+      "title": "Top-10 Instances by Replication Lag (bytes)",
+      "type": "bargauge",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "topk(10, clamp_min(  max by (instance, service) (redis_master_repl_offset{instance=~\"$instance\"})  - max by (instance, service) (redis_slave_repl_offset{instance=~\"$instance\"}),  0))",
+          "legendFormat": "{{service}} / {{instance}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 147
+      },
+      "id": 850,
+      "title": "Replica Health Summary",
+      "type": "row",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Per-instance replication link status (1=UP, 0=DOWN) over time. Each series is labeled with instance and role from redis_instance_info. Any series that drops to 0 indicates that replica lost its connection to the master. A simultaneous drop across all replicas may indicate master unavailability.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 5,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "line"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "short",
+          "decimals": 1
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 148
+      },
+      "id": 851,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "bottom",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "Replica Link Status per Instance",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "min by (instance, service) (redis_master_link_status{instance=~\"$instance\"})",
+          "legendFormat": "{{service}} / {{instance}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Absolute replication offsets for master instances (solid) and slave instances (dashed). A widening gap between master and any slave line confirms lag accumulation. Converging lines after a lag spike indicate the replica is catching up. Primary labeled 'Primary (master)', replicas labeled 'Replica (slave)'.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "bytes",
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "Primary offset.*"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "Replica offset.*"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    8,
+                    4
+                  ],
+                  "fill": "dash"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 148
+      },
+      "id": 852,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "bottom",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "Master vs Replica Offset Divergence",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max by (instance, service) (redis_master_repl_offset{instance=~\"$instance\"} * on(instance, service) group_left(role) label_replace(redis_instance_info{role=\"master\", instance=~\"$instance\"}, \"dummy\", \"\", \"\", \"\"))",
+          "legendFormat": "Primary offset — {{service}} / {{instance}}",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "max by (instance, service) (redis_slave_repl_offset{instance=~\"$instance\"})",
+          "legendFormat": "Replica offset — {{service}} / {{instance}}",
+          "refId": "B"
         }
       ]
     }
@@ -1472,7 +5672,9 @@
   "tags": [
     "chrono-queue",
     "redis",
-    "monitoring"
+    "monitoring",
+    "alerts",
+    "sre"
   ],
   "templating": {
     "list": [
@@ -1489,6 +5691,59 @@
         "skipUrlSync": false,
         "sort": 1,
         "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(redis_up, instance)",
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "name": "instance",
+        "label": "Redis Instance",
+        "options": [],
+        "query": "label_values(redis_up, instance)",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query",
+        "allValue": ".*"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "name": "application",
+        "label": "Application",
+        "options": [],
+        "query": "redis,job-worker,retry-dispatcher",
+        "type": "custom",
+        "sort": 0,
+        "skipUrlSync": false,
+        "refresh": 0,
+        "regex": "",
+        "allValue": ".*"
       }
     ]
   },
@@ -1519,7 +5774,7 @@
   "timezone": "browser",
   "title": "Redis — Health & Keyspace",
   "uid": "chrono-redis-overview",
-  "version": 2,
+  "version": 18,
   "liveNow": false,
   "__inputs": [
     {
@@ -1554,6 +5809,12 @@
       "type": "panel",
       "id": "timeseries",
       "name": "Time series",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "bargauge",
+      "name": "Bar gauge",
       "version": ""
     }
   ]
