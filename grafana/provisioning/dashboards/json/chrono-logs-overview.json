@@ -15,7 +15,7 @@
       }
     ]
   },
-  "description": "Log volume and exploration \u2014 total/ERROR/WARN/INFO counts, log rate per service, level distribution, per-service error breakdown, and live log explorer with full-text search.",
+  "description": "Log volume and exploration — total/ERROR/WARN/INFO counts, log rate per service, level distribution, and live log explorer with full-text search.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -66,14 +66,14 @@
             ]
           },
           "unit": "short",
-          "noValue": "\u2014",
+          "noValue": "—",
           "decimals": 0
         },
         "overrides": []
       },
       "gridPos": {
         "h": 4,
-        "w": 4,
+        "w": 6,
         "x": 0,
         "y": 1
       },
@@ -127,76 +127,6 @@
               },
               {
                 "color": "yellow",
-                "value": 1
-              },
-              {
-                "color": "red",
-                "value": 50
-              }
-            ]
-          },
-          "unit": "short",
-          "noValue": "\u2014",
-          "decimals": 0
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 4,
-        "y": 1
-      },
-      "id": 2,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "title": "ERROR Lines",
-      "type": "stat",
-      "targets": [
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "sum(count_over_time({job=~\"$service\"} |~ \"(?i) ERROR \" [$__range]))",
-          "editorMode": "code",
-          "queryType": "range",
-          "refId": "A"
-        }
-      ],
-      "description": "Total ERROR-level log lines across selected services over the dashboard time range."
-    },
-    {
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
                 "value": 5
               },
               {
@@ -206,15 +136,15 @@
             ]
           },
           "unit": "short",
-          "noValue": "\u2014",
+          "noValue": "—",
           "decimals": 0
         },
         "overrides": []
       },
       "gridPos": {
         "h": 4,
-        "w": 4,
-        "x": 8,
+        "w": 6,
+        "x": 6,
         "y": 1
       },
       "id": 3,
@@ -268,14 +198,14 @@
             ]
           },
           "unit": "short",
-          "noValue": "\u2014",
+          "noValue": "—",
           "decimals": 0
         },
         "overrides": []
       },
       "gridPos": {
         "h": 4,
-        "w": 4,
+        "w": 6,
         "x": 12,
         "y": 1
       },
@@ -330,15 +260,15 @@
             ]
           },
           "unit": "short",
-          "noValue": "\u2014",
+          "noValue": "—",
           "decimals": 0
         },
         "overrides": []
       },
       "gridPos": {
         "h": 4,
-        "w": 4,
-        "x": 16,
+        "w": 6,
+        "x": 18,
         "y": 1
       },
       "id": 9,
@@ -371,76 +301,6 @@
         }
       ],
       "description": "Total DEBUG-level log lines across selected services over the dashboard time range."
-    },
-    {
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 1
-              },
-              {
-                "color": "red",
-                "value": 5
-              }
-            ]
-          },
-          "unit": "short",
-          "noValue": "\u2014",
-          "decimals": 0
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 20,
-        "y": 1
-      },
-      "id": 10,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "title": "Error Rate (now, lines/min)",
-      "type": "stat",
-      "targets": [
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "sum(count_over_time({job=~\"$service\"} |~ \"(?i) ERROR \" [1m]))",
-          "editorMode": "code",
-          "queryType": "range",
-          "refId": "A"
-        }
-      ],
-      "description": "Current ERROR log rate across selected services (lines per minute)."
     },
     {
       "collapsed": false,
@@ -969,578 +829,6 @@
         "x": 0,
         "y": 31
       },
-      "id": 103,
-      "title": "Per-Service Error Counts (Range)",
-      "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 1
-              },
-              {
-                "color": "red",
-                "value": 10
-              }
-            ]
-          },
-          "unit": "short",
-          "noValue": "\u2014",
-          "decimals": 0
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 0,
-        "y": 32
-      },
-      "id": 14,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "title": "job-producer Errors",
-      "type": "stat",
-      "targets": [
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "sum(count_over_time({job=\"job-producer\"} |~ \"(?i) ERROR \" [$__range]))",
-          "editorMode": "code",
-          "queryType": "range",
-          "refId": "A"
-        }
-      ],
-      "description": "Total ERROR-level log lines from job-producer over the dashboard time range."
-    },
-    {
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 1
-              },
-              {
-                "color": "red",
-                "value": 10
-              }
-            ]
-          },
-          "unit": "short",
-          "noValue": "\u2014",
-          "decimals": 0
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 6,
-        "y": 32
-      },
-      "id": 15,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "title": "job-worker Errors",
-      "type": "stat",
-      "targets": [
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "sum(count_over_time({job=\"job-worker\"} |~ \"(?i) ERROR \" [$__range]))",
-          "editorMode": "code",
-          "queryType": "range",
-          "refId": "A"
-        }
-      ],
-      "description": "Total ERROR-level log lines from job-worker over the dashboard time range."
-    },
-    {
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 1
-              },
-              {
-                "color": "red",
-                "value": 10
-              }
-            ]
-          },
-          "unit": "short",
-          "noValue": "\u2014",
-          "decimals": 0
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 12,
-        "y": 32
-      },
-      "id": 16,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "title": "dlq Errors",
-      "type": "stat",
-      "targets": [
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "sum(count_over_time({job=\"dlq\"} |~ \"(?i) ERROR \" [$__range]))",
-          "editorMode": "code",
-          "queryType": "range",
-          "refId": "A"
-        }
-      ],
-      "description": "Total ERROR-level log lines from dlq over the dashboard time range."
-    },
-    {
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 1
-              },
-              {
-                "color": "red",
-                "value": 10
-              }
-            ]
-          },
-          "unit": "short",
-          "noValue": "\u2014",
-          "decimals": 0
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 18,
-        "y": 32
-      },
-      "id": 17,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "title": "retry-dispatcher Errors",
-      "type": "stat",
-      "targets": [
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "sum(count_over_time({job=\"retry-dispatcher\"} |~ \"(?i) ERROR \" [$__range]))",
-          "editorMode": "code",
-          "queryType": "range",
-          "refId": "A"
-        }
-      ],
-      "description": "Total ERROR-level log lines from retry-dispatcher over the dashboard time range."
-    },
-    {
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 5
-              },
-              {
-                "color": "orange",
-                "value": 25
-              }
-            ]
-          },
-          "unit": "short",
-          "noValue": "\u2014",
-          "decimals": 0
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 0,
-        "y": 36
-      },
-      "id": 18,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "title": "job-producer WARNs",
-      "type": "stat",
-      "targets": [
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "sum(count_over_time({job=\"job-producer\"} |~ \"(?i) WARN \" [$__range]))",
-          "editorMode": "code",
-          "queryType": "range",
-          "refId": "A"
-        }
-      ],
-      "description": "Total WARN-level log lines from job-producer over the dashboard time range."
-    },
-    {
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 5
-              },
-              {
-                "color": "orange",
-                "value": 25
-              }
-            ]
-          },
-          "unit": "short",
-          "noValue": "\u2014",
-          "decimals": 0
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 6,
-        "y": 36
-      },
-      "id": 19,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "title": "job-worker WARNs",
-      "type": "stat",
-      "targets": [
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "sum(count_over_time({job=\"job-worker\"} |~ \"(?i) WARN \" [$__range]))",
-          "editorMode": "code",
-          "queryType": "range",
-          "refId": "A"
-        }
-      ],
-      "description": "Total WARN-level log lines from job-worker over the dashboard time range."
-    },
-    {
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 5
-              },
-              {
-                "color": "orange",
-                "value": 25
-              }
-            ]
-          },
-          "unit": "short",
-          "noValue": "\u2014",
-          "decimals": 0
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 12,
-        "y": 36
-      },
-      "id": 20,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "title": "dlq WARNs",
-      "type": "stat",
-      "targets": [
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "sum(count_over_time({job=\"dlq\"} |~ \"(?i) WARN \" [$__range]))",
-          "editorMode": "code",
-          "queryType": "range",
-          "refId": "A"
-        }
-      ],
-      "description": "Total WARN-level log lines from dlq over the dashboard time range."
-    },
-    {
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 5
-              },
-              {
-                "color": "orange",
-                "value": 25
-              }
-            ]
-          },
-          "unit": "short",
-          "noValue": "\u2014",
-          "decimals": 0
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 18,
-        "y": 36
-      },
-      "id": 21,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "title": "retry-dispatcher WARNs",
-      "type": "stat",
-      "targets": [
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "sum(count_over_time({job=\"retry-dispatcher\"} |~ \"(?i) WARN \" [$__range]))",
-          "editorMode": "code",
-          "queryType": "range",
-          "refId": "A"
-        }
-      ],
-      "description": "Total WARN-level log lines from retry-dispatcher over the dashboard time range."
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 40
-      },
       "id": 104,
       "title": "Log Explorer",
       "type": "row"
@@ -1554,7 +842,7 @@
         "h": 14,
         "w": 24,
         "x": 0,
-        "y": 41
+        "y": 32
       },
       "id": 8,
       "options": {
@@ -1567,7 +855,7 @@
         "showLabels": false,
         "sortOrder": "Descending"
       },
-      "title": "Live Logs \u2014 All Services (searchable)",
+      "title": "Live Logs — All Services (searchable)",
       "type": "logs",
       "targets": [
         {
@@ -1582,6 +870,44 @@
         }
       ],
       "description": "Live log stream from all selected services with full-text search via the Filter variable."
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 46
+      },
+      "id": 14,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showTime": true,
+        "wrapLogMessage": true,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "sortOrder": "Descending"
+      },
+      "title": "Live Tail — Latest Logs",
+      "type": "logs",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "{job=~\"$service\"}",
+          "editorMode": "code",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "description": "Always-on tail view of the latest logs across selected services without text filtering."
     }
   ],
   "refresh": "15s",
@@ -1657,7 +983,7 @@
     ]
   },
   "timezone": "browser",
-  "title": "Chrono Queue \u2014 Logs Overview",
+  "title": "Chrono Queue — Logs Overview",
   "uid": "chrono-logs-overview",
-  "version": 1
+  "version": 4
 }
