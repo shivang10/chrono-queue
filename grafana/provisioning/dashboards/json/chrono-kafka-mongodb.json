@@ -453,12 +453,75 @@
       "description": "Total DLQ jobs persisted to MongoDB over the dashboard time range."
     },
     {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "showPoints": "never",
+            "drawStyle": "line",
+            "spanNulls": false,
+            "lineInterpolation": "smooth"
+          },
+          "unit": "short",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "id": 40,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "Kafka Lag Trend",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "max(kafka_consumer_fetch_manager_records_lag_max{application=~\"$app\"})",
+          "legendFormat": "max lag",
+          "refId": "A",
+          "interval": "",
+          "editorMode": "code"
+        }
+      ],
+      "description": "Trend of the maximum Kafka consumer lag across the selected applications."
+    },
+    {
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 5
+        "y": 13
       },
       "id": 101,
       "title": "Kafka Consumer (job-worker)",
@@ -490,7 +553,7 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 6
+        "y": 14
       },
       "id": 7,
       "options": {
@@ -553,7 +616,7 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 6
+        "y": 14
       },
       "id": 8,
       "options": {
@@ -627,7 +690,7 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 6
+        "y": 14
       },
       "id": 30,
       "options": {
@@ -690,7 +753,7 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 14
+        "y": 22
       },
       "id": 31,
       "options": {
@@ -753,7 +816,7 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 14
+        "y": 22
       },
       "id": 32,
       "options": {
@@ -827,7 +890,7 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 14
+        "y": 22
       },
       "id": 33,
       "options": {
@@ -912,7 +975,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 22
+        "y": 30
       },
       "id": 39,
       "options": {
@@ -965,7 +1028,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 30
+        "y": 38
       },
       "id": 102,
       "title": "Kafka Consume-to-Process Latency (Spring Listener)",
@@ -997,7 +1060,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 31
+        "y": 47
       },
       "id": 9,
       "options": {
@@ -1093,7 +1156,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 31
+        "y": 47
       },
       "id": 10,
       "options": {
@@ -1189,7 +1252,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 39
+        "y": 47
       },
       "id": 34,
       "options": {
@@ -1252,7 +1315,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 39
+        "y": 47
       },
       "id": 35,
       "options": {
@@ -1295,7 +1358,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 47
+        "y": 55
       },
       "id": 103,
       "title": "Kafka Producer (job-producer & retry-dispatcher)",
@@ -1327,7 +1390,7 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 48
+        "y": 56
       },
       "id": 11,
       "options": {
@@ -1390,7 +1453,7 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 48
+        "y": 56
       },
       "id": 12,
       "options": {
@@ -1453,7 +1516,7 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 48
+        "y": 56
       },
       "id": 13,
       "options": {
@@ -1502,6 +1565,69 @@
           },
           "custom": {
             "lineWidth": 2,
+            "fillOpacity": 12,
+            "showPoints": "never",
+            "drawStyle": "line",
+            "spanNulls": false,
+            "lineInterpolation": "smooth"
+          },
+          "unit": "percentunit",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 64
+      },
+      "id": 41,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "Producer Errors %",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(rate(kafka_producer_record_error_total[$__rate_interval])) / sum(rate(kafka_producer_record_send_total[$__rate_interval]))",
+          "legendFormat": "producer error ratio",
+          "refId": "A",
+          "interval": "",
+          "editorMode": "code"
+        }
+      ],
+      "description": "Ratio of Kafka producer record errors to total records sent across all producers."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
             "fillOpacity": 5,
             "showPoints": "never",
             "drawStyle": "line",
@@ -1516,7 +1642,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 56
+        "y": 72
       },
       "id": 36,
       "options": {
@@ -1612,7 +1738,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 56
+        "y": 72
       },
       "id": 14,
       "options": {
@@ -1655,7 +1781,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 64
+        "y": 80
       },
       "id": 104,
       "title": "MongoDB Performance (dlq-service)",
@@ -1687,7 +1813,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 65
+        "y": 81
       },
       "id": 15,
       "options": {
@@ -1818,7 +1944,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 65
+        "y": 81
       },
       "id": 16,
       "options": {
@@ -1892,7 +2018,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 73
+        "y": 89
       },
       "id": 37,
       "options": {
@@ -1975,7 +2101,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 73
+        "y": 89
       },
       "id": 38,
       "options": {
@@ -2038,7 +2164,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 81
+        "y": 97
       },
       "id": 201,
       "options": {
@@ -2101,7 +2227,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 81
+        "y": 97
       },
       "id": 202,
       "options": {
@@ -2144,7 +2270,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 89
+        "y": 105
       },
       "id": 105,
       "title": "Processing Activity (Log-based)",
@@ -2226,7 +2352,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 90
+        "y": 106
       },
       "id": 17,
       "options": {
@@ -2357,7 +2483,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 90
+        "y": 106
       },
       "id": 18,
       "options": {
@@ -2488,7 +2614,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 98
+        "y": 114
       },
       "id": 200,
       "options": {
@@ -2556,7 +2682,7 @@
         "h": 10,
         "w": 24,
         "x": 0,
-        "y": 108
+        "y": 124
       },
       "id": 19,
       "options": {

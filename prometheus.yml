@@ -1,6 +1,10 @@
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
+  external_labels:
+    cluster: chrono-prod
+    team: platform
+    env: production
 
 rule_files:
   - "prometheus-recording-rules.yml"
@@ -8,6 +12,15 @@ rule_files:
 scrape_configs:
   - job_name: "job-producer"
     metrics_path: "/actuator/prometheus"
+    relabel_configs:
+      - target_label: application
+        replacement: "chrono-queue"
+      - source_labels: [ service ]
+        target_label: service
+      - target_label: env
+        replacement: "production"
+      - source_labels: [ __address__ ]
+        target_label: instance
     static_configs:
       - targets: [ "job-producer:8081" ]
         labels:
@@ -15,6 +28,15 @@ scrape_configs:
 
   - job_name: "job-worker"
     metrics_path: "/actuator/prometheus"
+    relabel_configs:
+      - target_label: application
+        replacement: "chrono-queue"
+      - source_labels: [ service ]
+        target_label: service
+      - target_label: env
+        replacement: "production"
+      - source_labels: [ __address__ ]
+        target_label: instance
     static_configs:
       - targets: [ "job-worker:8082" ]
         labels:
@@ -22,6 +44,15 @@ scrape_configs:
 
   - job_name: "retry-dispatcher"
     metrics_path: "/actuator/prometheus"
+    relabel_configs:
+      - target_label: application
+        replacement: "chrono-queue"
+      - source_labels: [ service ]
+        target_label: service
+      - target_label: env
+        replacement: "production"
+      - source_labels: [ __address__ ]
+        target_label: instance
     static_configs:
       - targets: [ "retry-dispatcher:8083" ]
         labels:
@@ -29,12 +60,30 @@ scrape_configs:
 
   - job_name: "dlq-service"
     metrics_path: "/actuator/prometheus"
+    relabel_configs:
+      - target_label: application
+        replacement: "chrono-queue"
+      - source_labels: [ service ]
+        target_label: service
+      - target_label: env
+        replacement: "production"
+      - source_labels: [ __address__ ]
+        target_label: instance
     static_configs:
       - targets: [ "dlq:8084" ]
         labels:
           service: "dlq-service"
 
   - job_name: "redis-exporter"
+    relabel_configs:
+      - target_label: application
+        replacement: "chrono-queue"
+      - source_labels: [ service ]
+        target_label: service
+      - target_label: env
+        replacement: "production"
+      - source_labels: [ __address__ ]
+        target_label: instance
     static_configs:
       - targets: [ "redis-exporter:9121" ]
         labels:

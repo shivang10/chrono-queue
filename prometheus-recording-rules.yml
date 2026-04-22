@@ -67,9 +67,7 @@ groups:
             )
             / on(instance) group_left(service)
               clamp_min(max by (instance) (machine_cpu_cores), 1)
-          )
-          or
-          (
+          ) or (
             100 * sum by (instance, service) (
               rate(redis_cpu_sys_seconds_total[5m])
               + rate(redis_cpu_user_seconds_total[5m])
@@ -98,6 +96,25 @@ groups:
             100
           )
 
+      # Memory usage as % of configured maxmemory.
+      # Instances with maxmemory=0 are excluded because they are unlimited.
+      - record: chrono:redis_memory_usage:pct
+        expr: >-
+          100 * (
+            sum by (instance, service) (
+              redis_memory_used_bytes
+              and on(instance, service) (redis_memory_max_bytes > 0)
+            )
+            /
+            clamp_min(
+              sum by (instance, service) (
+                redis_memory_max_bytes
+                and on(instance, service) (redis_memory_max_bytes > 0)
+              ),
+              1e-9
+            )
+          )
+
       # ── Evictions and expirations ─────────────────────────────────────────
       - record: chrono:redis_evicted_keys_total:rate5m
         expr: >-
@@ -117,6 +134,20 @@ groups:
           sum by (instance, service) (
             rate(redis_rejected_connections_total[5m])
           )
+
+  # ============================================================================
+  # chrono-queue · HTTP server recording rules
+  #
+  # Service-level 5xx error ratio across all instrumented Spring Boot services.
+  # ============================================================================
+  - name: chrono_http_rate5m
+    interval: 15s
+    rules:
+
+      - record: chrono:http_error_rate:ratio5m
+        expr: >-
+          sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) /
+          sum(rate(http_server_requests_seconds_count[5m]))
 
   # ============================================================================
   # chrono-queue · Lettuce (Spring Boot Redis client) recording rules

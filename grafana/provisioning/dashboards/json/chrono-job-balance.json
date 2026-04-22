@@ -156,6 +156,164 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
+      "description": "Alert-style indicator for balance drift. Green when produced jobs are fully accounted for, red when there is a positive unaccounted balance.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "color": "green",
+                  "index": 0,
+                  "text": "No"
+                }
+              }
+            },
+            {
+              "type": "range",
+              "options": {
+                "from": 1,
+                "to": null,
+                "result": {
+                  "color": "red",
+                  "index": 1,
+                  "text": "Yes"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 5
+      },
+      "id": 14,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "title": "Balance Drift Detected",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "round((sum(increase(chrono_jobs_produced_total{application=\"job-producer\"}[$__range])) or vector(0)) - (sum(increase(chrono_jobs_consumed_total{application=\"job-worker\", result=\"success\"}[$__range])) or vector(0)) - (sum(increase(chrono_jobs_dlq_total{application=\"dlq-service\"}[$__range])) or vector(0)))",
+          "legendFormat": "Drift",
+          "instant": true
+        }
+      ],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Percentage of produced jobs that are not yet accounted for by successful consumption or DLQ persistence over the selected time range.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 2,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          },
+          "unit": "percent",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 1
+      },
+      "id": 13,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "title": "Unaccounted Jobs %",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "100 * (((sum(increase(chrono_jobs_produced_total{application=\"job-producer\"}[$__range])) or vector(0)) - (sum(increase(chrono_jobs_consumed_total{application=\"job-worker\", result=\"success\"}[$__range])) or vector(0)) - (sum(increase(chrono_jobs_dlq_total{application=\"dlq-service\"}[$__range])) or vector(0))) / clamp_min((sum(increase(chrono_jobs_produced_total{application=\"job-producer\"}[$__range])) or vector(0)), 1))",
+          "legendFormat": "Unaccounted %",
+          "instant": true
+        }
+      ],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "description": "Jobs successfully processed by job-worker in the selected time range.",
       "fieldConfig": {
         "defaults": {
@@ -341,8 +499,8 @@
       "gridPos": {
         "h": 4,
         "w": 6,
-        "x": 18,
-        "y": 1
+        "x": 0,
+        "y": 5
       },
       "id": 4,
       "options": {
@@ -516,7 +674,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 5
+        "y": 9
       },
       "id": 12,
       "options": {
@@ -586,7 +744,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 13
+        "y": 17
       },
       "id": 101,
       "title": "Consumer Lag \u2014 Are All Kafka Records Consumed?",
@@ -641,7 +799,7 @@
         "h": 4,
         "w": 8,
         "x": 0,
-        "y": 14
+        "y": 18
       },
       "id": 5,
       "options": {
@@ -722,7 +880,7 @@
         "h": 4,
         "w": 8,
         "x": 8,
-        "y": 14
+        "y": 18
       },
       "id": 6,
       "options": {
@@ -803,7 +961,7 @@
         "h": 4,
         "w": 8,
         "x": 16,
-        "y": 14
+        "y": 18
       },
       "id": 7,
       "options": {
@@ -840,7 +998,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 18
+        "y": 22
       },
       "id": 102,
       "title": "Cumulative Throughput Over Time",
@@ -942,7 +1100,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 19
+        "y": 23
       },
       "id": 8,
       "options": {
@@ -1022,7 +1180,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 27
+        "y": 31
       },
       "id": 9,
       "options": {
@@ -1119,7 +1277,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 27
+        "y": 31
       },
       "id": 10,
       "options": {
@@ -1205,7 +1363,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 35
+        "y": 39
       },
       "id": 103,
       "title": "Log-Based Verification (Loki \u2014 cross-check)",
@@ -1287,7 +1445,7 @@
         "h": 4,
         "w": 24,
         "x": 0,
-        "y": 36
+        "y": 40
       },
       "id": 11,
       "options": {
