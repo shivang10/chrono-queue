@@ -1296,7 +1296,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Memory pressure ratio per Redis instance and application, computed as used memory divided by configured maxmemory. Instances with maxmemory=0 are excluded because they are effectively unlimited and would otherwise distort the ratio.",
+      "description": "Memory pressure ratio per Redis instance and application. When maxmemory is configured (> 0): shows used/max ratio (true pressure). When maxmemory is unlimited (= 0): shows used/peak ratio as a proxy for memory headroom. Warn threshold at 70\u202f% (yellow), critical at 85\u202f% (red).",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1389,7 +1389,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum by (instance, service) (redis_memory_used_bytes{instance=~\"$instance\"} and on(instance, service) (redis_memory_max_bytes{instance=~\"$instance\"} > 0)) / clamp_min(sum by (instance, service) (redis_memory_max_bytes{instance=~\"$instance\"} > 0), 1e-9)",
+          "expr": "(sum by (instance, service) (redis_memory_used_bytes{instance=~\"$instance\"} and on(instance, service) (redis_memory_max_bytes{instance=~\"$instance\"} > 0)) / clamp_min(sum by (instance, service) (redis_memory_max_bytes{instance=~\"$instance\"} and on(instance, service) (redis_memory_max_bytes{instance=~\"$instance\"} > 0)), 1e-9)) or (sum by (instance, service) (redis_memory_used_bytes{instance=~\"$instance\"}) / clamp_min(sum by (instance, service) (redis_memory_used_peak_bytes{instance=~\"$instance\"}), 1e-9))",
           "legendFormat": "{{service}} / {{instance}}",
           "refId": "A"
         }
@@ -2080,7 +2080,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "min by (instance, service) (redis_master_link_status{instance=~\"$instance\"})",
+          "expr": "(min by (instance, service) (redis_master_link_status{instance=~\"$instance\"}) or min by (instance, service) (redis_up{instance=~\"$instance\"}))",
           "legendFormat": "Master Link \u2014 {{service}} / {{instance}}",
           "refId": "B"
         },
@@ -2089,7 +2089,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "count by (role) (redis_instance_info{instance=~\"$instance\"})",
+          "expr": "sum by (role) (redis_instance_info{instance=~\"$instance\"})",
           "legendFormat": "Role count: {{role}}",
           "refId": "C",
           "hide": false
@@ -5303,7 +5303,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Per-replica replication lag in bytes over time. Computed as redis_master_repl_offset \u2212 redis_slave_repl_offset per slave instance. SLO threshold lines: warn at 1\u202fMB (1048576 bytes, yellow), critical at 10\u202fMB (10485760, red). A growing lag without a corresponding increase in write throughput indicates a struggling replica or network degradation between master and replica.",
+      "description": "Per-replica replication lag in bytes over time, computed as redis_master_repl_offset \u2212 redis_slave_repl_offset per slave instance. Panel is empty for standalone Redis with no replicas (correct \u2014 there is no lag to measure). SLO threshold lines: warn at 1\u202fMB (1048576 bytes, yellow), critical at 10\u202fMB (10485760, red). A growing lag without a corresponding increase in write throughput indicates a struggling replica or network degradation between master and replica.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -5428,7 +5428,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "clamp_min(  max by (instance, service) (redis_master_repl_offset{instance=~\"$instance\"})  - max by (instance, service) (redis_slave_repl_offset{instance=~\"$instance\"}),  0)",
+          "expr": "clamp_min(max by (instance, service) (redis_master_repl_offset{instance=~\"$instance\"}) - max by (instance, service) (redis_slave_repl_offset{instance=~\"$instance\"}), 0)",
           "legendFormat": "Lag \u2014 {{service}} / {{instance}}",
           "refId": "A"
         },
@@ -5437,7 +5437,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "min by (instance, service) (redis_master_link_status{instance=~\"$instance\"})",
+          "expr": "(min by (instance, service) (redis_master_link_status{instance=~\"$instance\"}) or min by (instance, service) (redis_up{instance=~\"$instance\"}))",
           "legendFormat": "Link \u2014 {{service}} / {{instance}}",
           "refId": "B"
         }
@@ -5579,7 +5579,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "count by (role) (redis_instance_info{instance=~\"$instance\"})",
+          "expr": "sum by (role) (redis_instance_info{instance=~\"$instance\"})",
           "legendFormat": "Role: {{role}}",
           "refId": "A"
         }
@@ -5751,7 +5751,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "min by (instance, service) (redis_master_link_status{instance=~\"$instance\"})",
+          "expr": "(min by (instance, service) (redis_master_link_status{instance=~\"$instance\"}) or min by (instance, service) (redis_up{instance=~\"$instance\"}))",
           "legendFormat": "{{service}} / {{instance}}",
           "refId": "A"
         }
@@ -5762,7 +5762,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Absolute replication offsets for master instances (solid) and slave instances (dashed). A widening gap between master and any slave line confirms lag accumulation. Converging lines after a lag spike indicate the replica is catching up. Primary labeled 'Primary (master)', replicas labeled 'Replica (slave)'.",
+      "description": "Absolute replication offsets for master instances (solid green) and slave instances (dashed blue). A widening gap between master and any slave line confirms lag accumulation. For standalone Redis with no replicas only the Primary offset line is shown; Replica lines appear when redis_slave_repl_offset is reported. Primary labeled 'Primary (master)', replicas labeled 'Replica (slave)'.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -6007,7 +6007,7 @@
   "timezone": "browser",
   "title": "Redis \u2014 Health & Keyspace",
   "uid": "chrono-redis-overview",
-  "version": 18,
+  "version": 19,
   "liveNow": false,
   "__inputs": [
     {

@@ -2145,7 +2145,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Active and pending Redis client connections per application/instance. Sustained pending growth indicates pool saturation or downstream Redis latency. Full-width time-series replaces per-instance stat panels for richer trend context.",
+      "description": "Active and pending Redis client connections per application/instance. Shows Lettuce connection pool metrics (lettuce_pool_active_objects / lettuce_pool_idle_objects) when a commons-pool2 pool is configured, falling back to redis_connected_clients (active) and redis_blocked_clients (blocked) from the Redis server side when no pool is instrumented.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -2229,7 +2229,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "(max by (application, instance) (lettuce_connections_active{application=~\"${application:regex}\", instance=~\"$instance\"}) or max by (application, instance) (lettuce_pool_allocated{application=~\"${application:regex}\", instance=~\"$instance\"}))",
+          "expr": "(max by (application, instance) (lettuce_pool_active_objects{application=~\"${application:regex}\"}) or max by (instance, service) (redis_connected_clients{instance=~\"$instance\"}))",
           "legendFormat": "active \u2014 {{application}} / {{instance}}",
           "refId": "A",
           "interval": ""
@@ -2239,7 +2239,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "(max by (application, instance) (lettuce_pool_pending{application=~\"${application:regex}\", instance=~\"$instance\"}) or max by (application, instance) (lettuce_connections_pending{application=~\"${application:regex}\", instance=~\"$instance\"}))",
+          "expr": "(max by (application, instance) (lettuce_pool_idle_objects{application=~\"${application:regex}\"}) or max by (instance, service) (redis_blocked_clients{instance=~\"$instance\"}))",
           "legendFormat": "pending \u2014 {{application}} / {{instance}}",
           "refId": "B",
           "interval": ""
@@ -2463,7 +2463,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Command throughput growth versus one hour ago by instance/application. Positive values indicate workload expansion; negative values indicate contraction.",
+      "description": "Command throughput growth versus one hour ago by instance/application. Positive values indicate workload expansion; negative values indicate contraction. Panel shows no data for the portion of the time window that predates 1\u202fh of recording-rule history (expected behaviour on fresh deployments).",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -4267,7 +4267,7 @@
   "timezone": "browser",
   "title": "Redis Performance and Latency",
   "uid": "chrono-redis-performance",
-  "version": 18,
+  "version": 19,
   "liveNow": false,
   "__inputs": [
     {
