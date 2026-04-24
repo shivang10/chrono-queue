@@ -1265,7 +1265,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.99, sum by (le, application) (clamp_min(rate(jvm_gc_pause_seconds_bucket{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
+          "expr": "histogram_quantile(0.99, sum by (le, application) (clamp_min(increase(jvm_gc_pause_seconds_bucket{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "{{application}}",
           "refId": "A",
           "interval": ""
@@ -1327,7 +1327,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.95, sum by (le, application) (clamp_min(rate(jvm_gc_pause_seconds_bucket{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
+          "expr": "histogram_quantile(0.95, sum by (le, application) (clamp_min(increase(jvm_gc_pause_seconds_bucket{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
           "legendFormat": "{{application}}",
           "refId": "A",
           "interval": ""
