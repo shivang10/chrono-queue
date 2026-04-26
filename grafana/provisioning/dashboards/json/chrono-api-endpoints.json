@@ -12,6 +12,19 @@
         "iconColor": "rgba(0, 211, 255, 1)",
         "name": "Annotations & Alerts",
         "type": "dashboard"
+      },
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "enable": true,
+        "expr": "changes(process_start_time_seconds{service=~\"$app\", env=~\"$env\"}[2m]) > 0",
+        "iconColor": "purple",
+        "name": "Service Restart",
+        "titleFormat": "Restart: {{service}}",
+        "tagKeys": "service,env",
+        "type": "annotation"
       }
     ]
   },
@@ -851,10 +864,26 @@
             "showPoints": "never",
             "drawStyle": "line",
             "spanNulls": false,
-            "lineInterpolation": "smooth"
+            "lineInterpolation": "smooth",
+            "thresholdsStyle": {
+              "mode": "line"
+            }
           },
           "unit": "percentunit",
-          "min": 0
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 0.001
+              }
+            ]
+          }
         },
         "overrides": []
       },
@@ -896,7 +925,7 @@
           "editorMode": "code"
         }
       ],
-      "description": "Ratio of 5xx request rate to total HTTP request rate across the selected time range."
+      "description": "Ratio of 5xx request rate to total HTTP request rate. Red threshold line marks the 99.9% SLO budget (0.1% error rate)."
     },
     {
       "datasource": {
@@ -1623,7 +1652,7 @@
           }
         ]
       },
-      "pluginVersion": "10.0.0",
+      "pluginVersion": "10.2.3",
       "targets": [
         {
           "datasource": {
@@ -1996,7 +2025,7 @@
         "skipUrlSync": false,
         "refresh": 0,
         "regex": "",
-        "allValue": null
+        "allValue": ".*"
       },
       {
         "current": {
@@ -2014,13 +2043,13 @@
         "name": "app",
         "label": "Application",
         "options": [],
-        "query": "job-producer,dlq-service",
+        "query": "job-producer,job-worker,retry-dispatcher,dlq-service",
         "type": "custom",
         "sort": 0,
         "skipUrlSync": false,
         "refresh": 0,
         "regex": "",
-        "allValue": null
+        "allValue": ".*"
       }
     ]
   },
@@ -2078,7 +2107,7 @@
       "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
-      "version": "10.0.0"
+      "version": "10.2.3"
     },
     {
       "type": "datasource",
@@ -2102,6 +2131,12 @@
       "type": "panel",
       "id": "stat",
       "name": "Stat",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "table",
+      "name": "Table",
       "version": ""
     },
     {
