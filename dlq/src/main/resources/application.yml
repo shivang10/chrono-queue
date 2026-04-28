@@ -1,30 +1,53 @@
 spring:
   application:
     name: dlq-service
+
+  # ── Graceful Shutdown ──────────────────────────────────────
+  lifecycle:
+    timeout-per-shutdown-phase: 45s
+
+  # ── Kafka ──────────────────────────────────────────────────
   kafka:
     bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
     consumer:
       group-id: dlq-group
+      client-id: ${HOSTNAME:dlq-service}
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
       auto-offset-reset: earliest
       enable-auto-commit: false
+      max-poll-records: 100
+      properties:
+        '[isolation.level]': read_committed
+        '[heartbeat.interval.ms]': 5000
+        '[session.timeout.ms]': 60000
+        '[max.poll.interval.ms]': 300000
+        '[fetch.max.bytes]': 52428800
+        '[fetch.min.bytes]': 1
+        '[fetch.max.wait.ms]': 100
+        '[max.partition.fetch.bytes]': 1048576
+        '[group.instance.id]': ${HOSTNAME:dlq-service}
+
     listener:
-      ack-mode: manual
+      ack-mode: manual_immediate
+      concurrency: 3
       observation-enabled: true
+      poll-timeout: 3000
+    template:
+      observation-enabled: true
+
+  # ── MongoDB ────────────────────────────────────────────────
   data:
     mongodb:
-      host: ${SPRING_DATA_MONGODB_HOST:mongodb}
-      port: ${MONGODB_PORT:27017}
-      database: dlq_db
-      username: ${MONGODB_USER:admin}
-      password: ${MONGODB_PASSWORD:password}
+      uri: ${SPRING_DATA_MONGODB_URI:mongodb://${SPRING_DATA_MONGODB_USERNAME:admin}:${SPRING_DATA_MONGODB_PASSWORD:password}@${SPRING_DATA_MONGODB_HOST:mongodb}:${SPRING_DATA_MONGODB_PORT:27017}/${SPRING_DATA_MONGODB_DATABASE:dlq_db}?authSource=${SPRING_DATA_MONGODB_AUTH_DB:admin}}
 
+# ── Server ─────────────────────────────────────────────────
 server:
   port: ${SERVER_PORT:8084}
   shutdown: graceful
 
-# Actuator Configuration
+# ── Actuator / Observability ───────────────────────────────
 management:
   endpoints:
     web:
@@ -48,15 +71,15 @@ management:
   metrics:
     distribution:
       percentiles-histogram:
-        http.server.requests: true
-        jvm.gc.pause: true
-        spring.kafka.listener: true
-        mongodb.driver.commands: true
+        '[http.server.requests]': true
+        '[jvm.gc.pause]': true
+        '[spring.kafka.listener]': true
+        '[mongodb.driver.commands]': true
     tags:
       application: ${spring.application.name}
       environment: ${SPRING_PROFILES_ACTIVE:local}
 
-# Logging Configuration
+# ── Logging ────────────────────────────────────────────────
 logging:
   level:
     root: INFO

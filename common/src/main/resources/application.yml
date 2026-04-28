@@ -1,3 +1,8 @@
-spring:
-  application:
-    name: common
+# ──────────────────────────────────────────────────────────────
+# Common module — shared library JAR, NOT a runnable Spring Boot application.
+#
+# Do NOT define spring.application.name here; it would shadow the
+# actual service name when this module is included as a dependency.
+# Service-specific configuration belongs in each service's own
+# application.yml.
+# ──────────────────────────────────────────────────────────────

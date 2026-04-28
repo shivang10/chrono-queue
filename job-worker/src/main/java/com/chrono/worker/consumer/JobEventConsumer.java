@@ -50,7 +50,7 @@ public class JobEventConsumer {
             KafkaTopics.EMAIL_JOBS,
             KafkaTopics.PAYMENT_JOBS,
             KafkaTopics.ORDER_CANCELLATION_JOBS
-    }, groupId = "job-worker-group")
+    })
     public void consume(
             @Payload String message,
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,

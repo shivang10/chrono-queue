@@ -1,20 +1,40 @@
 spring:
   application:
     name: retry-dispatcher
+
+  # ── Graceful Shutdown ──────────────────────────────────────
+  lifecycle:
+    timeout-per-shutdown-phase: 45s
+
+  # ── Kafka ──────────────────────────────────────────────────
   kafka:
     bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
     producer:
+      client-id: ${HOSTNAME:retry-dispatcher}
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      
       acks: all
-      retries: 3
+      retries: 10000
+      batch-size: 65536
+      buffer-memory: 67108864
       properties:
         '[enable.idempotence]': true
+        '[max.in.flight.requests.per.connection]': 5
+        '[compression.type]': zstd
+        '[linger.ms]': 10
+        '[request.timeout.ms]': 30000
+        '[delivery.timeout.ms]': 120000
+        '[retry.backoff.ms]': 100
+        '[reconnect.backoff.max.ms]': 5000
+        '[metadata.max.age.ms]': 300000
     template:
       observation-enabled: true
+
+  # ── Redis ──────────────────────────────────────────────────
   data:
     redis:
-      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      host: ${SPRING_DATA_REDIS_HOST:redis}
       port: ${SPRING_DATA_REDIS_PORT:6379}
       timeout: 2000ms
       lettuce:
@@ -24,17 +44,18 @@ spring:
           min-idle: 2
           max-wait: 2000ms
 
+# ── Server ─────────────────────────────────────────────────
 server:
   port: ${SERVER_PORT:8083}
   shutdown: graceful
 
-# Retry Poller Configuration (custom application properties)
+# ── Retry Poller Configuration ─────────────────────────────
 retry:
   poller:
-    fixed-delay: 5000
-    batch-size: 10
+    fixed-delay: ${RETRY_POLLER_FIXED_DELAY:5000}
+    batch-size: ${RETRY_POLLER_BATCH_SIZE:10}
 
-# Actuator Configuration
+# ── Actuator / Observability ───────────────────────────────
 management:
   endpoints:
     web:
@@ -58,15 +79,15 @@ management:
   metrics:
     distribution:
       percentiles-histogram:
-        http.server.requests: true
-        jvm.gc.pause: true
-        spring.kafka.template: true
-        lettuce.command: true
+        '[http.server.requests]': true
+        '[jvm.gc.pause]': true
+        '[spring.kafka.template]': true
+        '[lettuce.command]': true
     tags:
       application: ${spring.application.name}
       environment: ${SPRING_PROFILES_ACTIVE:local}
 
-# Logging Configuration
+# ── Logging ────────────────────────────────────────────────
 logging:
   level:
     root: INFO

@@ -79,9 +79,9 @@ services:
       test:
         [
           "CMD-SHELL",
-          "mongosh --username ${MONGO_INITDB_ROOT_USERNAME} --password
-            ${MONGO_INITDB_ROOT_PASSWORD} --authenticationDatabase admin --eval
-            'db.adminCommand(\"ping\")'",
+          "mongosh --quiet --username $$MONGO_INITDB_ROOT_USERNAME --password
+            $$MONGO_INITDB_ROOT_PASSWORD --authenticationDatabase admin --eval
+            'db.adminCommand(\"ping\").ok' | grep 1",
         ]
       interval: 10s
       timeout: 5s
@@ -126,7 +126,6 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SERVER_PORT: ${JOB_WORKER_PORT}
-      MANAGEMENT_METRICS_DISTRIBUTION_PERCENTILES-HISTOGRAM_LETTUCE_COMMAND: "true"
     labels:
       environment: "production"
     depends_on:
@@ -153,7 +152,6 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SERVER_PORT: ${RETRY_DISPATCHER_PORT}
-      MANAGEMENT_METRICS_DISTRIBUTION_PERCENTILES-HISTOGRAM_LETTUCE_COMMAND: "true"
     labels:
       environment: "production"
     depends_on:

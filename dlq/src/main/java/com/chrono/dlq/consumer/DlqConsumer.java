@@ -26,7 +26,7 @@ public class DlqConsumer {
 
     @KafkaListener(topics = {
             KafkaTopics.JOB_DLQ
-    }, groupId = "dlq-group")
+    })
     public void consume(
             @Payload String message,
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,

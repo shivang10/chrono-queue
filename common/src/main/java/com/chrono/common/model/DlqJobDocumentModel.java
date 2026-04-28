@@ -19,7 +19,6 @@ public class DlqJobDocumentModel {
 
     private static final int DEFAULT_MAX_RETRIES = 3;
 
-    @Field("job_id")
     @Id
     private String jobId;
 

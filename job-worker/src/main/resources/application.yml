@@ -1,35 +1,90 @@
 spring:
   application:
     name: job-worker
+
+  # ── Graceful Shutdown ──────────────────────────────────────
+  lifecycle:
+    timeout-per-shutdown-phase: 45s
+
+  # ── Kafka ──────────────────────────────────────────────────
   kafka:
     bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
     consumer:
       group-id: job-worker-group
+      client-id: ${HOSTNAME:job-worker}
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
       auto-offset-reset: earliest
       enable-auto-commit: false
+      max-poll-records: 500
+      properties:
+        '[isolation.level]': read_committed
+        '[heartbeat.interval.ms]': 5000
+        '[session.timeout.ms]': 60000
+        '[max.poll.interval.ms]': 300000
+        '[fetch.max.bytes]': 52428800
+        '[fetch.min.bytes]': 1
+        '[fetch.max.wait.ms]': 100
+        '[max.partition.fetch.bytes]': 1048576
+        '[group.instance.id]': ${HOSTNAME:job-worker}
+
     producer:
+      client-id: ${HOSTNAME:job-worker-dlq-producer}
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
       acks: all
-      retries: 3
+      buffer-memory: 33554432
+      batch-size: 16384
       properties:
         '[enable.idempotence]': true
+        '[max.in.flight.requests.per.connection]': 5
+        '[delivery.timeout.ms]': 120000
+        '[linger.ms]': 5
+        '[request.timeout.ms]': 30000
+        '[retry.backoff.ms]': 100
+        '[compression.type]': zstd
     listener:
+      ack-mode: manual_immediate
+      concurrency: 6
       observation-enabled: true
+      type: single
+      poll-timeout: 3000
     template:
       observation-enabled: true
+
+  # ── Redis ──────────────────────────────────────────────────
   data:
     redis:
-      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      host: ${SPRING_DATA_REDIS_HOST:redis}
       port: ${SPRING_DATA_REDIS_PORT:6379}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 2
+          max-wait: 2000ms
 
+# ── Server ─────────────────────────────────────────────────
 server:
   port: ${SERVER_PORT:8082}
   shutdown: graceful
 
-# Actuator Configuration
+# ── Custom Application Properties ──────────────────────────
+retry:
+  policy:
+    max-retries: ${RETRY_POLICY_MAX_RETRIES:3}
+    initial-delay: ${RETRY_POLICY_INITIAL_DELAY:5000}
+    multiplier: ${RETRY_POLICY_MULTIPLIER:2.0}
+    max-delay: ${RETRY_POLICY_MAX_DELAY:300000}
+
+worker:
+  validation:
+    simulated-failure-rate: ${WORKER_SIMULATED_FAILURE_RATE:0.5}
+
+# ── Actuator / Observability ───────────────────────────────
 management:
   endpoints:
     web:
@@ -53,16 +108,16 @@ management:
   metrics:
     distribution:
       percentiles-histogram:
-        http.server.requests: true
-        jvm.gc.pause: true
-        spring.kafka.listener: true
-        spring.kafka.template: true
-        lettuce.command: true
+        '[http.server.requests]': true
+        '[jvm.gc.pause]': true
+        '[spring.kafka.listener]': true
+        '[spring.kafka.template]': true
+        '[lettuce.command]': true
     tags:
       application: ${spring.application.name}
       environment: ${SPRING_PROFILES_ACTIVE:local}
 
-# Logging Configuration
+# ── Logging ────────────────────────────────────────────────
 logging:
   level:
     root: INFO
