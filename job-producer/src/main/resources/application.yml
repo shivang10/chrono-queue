@@ -4,7 +4,7 @@ spring:
 
   # ── Graceful Shutdown ──────────────────────────────────────
   lifecycle:
-    timeout-per-shutdown-phase: 45s
+    timeout-per-shutdown-phase: ${LIFECYCLE_SHUTDOWN_TIMEOUT:90s}
 
   # ── Kafka ──────────────────────────────────────────────────
   kafka:
@@ -22,12 +22,14 @@ spring:
         '[enable.idempotence]': true
         '[max.in.flight.requests.per.connection]': 5
         '[compression.type]': zstd
-        '[linger.ms]': 15
+        '[linger.ms]': 10
         '[request.timeout.ms]': 30000
         '[delivery.timeout.ms]': 120000
         '[retry.backoff.ms]': 100
+        '[retry.backoff.max.ms]': 5000
         '[reconnect.backoff.max.ms]': 5000
         '[metadata.max.age.ms]': 300000
+        '[max.block.ms]': 10000
     template:
       observation-enabled: true
 
@@ -64,6 +66,8 @@ management:
       probes:
         enabled: true
   health:
+    kafka:
+      enabled: true
     livenessState:
       enabled: true
     readinessState:

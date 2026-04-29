@@ -45,26 +45,76 @@ public class JobEventConsumer {
         this.random = randomSeed == null ? new Random() : new Random(randomSeed);
     }
 
-    @KafkaListener(topics = {
-            KafkaTopics.WEBHOOK_JOBS,
-            KafkaTopics.EMAIL_JOBS,
-            KafkaTopics.PAYMENT_JOBS,
-            KafkaTopics.ORDER_CANCELLATION_JOBS
-    })
-    public void consume(
+    @KafkaListener(topics = KafkaTopics.PAYMENT_JOBS, concurrency = "${worker.kafka.concurrency.payment-processing-jobs:6}")
+    public void consumePayment(
             @Payload String message,
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
             @Header(KafkaHeaders.RECEIVED_PARTITION) int partition,
             @Header(KafkaHeaders.OFFSET) long offset,
             @Header(KafkaHeaders.RECEIVED_KEY) String key,
             Acknowledgment acknowledgment) {
+
+        consume(message, topic, partition, offset, key, acknowledgment);
+    }
+
+    @KafkaListener(topics = KafkaTopics.EMAIL_JOBS, concurrency = "${worker.kafka.concurrency.email-jobs:3}")
+    public void consumeEmail(
+            @Payload String message,
+            @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
+            @Header(KafkaHeaders.RECEIVED_PARTITION) int partition,
+            @Header(KafkaHeaders.OFFSET) long offset,
+            @Header(KafkaHeaders.RECEIVED_KEY) String key,
+            Acknowledgment acknowledgment) {
+
+        consume(message, topic, partition, offset, key, acknowledgment);
+    }
+
+    @KafkaListener(topics = KafkaTopics.WEBHOOK_JOBS, concurrency = "${worker.kafka.concurrency.webhook-jobs:3}")
+    public void consumeWebhook(
+            @Payload String message,
+            @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
+            @Header(KafkaHeaders.RECEIVED_PARTITION) int partition,
+            @Header(KafkaHeaders.OFFSET) long offset,
+            @Header(KafkaHeaders.RECEIVED_KEY) String key,
+            Acknowledgment acknowledgment) {
+
+        consume(message, topic, partition, offset, key, acknowledgment);
+    }
+
+    @KafkaListener(topics = KafkaTopics.ORDER_CANCELLATION_JOBS, concurrency = "${worker.kafka.concurrency.order-cancellation-jobs:3}")
+    public void consumeCancellation(
+            @Payload String message,
+            @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
+            @Header(KafkaHeaders.RECEIVED_PARTITION) int partition,
+            @Header(KafkaHeaders.OFFSET) long offset,
+            @Header(KafkaHeaders.RECEIVED_KEY) String key,
+            Acknowledgment acknowledgment) {
+
+        consume(message, topic, partition, offset, key, acknowledgment);
+    }
+
+    private void consume(
+            String message,
+            String topic,
+            int partition,
+            long offset,
+            String key,
+            Acknowledgment acknowledgment) {
+
         JobEventModel jobEvent;
         try {
             jobEvent = objectMapper.readValue(message, JobEventModel.class);
         } catch (Exception e) {
             log.error("Failed to deserialize message - topic: {}, partition: {}, offset: {}, key: {}",
                     topic, partition, offset, key, e);
-            throw new IllegalStateException("Deserialization failed: " + e.getMessage(), e);
+            meterRegistry.counter("chrono.jobs.consumed",
+                    "job_type", "unknown",
+                    "result", "malformed").increment();
+            acknowledgment.acknowledge();
+            log.warn(
+                    "Malformed message acknowledged to avoid poison-pill retry loop - topic: {}, partition: {}, offset: {}, key: {}",
+                    topic, partition, offset, key);
+            return;
         }
 
         log.info("Consuming message - topic: {}, partition: {}, offset: {}, jobId: {}",

@@ -13,7 +13,7 @@ import org.springframework.util.backoff.FixedBackOff;
 @Configuration
 public class KafkaConsumerConfig {
 
-        @Bean
+        @Bean("workerKafkaListenerContainerFactory")
         @SuppressWarnings("unchecked")
         public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory(
                         ConcurrentKafkaListenerContainerFactoryConfigurer configurer,
@@ -29,8 +29,8 @@ public class KafkaConsumerConfig {
         }
 
         @Bean
-        public DefaultErrorHandler kafkaErrorHandler() {
-                FixedBackOff noRetry = new FixedBackOff(0L, 0L);
+        public DefaultErrorHandler kafkaConsumerErrorHandler() {
+                FixedBackOff noRetry = new FixedBackOff(1000L, 2L);
                 return new DefaultErrorHandler(
                                 (record, ex) -> log.error(
                                                 "Kafka record unrecoverable — topic: {}, partition: {}, offset: {}, key: {}",

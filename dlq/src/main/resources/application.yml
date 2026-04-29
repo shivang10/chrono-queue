@@ -4,14 +4,14 @@ spring:
 
   # ── Graceful Shutdown ──────────────────────────────────────
   lifecycle:
-    timeout-per-shutdown-phase: 45s
+    timeout-per-shutdown-phase: ${LIFECYCLE_SHUTDOWN_TIMEOUT:90s}
 
   # ── Kafka ──────────────────────────────────────────────────
   kafka:
     bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
     consumer:
-      group-id: dlq-group
-      client-id: ${HOSTNAME:dlq-service}
+      group-id: ${SPRING_KAFKA_CONSUMER_GROUP_ID:dlq-group}
+      client-id: ${spring.application.name}-${HOSTNAME:local}
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 
@@ -20,18 +20,21 @@ spring:
       max-poll-records: 100
       properties:
         '[isolation.level]': read_committed
-        '[heartbeat.interval.ms]': 5000
+        '[heartbeat.interval.ms]': 10000
         '[session.timeout.ms]': 60000
         '[max.poll.interval.ms]': 300000
         '[fetch.max.bytes]': 52428800
-        '[fetch.min.bytes]': 1
+        '[fetch.min.bytes]': 1024
         '[fetch.max.wait.ms]': 100
         '[max.partition.fetch.bytes]': 1048576
-        '[group.instance.id]': ${HOSTNAME:dlq-service}
+        '[allow.auto.create.topics]': false
+        '[retry.backoff.ms]': 100
+        '[retry.backoff.max.ms]': 5000
 
     listener:
+      type: single
+      missing-topics-fatal: ${KAFKA_MISSING_TOPICS_FATAL:true}
       ack-mode: manual_immediate
-      concurrency: 3
       observation-enabled: true
       poll-timeout: 3000
     template:
@@ -40,12 +43,22 @@ spring:
   # ── MongoDB ────────────────────────────────────────────────
   data:
     mongodb:
-      uri: ${SPRING_DATA_MONGODB_URI:mongodb://${SPRING_DATA_MONGODB_USERNAME:admin}:${SPRING_DATA_MONGODB_PASSWORD:password}@${SPRING_DATA_MONGODB_HOST:mongodb}:${SPRING_DATA_MONGODB_PORT:27017}/${SPRING_DATA_MONGODB_DATABASE:dlq_db}?authSource=${SPRING_DATA_MONGODB_AUTH_DB:admin}}
-
+      host: ${SPRING_DATA_MONGODB_HOST:mongodb}
+      port: ${SPRING_DATA_MONGODB_PORT:27017}
+      database: ${SPRING_DATA_MONGODB_DATABASE:dlq_db}
+      username: ${SPRING_DATA_MONGODB_USERNAME:admin}
+      password: ${SPRING_DATA_MONGODB_PASSWORD:password}
+      authentication-database: ${SPRING_DATA_MONGODB_AUTH_DB:admin}
 # ── Server ─────────────────────────────────────────────────
 server:
   port: ${SERVER_PORT:8084}
   shutdown: graceful
+
+
+dlq:
+  kafka:
+    concurrency:
+      dlq-concurrency: ${DLQ_CONCURRENCY:3}
 
 # ── Actuator / Observability ───────────────────────────────
 management:
@@ -60,6 +73,10 @@ management:
       probes:
         enabled: true
   health:
+    kafka:
+      enabled: true
+    mongo:
+      enabled: true
     livenessState:
       enabled: true
     readinessState:

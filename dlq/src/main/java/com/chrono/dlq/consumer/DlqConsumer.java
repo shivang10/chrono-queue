@@ -24,9 +24,7 @@ public class DlqConsumer {
         this.dlqHandlerService = dlqHandlerService;
     }
 
-    @KafkaListener(topics = {
-            KafkaTopics.JOB_DLQ
-    })
+    @KafkaListener(topics = KafkaTopics.JOB_DLQ, concurrency = "${dlq.kafka.concurrency.dlq-concurrency:3}")
     public void consume(
             @Payload String message,
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
@@ -41,7 +39,11 @@ public class DlqConsumer {
         } catch (Exception ex) {
             log.error("Failed to deserialize DLQ message - topic: {}, partition: {}, offset: {}, key: {}",
                     topic, partition, offset, key, ex);
-            throw new IllegalStateException("DLQ message deserialization failed", ex);
+            acknowledgment.acknowledge();
+            log.warn(
+                    "Malformed DLQ message acknowledged to avoid poison-pill retry loop - topic: {}, partition: {}, offset: {}, key: {}",
+                    topic, partition, offset, key);
+            return;
         }
 
         try {

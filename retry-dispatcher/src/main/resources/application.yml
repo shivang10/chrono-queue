@@ -4,7 +4,7 @@ spring:
 
   # ── Graceful Shutdown ──────────────────────────────────────
   lifecycle:
-    timeout-per-shutdown-phase: 45s
+    timeout-per-shutdown-phase: ${LIFECYCLE_SHUTDOWN_TIMEOUT:90s}
 
   # ── Kafka ──────────────────────────────────────────────────
   kafka:
@@ -25,9 +25,11 @@ spring:
         '[linger.ms]': 10
         '[request.timeout.ms]': 30000
         '[delivery.timeout.ms]': 120000
-        '[retry.backoff.ms]': 100
         '[reconnect.backoff.max.ms]': 5000
         '[metadata.max.age.ms]': 300000
+        '[max.block.ms]': 10000
+        '[retry.backoff.ms]': 100
+        '[retry.backoff.max.ms]': 5000
     template:
       observation-enabled: true
 
@@ -53,7 +55,8 @@ server:
 retry:
   poller:
     fixed-delay: ${RETRY_POLLER_FIXED_DELAY:5000}
-    batch-size: ${RETRY_POLLER_BATCH_SIZE:10}
+    batch-size: ${RETRY_POLLER_BATCH_SIZE:100}
+    max-concurrent-dispatches: ${RETRY_POLLER_MAX_CONCURRENT:5}
 
 # ── Actuator / Observability ───────────────────────────────
 management:
@@ -68,6 +71,10 @@ management:
       probes:
         enabled: true
   health:
+    kafka:
+      enabled: true
+    redis:
+      enabled: true
     livenessState:
       enabled: true
     readinessState:

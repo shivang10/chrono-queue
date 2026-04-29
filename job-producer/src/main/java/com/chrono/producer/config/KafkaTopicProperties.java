@@ -19,6 +19,20 @@ public class KafkaTopicProperties {
 
     public int resolvePartitions(String topicName) {
         Integer configuredPartitions = partitions.get(topicName);
-        return configuredPartitions != null ? configuredPartitions : defaultPartitions;
+        int resolvedPartitions = configuredPartitions != null ? configuredPartitions : defaultPartitions;
+
+        if (resolvedPartitions < 1) {
+            throw new IllegalStateException("Kafka topic partitions must be greater than zero for topic: " + topicName);
+        }
+
+        return resolvedPartitions;
+    }
+
+    public short resolveReplicationFactor() {
+        if (replicationFactor < 1) {
+            throw new IllegalStateException("Kafka topic replication factor must be greater than zero");
+        }
+
+        return replicationFactor;
     }
 }

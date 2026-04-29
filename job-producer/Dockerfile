@@ -40,8 +40,8 @@ COPY --from=build --chown=appuser:appgroup /app/job-producer/target/job-producer
 
 USER appuser
 
-ENV SERVER_PORT=8080
-EXPOSE 8080
+ENV SERVER_PORT=8081
+EXPOSE 8081
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:${SERVER_PORT}/actuator/health/liveness || exit 1

@@ -4,14 +4,14 @@ spring:
 
   # ── Graceful Shutdown ──────────────────────────────────────
   lifecycle:
-    timeout-per-shutdown-phase: 45s
+    timeout-per-shutdown-phase: ${LIFECYCLE_SHUTDOWN_TIMEOUT:90s}
 
   # ── Kafka ──────────────────────────────────────────────────
   kafka:
     bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
     consumer:
-      group-id: job-worker-group
-      client-id: ${HOSTNAME:job-worker}
+      group-id: ${SPRING_KAFKA_CONSUMER_GROUP_ID:job-worker-group}
+      client-id: ${spring.application.name}-${HOSTNAME:job-worker}
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 
@@ -20,14 +20,16 @@ spring:
       max-poll-records: 500
       properties:
         '[isolation.level]': read_committed
-        '[heartbeat.interval.ms]': 5000
+        '[heartbeat.interval.ms]': 10000
         '[session.timeout.ms]': 60000
         '[max.poll.interval.ms]': 300000
         '[fetch.max.bytes]': 52428800
-        '[fetch.min.bytes]': 1
+        '[fetch.min.bytes]': 1024
         '[fetch.max.wait.ms]': 100
         '[max.partition.fetch.bytes]': 1048576
-        '[group.instance.id]': ${HOSTNAME:job-worker}
+        '[allow.auto.create.topics]': false
+        '[retry.backoff.ms]': 100
+        '[retry.backoff.max.ms]': 5000
 
     producer:
       client-id: ${HOSTNAME:job-worker-dlq-producer}
@@ -35,19 +37,24 @@ spring:
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
 
       acks: all
-      buffer-memory: 33554432
-      batch-size: 16384
+      retries: 10000
+      buffer-memory: 67108864
+      batch-size: 65536
       properties:
         '[enable.idempotence]': true
         '[max.in.flight.requests.per.connection]': 5
         '[delivery.timeout.ms]': 120000
-        '[linger.ms]': 5
+        '[linger.ms]': 10
         '[request.timeout.ms]': 30000
         '[retry.backoff.ms]': 100
+        '[retry.backoff.max.ms]': 5000
+        '[reconnect.backoff.max.ms]': 5000
+        '[metadata.max.age.ms]': 300000
         '[compression.type]': zstd
+        '[max.block.ms]': 10000
     listener:
+      missing-topics-fatal: ${KAFKA_MISSING_TOPICS_FATAL:true}
       ack-mode: manual_immediate
-      concurrency: 6
       observation-enabled: true
       type: single
       poll-timeout: 3000
@@ -83,6 +90,12 @@ retry:
 worker:
   validation:
     simulated-failure-rate: ${WORKER_SIMULATED_FAILURE_RATE:0.5}
+  kafka:
+    concurrency:
+      webhook-jobs: ${WEBHOOK_JOBS_CONCURRENCY:3}
+      email-jobs: ${EMAIL_JOBS_CONCURRENCY:3}
+      payment-processing-jobs: ${PAYMENT_PROCESSING_JOBS_CONCURRENCY:6}
+      order-cancellation-jobs: ${ORDER_CANCELLATION_JOBS_CONCURRENCY:3}
 
 # ── Actuator / Observability ───────────────────────────────
 management:
@@ -97,6 +110,10 @@ management:
       probes:
         enabled: true
   health:
+    kafka:
+      enabled: true
+    redis:
+      enabled: true
     livenessState:
       enabled: true
     readinessState:

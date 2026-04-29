@@ -16,28 +16,28 @@ import lombok.extern.slf4j.Slf4j;
 @Configuration
 public class KafkaDlqConfig {
 
-    @Bean
-    @SuppressWarnings("unchecked")
-    public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory(
-            ConcurrentKafkaListenerContainerFactoryConfigurer configurer,
-            ConsumerFactory<String, String> consumerFactory,
-            @NonNull DefaultErrorHandler kafkaErrorHandler) {
+        @Bean("dlqKafkaListenerContainerFactory")
+        @SuppressWarnings("unchecked")
+        public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory(
+                        ConcurrentKafkaListenerContainerFactoryConfigurer configurer,
+                        ConsumerFactory<String, String> consumerFactory,
+                        @NonNull DefaultErrorHandler kafkaErrorHandler) {
 
-        ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
-        configurer.configure(
-                (ConcurrentKafkaListenerContainerFactory<Object, Object>) (ConcurrentKafkaListenerContainerFactory<?, ?>) factory,
-                (ConsumerFactory<Object, Object>) (ConsumerFactory<?, ?>) consumerFactory);
-        factory.setCommonErrorHandler(kafkaErrorHandler);
-        return factory;
-    }
+                ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
+                configurer.configure(
+                                (ConcurrentKafkaListenerContainerFactory<Object, Object>) (ConcurrentKafkaListenerContainerFactory<?, ?>) factory,
+                                (ConsumerFactory<Object, Object>) (ConsumerFactory<?, ?>) consumerFactory);
+                factory.setCommonErrorHandler(kafkaErrorHandler);
+                return factory;
+        }
 
-    @Bean
-    public DefaultErrorHandler kafkaErrorHandler() {
-        FixedBackOff noRetry = new FixedBackOff(0L, 0L);
-        return new DefaultErrorHandler(
-                (record, ex) -> log.error(
-                        "Kafka record unrecoverable — topic: {}, partition: {}, offset: {}, key: {}",
-                        record.topic(), record.partition(), record.offset(), record.key(), ex),
-                noRetry);
-    }
+        @Bean
+        public DefaultErrorHandler dlqKafkaErrorHandler() {
+                FixedBackOff noRetry = new FixedBackOff(1000L, 2L);
+                return new DefaultErrorHandler(
+                                (record, ex) -> log.error(
+                                                "DLQ persistence failed — topic: {}, partition: {}, offset: {}, key: {}",
+                                                record.topic(), record.partition(), record.offset(), record.key(), ex),
+                                noRetry);
+        }
 }
