@@ -107,7 +107,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "max(process_uptime_seconds{service=\"job-producer\", instance=~\"$instance\", env=~\"$env\"})",
+          "expr": "max(process_uptime_seconds{service=\"job-producer\", env=~\"$env\"})",
           "legendFormat": "",
           "refId": "A",
           "interval": ""
@@ -176,7 +176,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "max(process_uptime_seconds{service=\"job-worker\", instance=~\"$instance\", env=~\"$env\"})",
+          "expr": "max(process_uptime_seconds{service=\"job-worker\", env=~\"$env\"})",
           "legendFormat": "",
           "refId": "A",
           "interval": ""

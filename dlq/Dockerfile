@@ -40,8 +40,8 @@ COPY --from=build --chown=appuser:appgroup /app/dlq/target/dlq-0.0.1-SNAPSHOT.ja
 
 USER appuser
 
-ENV SERVER_PORT=8083
-EXPOSE 8083
+ENV SERVER_PORT=8084
+EXPOSE 8084
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:${SERVER_PORT}/actuator/health/liveness || exit 1
