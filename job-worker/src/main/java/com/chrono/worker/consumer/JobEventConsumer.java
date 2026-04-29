@@ -18,6 +18,7 @@ import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Random;
 
 @Slf4j
@@ -45,108 +46,110 @@ public class JobEventConsumer {
         this.random = randomSeed == null ? new Random() : new Random(randomSeed);
     }
 
-    @KafkaListener(topics = KafkaTopics.PAYMENT_JOBS, concurrency = "${worker.kafka.concurrency.payment-processing-jobs:6}")
+    @KafkaListener(topics = KafkaTopics.PAYMENT_JOBS, concurrency = "${worker.kafka.concurrency.payment-processing-jobs:12}")
     public void consumePayment(
-            @Payload String message,
-            @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
-            @Header(KafkaHeaders.RECEIVED_PARTITION) int partition,
-            @Header(KafkaHeaders.OFFSET) long offset,
-            @Header(KafkaHeaders.RECEIVED_KEY) String key,
+            @Payload List<String> message,
+            @Header(KafkaHeaders.RECEIVED_TOPIC) List<String> topics,
+            @Header(KafkaHeaders.RECEIVED_PARTITION) List<Integer> partitions,
+            @Header(KafkaHeaders.OFFSET) List<Long> offsets,
+            @Header(KafkaHeaders.RECEIVED_KEY) List<String> keys,
             Acknowledgment acknowledgment) {
 
-        consume(message, topic, partition, offset, key, acknowledgment);
+        consume(message, topics, partitions, offsets, keys, acknowledgment);
     }
 
-    @KafkaListener(topics = KafkaTopics.EMAIL_JOBS, concurrency = "${worker.kafka.concurrency.email-jobs:3}")
+    @KafkaListener(topics = KafkaTopics.EMAIL_JOBS, concurrency = "${worker.kafka.concurrency.email-jobs:6}")
     public void consumeEmail(
-            @Payload String message,
-            @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
-            @Header(KafkaHeaders.RECEIVED_PARTITION) int partition,
-            @Header(KafkaHeaders.OFFSET) long offset,
-            @Header(KafkaHeaders.RECEIVED_KEY) String key,
+            @Payload List<String> message,
+            @Header(KafkaHeaders.RECEIVED_TOPIC) List<String> topics,
+            @Header(KafkaHeaders.RECEIVED_PARTITION) List<Integer> partitions,
+            @Header(KafkaHeaders.OFFSET) List<Long> offsets,
+            @Header(KafkaHeaders.RECEIVED_KEY) List<String> keys,
             Acknowledgment acknowledgment) {
 
-        consume(message, topic, partition, offset, key, acknowledgment);
+        consume(message, topics, partitions, offsets, keys, acknowledgment);
     }
 
-    @KafkaListener(topics = KafkaTopics.WEBHOOK_JOBS, concurrency = "${worker.kafka.concurrency.webhook-jobs:3}")
+    @KafkaListener(topics = KafkaTopics.WEBHOOK_JOBS, concurrency = "${worker.kafka.concurrency.webhook-jobs:6}")
     public void consumeWebhook(
-            @Payload String message,
-            @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
-            @Header(KafkaHeaders.RECEIVED_PARTITION) int partition,
-            @Header(KafkaHeaders.OFFSET) long offset,
-            @Header(KafkaHeaders.RECEIVED_KEY) String key,
+            @Payload List<String> message,
+            @Header(KafkaHeaders.RECEIVED_TOPIC) List<String> topics,
+            @Header(KafkaHeaders.RECEIVED_PARTITION) List<Integer> partitions,
+            @Header(KafkaHeaders.OFFSET) List<Long> offsets,
+            @Header(KafkaHeaders.RECEIVED_KEY) List<String> keys,
             Acknowledgment acknowledgment) {
 
-        consume(message, topic, partition, offset, key, acknowledgment);
+        consume(message, topics, partitions, offsets, keys, acknowledgment);
     }
 
     @KafkaListener(topics = KafkaTopics.ORDER_CANCELLATION_JOBS, concurrency = "${worker.kafka.concurrency.order-cancellation-jobs:3}")
     public void consumeCancellation(
-            @Payload String message,
-            @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
-            @Header(KafkaHeaders.RECEIVED_PARTITION) int partition,
-            @Header(KafkaHeaders.OFFSET) long offset,
-            @Header(KafkaHeaders.RECEIVED_KEY) String key,
+            @Payload List<String> message,
+            @Header(KafkaHeaders.RECEIVED_TOPIC) List<String> topics,
+            @Header(KafkaHeaders.RECEIVED_PARTITION) List<Integer> partitions,
+            @Header(KafkaHeaders.OFFSET) List<Long> offsets,
+            @Header(KafkaHeaders.RECEIVED_KEY) List<String> keys,
             Acknowledgment acknowledgment) {
 
-        consume(message, topic, partition, offset, key, acknowledgment);
+        consume(message, topics, partitions, offsets, keys, acknowledgment);
     }
 
     private void consume(
-            String message,
-            String topic,
-            int partition,
-            long offset,
-            String key,
+            List<String> messages,
+            @Header(KafkaHeaders.RECEIVED_TOPIC) List<String> topics,
+            @Header(KafkaHeaders.RECEIVED_PARTITION) List<Integer> partitions,
+            @Header(KafkaHeaders.OFFSET) List<Long> offsets,
+            @Header(KafkaHeaders.RECEIVED_KEY) List<String> keys,
             Acknowledgment acknowledgment) {
+        for (int i = 0; i < messages.size(); i++) {
 
-        JobEventModel jobEvent;
-        try {
-            jobEvent = objectMapper.readValue(message, JobEventModel.class);
-        } catch (Exception e) {
-            log.error("Failed to deserialize message - topic: {}, partition: {}, offset: {}, key: {}",
-                    topic, partition, offset, key, e);
-            meterRegistry.counter("chrono.jobs.consumed",
-                    "job_type", "unknown",
-                    "result", "malformed").increment();
-            acknowledgment.acknowledge();
-            log.warn(
-                    "Malformed message acknowledged to avoid poison-pill retry loop - topic: {}, partition: {}, offset: {}, key: {}",
-                    topic, partition, offset, key);
-            return;
-        }
-
-        log.info("Consuming message - topic: {}, partition: {}, offset: {}, jobId: {}",
-                topic, partition, offset, key);
-        try {
-            validateJob(jobEvent);
-            jobProcessingService.processJobEvent(jobEvent);
-            jobEvent.setStatus(JobStatus.COMPLETED);
-            acknowledgment.acknowledge();
-            meterRegistry.counter("chrono.jobs.consumed",
-                    "job_type", jobEvent.getJobType().name(),
-                    "result", "success").increment();
-            log.info("Job processed successfully - jobId: {}, jobType: {}, topic: {}, partition: {}, offset: {}",
-                    jobEvent.getJobId(), jobEvent.getJobType(), topic, partition, offset);
-        } catch (Exception processingError) {
-            log.warn("Job processing failed - jobId: {}, jobType: {}, attempt: {}/{}, reason: {}",
-                    jobEvent.getJobId(), jobEvent.getJobType(),
-                    jobEvent.getRetryCount() + 1, jobEvent.getMaxRetries() + 1,
-                    processingError.getMessage(), processingError);
-            jobEvent.setStatus(JobStatus.FAILED);
+            String message = messages.get(i);
+            String topic = topics.get(i);
+            int partition = partitions.get(i);
+            long offset = offsets.get(i);
+            String key = keys.get(i);
+            JobEventModel jobEvent;
             try {
-                retryHandler.handleFailure(jobEvent, processingError);
-                acknowledgment.acknowledge();
-                log.info("Job failure handled - jobId: {}, attempt: {}/{}, acknowledged",
-                        jobEvent.getJobId(), jobEvent.getRetryCount(), jobEvent.getMaxRetries());
-            } catch (Exception ex) {
-                log.error("Retry/DLQ handoff failed for jobId: {} — record will NOT be acknowledged",
-                        jobEvent.getJobId(), ex);
-                throw new IllegalStateException(
-                        "Failed to handle retry/DLQ for job " + jobEvent.getJobId() + ": " + ex.getMessage(), ex);
+                jobEvent = objectMapper.readValue(message, JobEventModel.class);
+            } catch (Exception e) {
+                log.error("Failed to deserialize message - topic: {}, partition: {}, offset: {}, key: {}",
+                        topic, partition, offset, key, e);
+                meterRegistry.counter("chrono.jobs.consumed",
+                        "job_type", "unknown",
+                        "result", "malformed").increment();
+                return;
+            }
+            try {
+
+                log.info("Consuming message - topic: {}, partition: {}, offset: {}, jobId: {}",
+                        topic, partition, offset, key);
+                validateJob(jobEvent);
+                jobProcessingService.processJobEvent(jobEvent);
+                jobEvent.setStatus(JobStatus.COMPLETED);
+                meterRegistry.counter("chrono.jobs.consumed",
+                        "job_type", jobEvent.getJobType().name(),
+                        "result", "success").increment();
+                log.info("Job processed successfully - jobId: {}, jobType: {}, topic: {}, partition: {}, offset: {}",
+                        jobEvent.getJobId(), jobEvent.getJobType(), topic, partition, offset);
+            } catch (Exception processingError) {
+                log.warn("Job processing failed - jobId: {}, jobType: {}, attempt: {}/{}, reason: {}",
+                        jobEvent.getJobId(), jobEvent.getJobType(),
+                        jobEvent.getRetryCount() + 1, jobEvent.getMaxRetries() + 1,
+                        processingError.getMessage(), processingError);
+                jobEvent.setStatus(JobStatus.FAILED);
+                try {
+                    retryHandler.handleFailure(jobEvent, processingError);
+                    log.info("Job failure handled - jobId: {}, attempt: {}/{}, acknowledged",
+                            jobEvent.getJobId(), jobEvent.getRetryCount(), jobEvent.getMaxRetries());
+                } catch (Exception ex) {
+                    log.error("Retry/DLQ handoff failed for jobId: {} — record will NOT be acknowledged",
+                            jobEvent.getJobId(), ex);
+                    throw new IllegalStateException(
+                            "Failed to handle retry/DLQ for job " + jobEvent.getJobId() + ": " + ex.getMessage(), ex);
+                }
             }
         }
+        acknowledgment.acknowledge();
     }
 
     private void validateJob(JobEventModel jobEvent) {

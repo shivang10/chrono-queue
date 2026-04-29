@@ -17,26 +17,26 @@ spring:
 
       auto-offset-reset: earliest
       enable-auto-commit: false
-      max-poll-records: 100
+      max-poll-records: 250
       properties:
         '[isolation.level]': read_committed
         '[heartbeat.interval.ms]': 10000
         '[session.timeout.ms]': 60000
         '[max.poll.interval.ms]': 300000
-        '[fetch.max.bytes]': 52428800
-        '[fetch.min.bytes]': 1024
-        '[fetch.max.wait.ms]': 100
+        '[fetch.max.bytes]': 10485760
+        '[fetch.min.bytes]': 4096
+        '[fetch.max.wait.ms]': 50
         '[max.partition.fetch.bytes]': 1048576
         '[allow.auto.create.topics]': false
         '[retry.backoff.ms]': 100
         '[retry.backoff.max.ms]': 5000
 
     listener:
-      type: single
+      type: batch
       missing-topics-fatal: ${KAFKA_MISSING_TOPICS_FATAL:true}
       ack-mode: manual_immediate
       observation-enabled: true
-      poll-timeout: 3000
+      poll-timeout: 2000
     template:
       observation-enabled: true
 
