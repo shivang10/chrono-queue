@@ -2685,8 +2685,8 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "1000 * sum by (application, instance) (chrono:lettuce_command_completion_seconds_sum:rate5m{instance=~\"$instance\"}) / clamp_min(sum by (application, instance) (chrono:lettuce_command_completion_seconds_count:rate5m{instance=~\"$instance\"}), 1e-9)",
-          "legendFormat": "Avg Latency (ms) \u2014 {{application}} / {{instance}}",
+          "expr": "1000 * sum by (service, instance) (chrono:lettuce_command_completion_seconds_sum:rate5m{instance=~\"$instance\"}) / clamp_min(sum by (service, instance) (chrono:lettuce_command_completion_seconds_count:rate5m{instance=~\"$instance\"}), 1e-9)",
+          "legendFormat": "Avg Latency (ms) \u2014 {{service}} / {{instance}}",
           "refId": "B",
           "interval": ""
         }
@@ -4944,7 +4944,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Count of application\u202f\u00d7\u202finstance combinations where p95 Lettuce latency exceeds the 100\u202fms SLO threshold. Alert PromQL: histogram_quantile(0.95, sum by (le, application, instance, command) (chrono:lettuce_command_completion_seconds_bucket:increase5m{instance=~\"$instance\"})) > 0.100",
+      "description": "Count of application\u202f\u00d7\u202finstance combinations where p95 Lettuce latency exceeds the 100\u202fms SLO threshold. Alert PromQL: histogram_quantile(0.95, sum by (le, service, instance, command) (chrono:lettuce_command_completion_seconds_bucket:increase5m{instance=~\"$instance\"})) > 0.100",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -4999,7 +4999,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(  max by (application, instance) (    chrono:lettuce_command_completion_p95_seconds:5m{instance=~\"$instance\"}  ) > bool 0.100 or vector(0))",
+          "expr": "sum(  max by (service, instance) (    chrono:lettuce_command_completion_p95_seconds:5m{instance=~\"$instance\"}  ) > bool 0.100 or vector(0))",
           "legendFormat": "",
           "refId": "A",
           "interval": ""

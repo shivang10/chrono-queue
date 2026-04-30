@@ -719,7 +719,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "max(chrono:lettuce_command_completion_p99_seconds:5m{application=~\"${application:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"})",
+          "expr": "max(chrono:lettuce_command_completion_p99_seconds:5m{service=~\"${service:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"})",
           "legendFormat": "worst-case p99 latency",
           "refId": "A",
           "interval": ""
@@ -1514,8 +1514,8 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "chrono:lettuce_command_completion_seconds_sum:rate5m{application=~\"${application:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"} / clamp_min(chrono:lettuce_command_completion_seconds_count:rate5m{application=~\"${application:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"}, 1e-9)",
-          "legendFormat": "completion avg \u2014 {{application}} / {{instance}} / {{command}}",
+          "expr": "chrono:lettuce_command_completion_seconds_sum:rate5m{service=~\"${service:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"} / clamp_min(chrono:lettuce_command_completion_seconds_count:rate5m{service=~\"${service:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"}, 1e-9)",
+          "legendFormat": "completion avg \u2014 {{service}} / {{instance}} / {{command}}",
           "refId": "A",
           "interval": ""
         },
@@ -1524,8 +1524,8 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "chrono:lettuce_command_firstresponse_seconds_sum:rate5m{application=~\"${application:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"} / clamp_min(chrono:lettuce_command_firstresponse_seconds_count:rate5m{application=~\"${application:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"}, 1e-9)",
-          "legendFormat": "first-response avg \u2014 {{application}} / {{instance}} / {{command}}",
+          "expr": "chrono:lettuce_command_firstresponse_seconds_sum:rate5m{service=~\"${service:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"} / clamp_min(chrono:lettuce_command_firstresponse_seconds_count:rate5m{service=~\"${service:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"}, 1e-9)",
+          "legendFormat": "first-response avg \u2014 {{service}} / {{instance}} / {{command}}",
           "refId": "B",
           "interval": ""
         },
@@ -1534,8 +1534,8 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "max by (application, instance, command) (lettuce_command_completion_seconds_max{application=~\"${application:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"})",
-          "legendFormat": "max \u2014 {{application}} / {{instance}} / {{command}}",
+          "expr": "max by (application, instance, command) (lettuce_command_completion_seconds_max{service=~\"${service:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"})",
+          "legendFormat": "max \u2014 {{service}} / {{instance}} / {{command}}",
           "refId": "C",
           "interval": ""
         }
@@ -1638,8 +1638,8 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "chrono:lettuce_command_completion_p50_seconds:5m{application=~\"${application:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"}",
-          "legendFormat": "p50 \u2014 {{application}} / {{instance}} / {{command}}",
+          "expr": "chrono:lettuce_command_completion_p50_seconds:5m{service=~\"${service:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"}",
+          "legendFormat": "p50 \u2014 {{service}} / {{instance}} / {{command}}",
           "refId": "A",
           "interval": ""
         },
@@ -1648,8 +1648,8 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "chrono:lettuce_command_completion_p95_seconds:5m{application=~\"${application:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"}",
-          "legendFormat": "p95 \u2014 {{application}} / {{instance}} / {{command}}",
+          "expr": "chrono:lettuce_command_completion_p95_seconds:5m{service=~\"${service:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"}",
+          "legendFormat": "p95 \u2014 {{service}} / {{instance}} / {{command}}",
           "refId": "B",
           "interval": ""
         },
@@ -1658,8 +1658,8 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "chrono:lettuce_command_completion_p99_seconds:5m{application=~\"${application:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"}",
-          "legendFormat": "p99 \u2014 {{application}} / {{instance}} / {{command}}",
+          "expr": "chrono:lettuce_command_completion_p99_seconds:5m{service=~\"${service:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"}",
+          "legendFormat": "p99 \u2014 {{service}} / {{instance}} / {{command}}",
           "refId": "C",
           "interval": ""
         }
@@ -1754,8 +1754,8 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "chrono:lettuce_command_completion_seconds_count:rate5m{application=~\"${application:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"}",
-          "legendFormat": "{{application}} / {{instance}} / {{command}}",
+          "expr": "chrono:lettuce_command_completion_seconds_count:rate5m{service=~\"${service:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"}",
+          "legendFormat": "{{service}} / {{instance}} / {{command}}",
           "refId": "A",
           "interval": ""
         }
@@ -2229,8 +2229,8 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "(max by (application, instance) (lettuce_pool_active_objects{application=~\"${application:regex}\"}) or max by (instance, service) (redis_connected_clients{instance=~\"$instance\"}))",
-          "legendFormat": "active \u2014 {{application}} / {{instance}}",
+          "expr": "(max by (service, instance) (lettuce_pool_active_objects{service=~\"${service:regex}\"}) or max by (instance, service) (redis_connected_clients{instance=~\"$instance\"}))",
+          "legendFormat": "active \u2014 {{service}} / {{instance}}",
           "refId": "A",
           "interval": ""
         },
@@ -2239,8 +2239,8 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "(max by (application, instance) (lettuce_pool_idle_objects{application=~\"${application:regex}\"}) or max by (instance, service) (redis_blocked_clients{instance=~\"$instance\"}))",
-          "legendFormat": "pending \u2014 {{application}} / {{instance}}",
+          "expr": "(max by (service, instance) (lettuce_pool_idle_objects{service=~\"${service:regex}\"}) or max by (instance, service) (redis_blocked_clients{instance=~\"$instance\"}))",
+          "legendFormat": "pending \u2014 {{service}} / {{instance}}",
           "refId": "B",
           "interval": ""
         }
@@ -2716,8 +2716,8 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "1000 * chrono:lettuce_command_completion_p95_seconds:5m{application=~\"${application:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"}",
-          "legendFormat": "p95 latency (ms) \u2014 {{application}} / {{instance}} / {{command}}",
+          "expr": "1000 * chrono:lettuce_command_completion_p95_seconds:5m{service=~\"${service:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"}",
+          "legendFormat": "p95 latency (ms) \u2014 {{service}} / {{instance}} / {{command}}",
           "refId": "B",
           "interval": ""
         }
@@ -3600,8 +3600,8 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "topk(10, 1000 * chrono:lettuce_command_completion_p99_seconds:5m{application=~\"${application:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"})",
-          "legendFormat": "{{application}} / {{instance}} / {{command}}",
+          "expr": "topk(10, 1000 * chrono:lettuce_command_completion_p99_seconds:5m{service=~\"${service:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"})",
+          "legendFormat": "{{service}} / {{instance}} / {{command}}",
           "refId": "A",
           "interval": ""
         }
@@ -3811,8 +3811,8 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "topk(10, 1000 * max by (application, instance) (chrono:lettuce_command_completion_p99_seconds:5m{instance=~\"$instance\"}))",
-          "legendFormat": "{{application}} / {{instance}}",
+          "expr": "topk(10, 1000 * max by (service, instance) (chrono:lettuce_command_completion_p99_seconds:5m{instance=~\"$instance\"}))",
+          "legendFormat": "{{service}} / {{instance}}",
           "refId": "A"
         }
       ]
@@ -3996,7 +3996,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Count of application\u202f\u00d7\u202finstance combinations where p95 Lettuce latency exceeds the 100\u202fms SLO threshold. Alert PromQL: histogram_quantile(0.95, sum by (le, application, instance, command) (chrono:lettuce_command_completion_p95_seconds:5m{instance=~\"$instance\", application=~\"$application\"})) > 0.100",
+      "description": "Count of application\u202f\u00d7\u202finstance combinations where p95 Lettuce latency exceeds the 100\u202fms SLO threshold. Alert PromQL: histogram_quantile(0.95, sum by (le, service, instance, command) (chrono:lettuce_command_completion_p95_seconds:5m{instance=~\"$instance\", service=~\"$service\"})) > 0.100",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -4051,7 +4051,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(  max by (application, instance) (    chrono:lettuce_command_completion_p95_seconds:5m{instance=~\"$instance\"}  ) > bool 0.100 or vector(0))",
+          "expr": "sum(  max by (service, instance) (    chrono:lettuce_command_completion_p95_seconds:5m{instance=~\"$instance\"}  ) > bool 0.100 or vector(0))",
           "legendFormat": "",
           "refId": "A",
           "interval": ""
@@ -4063,7 +4063,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Count of application\u202f\u00d7\u202finstance combinations where p99 Lettuce latency exceeds the 250\u202fms critical SLO threshold. Alert PromQL: histogram_quantile(0.99, sum by (le, application, instance, command) (chrono:lettuce_command_completion_p99_seconds:5m{instance=~\"$instance\", application=~\"$application\"})) > 0.250",
+      "description": "Count of application\u202f\u00d7\u202finstance combinations where p99 Lettuce latency exceeds the 250\u202fms critical SLO threshold. Alert PromQL: histogram_quantile(0.99, sum by (le, service, instance, command) (chrono:lettuce_command_completion_p99_seconds:5m{instance=~\"$instance\", service=~\"$service\"})) > 0.250",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -4118,7 +4118,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(  max by (application, instance) (    chrono:lettuce_command_completion_p99_seconds:5m{instance=~\"$instance\"}  ) > bool 0.250 or vector(0))",
+          "expr": "sum(  max by (service, instance) (    chrono:lettuce_command_completion_p99_seconds:5m{instance=~\"$instance\"}  ) > bool 0.250 or vector(0))",
           "legendFormat": "",
           "refId": "A",
           "interval": ""
@@ -4198,10 +4198,10 @@
         "hide": 0,
         "includeAll": true,
         "multi": true,
-        "name": "application",
-        "label": "Application",
+        "name": "service",
+        "label": "Service",
         "options": [],
-        "query": "label_values(lettuce_command_completion_seconds_count{instance=~\"$instance\"}, application)",
+        "query": "label_values(lettuce_command_completion_seconds_count{instance=~\"$instance\"}, service)",
         "type": "query",
         "sort": 1,
         "skipUrlSync": false,
@@ -4223,14 +4223,14 @@
           "type": "prometheus",
           "uid": "${datasource}"
         },
-        "definition": "label_values(lettuce_command_completion_seconds_count{application=~\"${application:regex}\",instance=~\"$instance\"}, command)",
+        "definition": "label_values(lettuce_command_completion_seconds_count{service=~\"${service:regex}\",instance=~\"$instance\"}, command)",
         "hide": 0,
         "includeAll": true,
         "multi": true,
         "name": "command",
         "label": "Command",
         "options": [],
-        "query": "label_values(lettuce_command_completion_seconds_count{application=~\"${application:regex}\",instance=~\"$instance\"}, command)",
+        "query": "label_values(lettuce_command_completion_seconds_count{service=~\"${service:regex}\",instance=~\"$instance\"}, command)",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,

@@ -152,8 +152,9 @@ groups:
   # ============================================================================
   # chrono-queue · Lettuce (Spring Boot Redis client) recording rules
   #
-  # Labels retained: application, instance, command — preserves full breakdown
+  # Labels retained: service, instance, command — preserves full breakdown
   # for per-command analysis while eliminating repeated per-request rate work.
+  # Changed from 'application' to 'service' to match Prometheus relabel strategy.
   # The _bucket rule keeps "le" so histogram_quantile() continues to work.
   # ============================================================================
   - name: chrono_lettuce_rate5m
@@ -175,57 +176,145 @@ groups:
       # plain time series — no histogram_quantile call survives into Grafana.
       - record: chrono:lettuce_command_completion_seconds_bucket:increase5m
         expr: >-
-          sum by (le, application, instance, command) (
+          sum by (le, service, instance, command) (
             increase(lettuce_command_completion_seconds_bucket[5m])
           )
 
       # Pre-computed Lettuce latency quantiles — USE THESE in dashboard panels.
       # histogram_quantile is evaluated here inside Prometheus; any monotonicity
       # correction is applied at rule evaluation time and is invisible to Grafana.
-      # Labels retained: {application, instance, command} — full drilldown still
+      # Labels retained: {service, instance, command} — full drilldown still
       # works via Grafana template variable selectors.
       - record: chrono:lettuce_command_completion_p50_seconds:5m
         expr: >-
-          histogram_quantile(0.50, sum by (le, application, instance, command) (
+          histogram_quantile(0.50, sum by (le, service, instance, command) (
             rate(lettuce_command_completion_seconds_bucket[5m])
           ))
 
       - record: chrono:lettuce_command_completion_p95_seconds:5m
         expr: >-
-          histogram_quantile(0.95, sum by (le, application, instance, command) (
+          histogram_quantile(0.95, sum by (le, service, instance, command) (
             rate(lettuce_command_completion_seconds_bucket[5m])
           ))
 
       - record: chrono:lettuce_command_completion_p99_seconds:5m
         expr: >-
-          histogram_quantile(0.99, sum by (le, application, instance, command) (
+          histogram_quantile(0.99, sum by (le, service, instance, command) (
             rate(lettuce_command_completion_seconds_bucket[5m])
           ))
 
       # Per-command request count (throughput proxy)
       - record: chrono:lettuce_command_completion_seconds_count:rate5m
         expr: >-
-          sum by (application, instance, command) (
+          sum by (service, instance, command) (
             rate(lettuce_command_completion_seconds_count[5m])
           )
 
       # Per-command latency sum (divide by count for avg latency)
       - record: chrono:lettuce_command_completion_seconds_sum:rate5m
         expr: >-
-          sum by (application, instance, command) (
+          sum by (service, instance, command) (
             rate(lettuce_command_completion_seconds_sum[5m])
           )
 
       # First-response latency sum (time-to-first-byte from Redis)
       - record: chrono:lettuce_command_firstresponse_seconds_sum:rate5m
         expr: >-
-          sum by (application, instance, command) (
+          sum by (service, instance, command) (
             rate(lettuce_command_firstresponse_seconds_sum[5m])
           )
 
       # First-response latency count
       - record: chrono:lettuce_command_firstresponse_seconds_count:rate5m
         expr: >-
-          sum by (application, instance, command) (
+          sum by (service, instance, command) (
             rate(lettuce_command_firstresponse_seconds_count[5m])
+          )
+
+  # ============================================================================
+  # chrono-queue · Retry Dispatcher recording rules
+  #
+  # Pre-aggregated rates and histogram quantiles for the retry-dispatcher
+  # service. Eliminates per-query rate() computation in Grafana panels.
+  #
+  # Naming convention: chrono:<metric_basename>:<operation_and_window>
+  # ============================================================================
+  - name: chrono_retry_dispatcher_rate5m
+    interval: 15s
+    rules:
+
+      # ── Poller throughput ─────────────────────────────────────────────────
+      - record: chrono:retry_poller_dispatched_total:rate5m
+        expr: >-
+          sum by (service) (
+            rate(retry_poller_dispatched_total[5m])
+          )
+
+      - record: chrono:retry_poller_polls_total:rate5m
+        expr: >-
+          sum by (service) (
+            rate(retry_poller_polls_total[5m])
+          )
+
+      # ── Poller error rates ────────────────────────────────────────────────
+      - record: chrono:retry_poller_deserialization_failures_total:rate5m
+        expr: >-
+          sum by (service) (
+            rate(retry_poller_deserialization_failures_total[5m])
+          )
+
+      - record: chrono:retry_poller_skipped_total:rate5m
+        expr: >-
+          sum by (service) (
+            rate(retry_poller_skipped_total[5m])
+          )
+
+      # ── Kafka producer success/failure ────────────────────────────────────
+      - record: chrono:retry_producer_requeue_success_total:rate5m
+        expr: >-
+          sum by (service) (
+            rate(retry_producer_requeue_success_total[5m])
+          )
+
+      - record: chrono:retry_producer_requeue_failure_total:rate5m
+        expr: >-
+          sum by (service) (
+            rate(retry_producer_requeue_failure_total[5m])
+          )
+
+      # ── Poll duration quantiles ───────────────────────────────────────────
+      # Pre-computed to avoid histogram_quantile monotonicity warnings in Grafana.
+      - record: chrono:retry_poller_poll_duration_p50_seconds:5m
+        expr: >-
+          histogram_quantile(0.50, sum by (le, service) (
+            rate(retry_poller_poll_duration_seconds_bucket[5m])
+          ))
+
+      - record: chrono:retry_poller_poll_duration_p90_seconds:5m
+        expr: >-
+          histogram_quantile(0.90, sum by (le, service) (
+            rate(retry_poller_poll_duration_seconds_bucket[5m])
+          ))
+
+      - record: chrono:retry_poller_poll_duration_p95_seconds:5m
+        expr: >-
+          histogram_quantile(0.95, sum by (le, service) (
+            rate(retry_poller_poll_duration_seconds_bucket[5m])
+          ))
+
+      - record: chrono:retry_poller_poll_duration_p99_seconds:5m
+        expr: >-
+          histogram_quantile(0.99, sum by (le, service) (
+            rate(retry_poller_poll_duration_seconds_bucket[5m])
+          ))
+
+      # ── Derived: avg jobs per poll ────────────────────────────────────────
+      - record: chrono:retry_poller_avg_jobs_per_poll:5m
+        expr: >-
+          (
+            sum by (service) (rate(retry_poller_dispatched_total[5m]))
+            / clamp_min(
+                sum by (service) (rate(retry_poller_polls_total[5m])),
+                1e-9
+              )
           )
