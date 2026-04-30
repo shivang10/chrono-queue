@@ -1,14 +1,21 @@
 package com.chrono.retry.config;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
+import org.springframework.validation.annotation.Validated;
 
-@Component
+@Validated
 @ConfigurationProperties(prefix = "retry.poller")
 public class RetryPollerProperties {
 
-    private long fixedDelay = 5000;
-    private int batchSize = 10;
+    @Min(100)
+    @Max(60000)
+    private long fixedDelay = 1000;
+
+    @Min(1)
+    @Max(1000)
+    private int batchSize = 250;
 
     public long getFixedDelay() {
         return fixedDelay;

@@ -4,47 +4,68 @@ spring:
 
   # ── Graceful Shutdown ──────────────────────────────────────
   lifecycle:
-    timeout-per-shutdown-phase: ${LIFECYCLE_SHUTDOWN_TIMEOUT:90s}
+    timeout-per-shutdown-phase: ${LIFECYCLE_SHUTDOWN_TIMEOUT:60s}
 
   # ── Kafka ──────────────────────────────────────────────────
+  # Producer tuned for: 250 jobs/batch × ~250 bytes/job = ~62.5KB per poll cycle
   kafka:
     bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
     producer:
       client-id: ${HOSTNAME:retry-dispatcher}
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
-      
+
+      # Durability: all ISR must ack
       acks: all
-      retries: 10000
-      batch-size: 65536
-      buffer-memory: 67108864
+      retries: 2147483647
+      # batch-size: 250 jobs × ~300 bytes (payload + key + headers) ≈ 75KB, rounded to 80KB
+      batch-size: 81920
+      # buffer-memory: 16MB sufficient for this workload (250 jobs/sec at ~250 bytes)
+      buffer-memory: 16777216
       properties:
         '[enable.idempotence]': true
         '[max.in.flight.requests.per.connection]': 5
-        '[compression.type]': zstd
-        '[linger.ms]': 10
+        '[compression.type]': lz4
+        # linger.ms: 5ms - entire batch arrives within one poll, linger ensures batching completes
+        '[linger.ms]': 5
         '[request.timeout.ms]': 30000
         '[delivery.timeout.ms]': 120000
+        '[reconnect.backoff.ms]': 500
         '[reconnect.backoff.max.ms]': 5000
         '[metadata.max.age.ms]': 300000
-        '[max.block.ms]': 10000
+        # max.block.ms: if buffer is full, block for 5s then fail (provides backpressure to poller)
+        '[max.block.ms]': 5000
         '[retry.backoff.ms]': 100
         '[retry.backoff.max.ms]': 5000
     template:
       observation-enabled: true
 
   # ── Redis ──────────────────────────────────────────────────
+  # Lua script is atomic - only 1 connection used per poll. Pool sized for
+  # concurrent health checks + burst scenarios in multi-instance deployments.
   data:
     redis:
       host: ${SPRING_DATA_REDIS_HOST:redis}
       port: ${SPRING_DATA_REDIS_PORT:6379}
-      timeout: 2000ms
+      timeout: 3000ms
       lettuce:
         pool:
-          max-active: 8
-          max-idle: 8
-          min-idle: 2
-          max-wait: 2000ms
+          max-active: 4
+          max-idle: 4
+          min-idle: 1
+          max-wait: 3000ms
+
+  # ── Scheduling ─────────────────────────────────────────────
+  # Pool size 2: one thread for RetryPoller, one spare for future scheduled tasks.
+  # fixedDelay ensures no overlap - next poll starts only after previous completes.
+  task:
+    scheduling:
+      pool:
+        size: 2
+      thread-name-prefix: retry-sched-
+      shutdown:
+        await-termination: true
+        await-termination-period: 30s
 
 # ── Server ─────────────────────────────────────────────────
 server:
@@ -52,11 +73,12 @@ server:
   shutdown: graceful
 
 # ── Retry Poller Configuration ─────────────────────────────
+# batch-size=250: matches Kafka producer batch capacity (250 × 250B = 62.5KB < 80KB batch-size)
+# fixed-delay=1000: 1s between polls → max throughput ~250 jobs/sec
 retry:
   poller:
-    fixed-delay: ${RETRY_POLLER_FIXED_DELAY:5000}
-    batch-size: ${RETRY_POLLER_BATCH_SIZE:100}
-    max-concurrent-dispatches: ${RETRY_POLLER_MAX_CONCURRENT:5}
+    fixed-delay: ${RETRY_POLLER_FIXED_DELAY:1000}
+    batch-size: ${RETRY_POLLER_BATCH_SIZE:250}
 
 # ── Actuator / Observability ───────────────────────────────
 management:
@@ -87,9 +109,10 @@ management:
     distribution:
       percentiles-histogram:
         '[http.server.requests]': true
-        '[jvm.gc.pause]': true
         '[spring.kafka.template]': true
         '[lettuce.command]': true
+      percentiles:
+        '[retry.poller.poll.duration]': 0.5,0.90,0.95,0.99
     tags:
       application: ${spring.application.name}
       environment: ${SPRING_PROFILES_ACTIVE:local}

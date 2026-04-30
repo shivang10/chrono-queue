@@ -1,7 +1,6 @@
 package com.chrono.retry.repository;
 
 import com.chrono.common.constants.RedisKeys;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -17,8 +16,7 @@ public class RetryQueueRepository {
     private final DefaultRedisScript<List<String>> claimDueJobsScript;
 
     public RetryQueueRepository(StringRedisTemplate stringRedisTemplate,
-                                @Qualifier("claimDueJobsScript") DefaultRedisScript<List<String>> claimDueJobsScript,
-                                ObjectMapper objectMapper) {
+            @Qualifier("claimDueJobsScript") DefaultRedisScript<List<String>> claimDueJobsScript) {
         this.stringRedisTemplate = stringRedisTemplate;
         this.claimDueJobsScript = claimDueJobsScript;
     }
