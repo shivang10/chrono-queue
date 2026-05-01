@@ -111,6 +111,7 @@ management:
         '[http.server.requests]': true
         '[spring.kafka.template]': true
         '[lettuce.command]': true
+        '[retry.poller.poll.duration]': true
       percentiles:
         '[retry.poller.poll.duration]': 0.5,0.90,0.95,0.99
     tags:

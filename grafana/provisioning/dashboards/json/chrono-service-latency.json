@@ -449,8 +449,8 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.90, sum by (le, application) (clamp_min(rate(http_server_requests_seconds_bucket{service=~\"job-producer|dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
-          "legendFormat": "HTTP p90 {{application}}",
+          "expr": "histogram_quantile(0.90, sum by (le, service) (clamp_min(rate(http_server_requests_seconds_bucket{service=~\"job-producer|dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
+          "legendFormat": "HTTP p90 {{service}}",
           "refId": "A",
           "interval": ""
         }
@@ -511,8 +511,8 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.95, sum by (le, application) (clamp_min(rate(http_server_requests_seconds_bucket{service=~\"job-producer|dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
-          "legendFormat": "p95 {{application}}",
+          "expr": "histogram_quantile(0.95, sum by (le, service) (clamp_min(rate(http_server_requests_seconds_bucket{service=~\"job-producer|dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
+          "legendFormat": "p95 {{service}}",
           "refId": "A",
           "interval": ""
         },
@@ -521,8 +521,8 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.99, sum by (le, application) (clamp_min(rate(http_server_requests_seconds_bucket{service=~\"job-producer|dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
-          "legendFormat": "p99 {{application}}",
+          "expr": "histogram_quantile(0.99, sum by (le, service) (clamp_min(rate(http_server_requests_seconds_bucket{service=~\"job-producer|dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
+          "legendFormat": "p99 {{service}}",
           "refId": "B",
           "interval": ""
         }
@@ -1079,8 +1079,8 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum by (application) (jvm_memory_used_bytes{service=~\"$service\", area=\"heap\", instance=~\"$instance\", env=~\"$env\"})",
-          "legendFormat": "{{application}}",
+          "expr": "sum by (service) (jvm_memory_used_bytes{service=~\"$service\", area=\"heap\", instance=~\"$instance\", env=~\"$env\"})",
+          "legendFormat": "{{service}}",
           "refId": "A",
           "interval": ""
         }
@@ -1141,8 +1141,8 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "clamp_max(clamp_min(100 * sum by (application) (jvm_memory_used_bytes{service=~\"$service\", area=\"heap\", instance=~\"$instance\", env=~\"$env\"}) / clamp_min(sum by (application) (jvm_memory_max_bytes{service=~\"$service\", area=\"heap\", instance=~\"$instance\", env=~\"$env\"}), 1e-9), 0), 100)",
-          "legendFormat": "{{application}}",
+          "expr": "clamp_max(clamp_min(100 * sum by (service) (jvm_memory_used_bytes{service=~\"$service\", area=\"heap\", instance=~\"$instance\", env=~\"$env\"}) / clamp_min(sum by (service) (jvm_memory_max_bytes{service=~\"$service\", area=\"heap\", instance=~\"$instance\", env=~\"$env\"}), 1e-9), 0), 100)",
+          "legendFormat": "{{service}}",
           "refId": "A",
           "interval": ""
         }
@@ -1203,8 +1203,8 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum by (application) (clamp_min(rate(jvm_gc_pause_seconds_count{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0))",
-          "legendFormat": "{{application}}",
+          "expr": "sum by (service) (clamp_min(rate(jvm_gc_pause_seconds_count{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0))",
+          "legendFormat": "{{service}}",
           "refId": "A",
           "interval": ""
         }
@@ -1265,8 +1265,8 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.99, sum by (le, application) (clamp_min(increase(jvm_gc_pause_seconds_bucket{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
-          "legendFormat": "{{application}}",
+          "expr": "histogram_quantile(0.99, sum by (le, service) (clamp_min(rate(jvm_gc_pause_seconds_bucket{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
+          "legendFormat": "{{service}}",
           "refId": "A",
           "interval": ""
         }
@@ -1327,8 +1327,8 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.95, sum by (le, application) (clamp_min(increase(jvm_gc_pause_seconds_bucket{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
-          "legendFormat": "{{application}}",
+          "expr": "histogram_quantile(0.95, sum by (le, service) (clamp_min(rate(jvm_gc_pause_seconds_bucket{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
+          "legendFormat": "{{service}}",
           "refId": "A",
           "interval": ""
         }
@@ -1390,7 +1390,7 @@
             "uid": "${datasource}"
           },
           "expr": "jvm_threads_live_threads{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}",
-          "legendFormat": "{{application}}",
+          "legendFormat": "{{service}}",
           "refId": "A",
           "interval": ""
         }
@@ -1452,7 +1452,7 @@
             "uid": "${datasource}"
           },
           "expr": "process_cpu_usage{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}",
-          "legendFormat": "{{application}}",
+          "legendFormat": "{{service}}",
           "refId": "A",
           "interval": ""
         }
@@ -1514,7 +1514,7 @@
             "uid": "${datasource}"
           },
           "expr": "system_cpu_usage{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}",
-          "legendFormat": "{{application}}",
+          "legendFormat": "{{service}}",
           "refId": "A",
           "interval": ""
         }
@@ -1575,8 +1575,8 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum by (application)(rate(process_cpu_seconds_total[$__rate_interval]))",
-          "legendFormat": "{{application}}",
+          "expr": "sum by (service)(rate(process_cpu_seconds_total{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]))",
+          "legendFormat": "{{service}}",
           "refId": "A",
           "interval": ""
         }
@@ -1637,8 +1637,8 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum by (application) (jvm_memory_used_bytes{service=~\"$service\", area=\"nonheap\", instance=~\"$instance\", env=~\"$env\"})",
-          "legendFormat": "{{application}}",
+          "expr": "sum by (service) (jvm_memory_used_bytes{service=~\"$service\", area=\"nonheap\", instance=~\"$instance\", env=~\"$env\"})",
+          "legendFormat": "{{service}}",
           "refId": "A",
           "interval": ""
         }
@@ -1700,7 +1700,7 @@
             "uid": "${datasource}"
           },
           "expr": "jvm_classes_loaded_classes{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}",
-          "legendFormat": "{{application}}",
+          "legendFormat": "{{service}}",
           "refId": "A",
           "interval": ""
         }
@@ -1762,7 +1762,7 @@
             "uid": "${datasource}"
           },
           "expr": "jvm_threads_live_threads{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}",
-          "legendFormat": "total {{application}}",
+          "legendFormat": "total {{service}}",
           "refId": "A",
           "interval": ""
         },
@@ -1772,7 +1772,7 @@
             "uid": "${datasource}"
           },
           "expr": "jvm_threads_daemon_threads{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}",
-          "legendFormat": "daemon {{application}}",
+          "legendFormat": "daemon {{service}}",
           "refId": "B",
           "interval": ""
         }
@@ -1834,7 +1834,7 @@
             "uid": "${datasource}"
           },
           "expr": "process_files_open_files{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}",
-          "legendFormat": "{{application}}",
+          "legendFormat": "{{service}}",
           "refId": "A",
           "interval": ""
         }
@@ -1993,7 +1993,7 @@
       "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
-      "version": "10.0.0"
+      "version": "10.2.3"
     },
     {
       "type": "datasource",

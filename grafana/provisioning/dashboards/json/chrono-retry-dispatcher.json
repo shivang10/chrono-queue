@@ -728,7 +728,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Poll cycle duration quantiles (P50, P90, P95, P99). Includes Redis fetch + Kafka dispatch loop. Shows data ONLY when poll cycles are executing. If no due jobs exist in Redis, polls still execute but duration will be very low (~1-10ms). Uses pre-computed recording rules with automatic fallback to raw metrics.",
+      "description": "Poll cycle duration quantiles (P50, P90, P95, P99). Includes Redis fetch + Kafka dispatch loop. Uses recording rules first, then falls back to client percentiles (quantile label), then avg/max so the panel does not stay blank when polling is active.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -869,7 +869,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "chrono:retry_poller_poll_duration_p50_seconds:5m{service=\"retry-dispatcher\"} or histogram_quantile(0.5, sum by (le) (rate(retry_poller_poll_duration_seconds_bucket{service=\"retry-dispatcher\"}[5m])))",
+          "expr": "chrono:retry_poller_poll_duration_p50_seconds:5m{service=\"retry-dispatcher\"} or on(service) max by (service) (retry_poller_poll_duration_seconds{service=\"retry-dispatcher\",quantile=\"0.5\"}) or on(service) (rate(retry_poller_poll_duration_seconds_sum{service=\"retry-dispatcher\"}[5m]) / clamp_min(rate(retry_poller_poll_duration_seconds_count{service=\"retry-dispatcher\"}[5m]), 1e-9))",
           "legendFormat": "P50"
         },
         {
@@ -877,7 +877,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "chrono:retry_poller_poll_duration_p90_seconds:5m{service=\"retry-dispatcher\"} or histogram_quantile(0.9, sum by (le) (rate(retry_poller_poll_duration_seconds_bucket{service=\"retry-dispatcher\"}[5m])))",
+          "expr": "chrono:retry_poller_poll_duration_p90_seconds:5m{service=\"retry-dispatcher\"} or on(service) max by (service) (retry_poller_poll_duration_seconds{service=\"retry-dispatcher\",quantile=\"0.9\"}) or on(service) (rate(retry_poller_poll_duration_seconds_sum{service=\"retry-dispatcher\"}[5m]) / clamp_min(rate(retry_poller_poll_duration_seconds_count{service=\"retry-dispatcher\"}[5m]), 1e-9))",
           "legendFormat": "P90"
         },
         {
@@ -885,7 +885,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "chrono:retry_poller_poll_duration_p95_seconds:5m{service=\"retry-dispatcher\"} or histogram_quantile(0.95, sum by (le) (rate(retry_poller_poll_duration_seconds_bucket{service=\"retry-dispatcher\"}[5m])))",
+          "expr": "chrono:retry_poller_poll_duration_p95_seconds:5m{service=\"retry-dispatcher\"} or on(service) max by (service) (retry_poller_poll_duration_seconds{service=\"retry-dispatcher\",quantile=\"0.95\"}) or on(service) (rate(retry_poller_poll_duration_seconds_sum{service=\"retry-dispatcher\"}[5m]) / clamp_min(rate(retry_poller_poll_duration_seconds_count{service=\"retry-dispatcher\"}[5m]), 1e-9))",
           "legendFormat": "P95"
         },
         {
@@ -893,7 +893,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "chrono:retry_poller_poll_duration_p99_seconds:5m{service=\"retry-dispatcher\"} or histogram_quantile(0.99, sum by (le) (rate(retry_poller_poll_duration_seconds_bucket{service=\"retry-dispatcher\"}[5m])))",
+          "expr": "chrono:retry_poller_poll_duration_p99_seconds:5m{service=\"retry-dispatcher\"} or on(service) max by (service) (retry_poller_poll_duration_seconds{service=\"retry-dispatcher\",quantile=\"0.99\"}) or on(service) max_over_time(retry_poller_poll_duration_seconds_max{service=\"retry-dispatcher\"}[5m])",
           "legendFormat": "P99"
         }
       ],
@@ -904,7 +904,7 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
-      "description": "Total number of poll duration measurements recorded. If this shows 0, the Timer metric is not being recorded. If this shows a value, poll duration data EXISTS and the chart should display.",
+      "description": "Total number of poll duration measurements recorded. Integer value is expected because this is a counter. If this is > 0, poll duration instrumentation is active.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -954,7 +954,7 @@
         },
         "textMode": "auto"
       },
-      "title": "Poll Duration Samples \ud83d\udd0d",
+      "title": "Poll Duration Sample Count \ud83d\udd0d",
       "targets": [
         {
           "datasource": {

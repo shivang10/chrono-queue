@@ -23,8 +23,8 @@ scrape_configs:
       - drop:
           expression: "(?i).*(/actuator(?:/[^\\s]*)?|healthcheck|\\b/health\\b).*"
       - regex:
-          expression: "(?i)(?:^|\\s)(?:level[=:
-            ]+)?(?P<level>trace|debug|info|warn|warning|error|fatal)(?:\\s|$)"
+          expression: "(?i)(?:^|\\s)(?:level[=:\\s]+)?(?P<level>trace|debug|info|warn|war\
+            ning|error|fatal)(?:\\s|$)"
       - template:
           source: level
           template: "{{ ToLower .Value }}"

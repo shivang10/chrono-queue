@@ -918,8 +918,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (application) (rate(kafka_consumer_fetch_manager_records_consumed_total{service=~\"job-worker|dlq-service\"}[$__rate_interval]))",
-          "legendFormat": "{{application}}",
+          "expr": "sum by (service) (rate(kafka_consumer_fetch_manager_records_consumed_total{service=~\"job-worker|dlq-service\"}[$__rate_interval]))",
+          "legendFormat": "{{service}}",
           "refId": "A",
           "interval": "",
           "editorMode": "code"
@@ -1000,7 +1000,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (application, topic) (deriv(kafka_consumer_fetch_manager_records_lag_max{service=\"job-worker\"}[$__rate_interval]))",
+          "expr": "sum by (service, topic) (deriv(kafka_consumer_fetch_manager_records_lag_max{service=\"job-worker\"}[$__rate_interval]))",
           "legendFormat": "job-worker / {{topic}}",
           "refId": "A",
           "interval": "",
@@ -1011,7 +1011,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (application, topic) (deriv(kafka_consumer_fetch_manager_records_lag_max{service=\"dlq-service\"}[$__rate_interval]))",
+          "expr": "sum by (service, topic) (deriv(kafka_consumer_fetch_manager_records_lag_max{service=\"dlq-service\"}[$__rate_interval]))",
           "legendFormat": "dlq-service / {{topic}}",
           "refId": "B",
           "interval": "",
@@ -1343,8 +1343,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (application) (rate(spring_kafka_listener_seconds_sum{service=~\"job-worker|dlq-service\"}[$__rate_interval])) / clamp_min(sum by (application) (rate(spring_kafka_listener_seconds_count{service=~\"job-worker|dlq-service\"}[$__rate_interval])), 1e-9)",
-          "legendFormat": "{{application}}",
+          "expr": "sum by (service) (rate(spring_kafka_listener_seconds_sum{service=~\"job-worker|dlq-service\"}[$__rate_interval])) / clamp_min(sum by (service) (rate(spring_kafka_listener_seconds_count{service=~\"job-worker|dlq-service\"}[$__rate_interval])), 1e-9)",
+          "legendFormat": "{{service}}",
           "refId": "A",
           "interval": "",
           "editorMode": "code"
@@ -1418,8 +1418,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (application) (rate(kafka_producer_record_send_total{service=~\"job-producer|retry-dispatcher\"}[$__rate_interval]))",
-          "legendFormat": "{{application}}",
+          "expr": "sum by (service) (rate(kafka_producer_record_send_total{service=~\"job-producer|retry-dispatcher\"}[$__rate_interval]))",
+          "legendFormat": "{{service}}",
           "refId": "A",
           "interval": "",
           "editorMode": "code"
@@ -1482,7 +1482,7 @@
             "uid": "prometheus"
           },
           "expr": "kafka_producer_request_latency_avg{service=~\"job-producer|retry-dispatcher\"}",
-          "legendFormat": "{{application}} {{client-id}}",
+          "legendFormat": "{{service}} {{client_id}}",
           "refId": "A",
           "interval": "",
           "editorMode": "code"
@@ -1544,8 +1544,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (application) (rate(kafka_producer_record_error_total{service=~\"job-producer|retry-dispatcher\"}[$__rate_interval]))",
-          "legendFormat": "{{application}}",
+          "expr": "sum by (service) (rate(kafka_producer_record_error_total{service=~\"job-producer|retry-dispatcher\"}[$__rate_interval]))",
+          "legendFormat": "{{service}}",
           "refId": "A",
           "interval": "",
           "editorMode": "code"
@@ -1766,8 +1766,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (application) (rate(kafka_consumer_fetch_manager_bytes_consumed_total{service=~\"job-worker|dlq-service\"}[$__rate_interval]))",
-          "legendFormat": "{{application}}",
+          "expr": "sum by (service) (rate(kafka_consumer_fetch_manager_bytes_consumed_total{service=~\"job-worker|dlq-service\"}[$__rate_interval]))",
+          "legendFormat": "{{service}}",
           "refId": "A",
           "interval": "",
           "editorMode": "code"
@@ -1841,7 +1841,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.50, sum by (le) (increase(mongodb_driver_commands_seconds_bucket{service=\"dlq-service\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(mongodb_driver_commands_seconds_bucket{service=\"dlq-service\"}[$__rate_interval])))",
           "legendFormat": "p50",
           "refId": "A",
           "interval": "",
@@ -1852,7 +1852,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.90, sum by (le) (increase(mongodb_driver_commands_seconds_bucket{service=\"dlq-service\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.90, sum by (le) (rate(mongodb_driver_commands_seconds_bucket{service=\"dlq-service\"}[$__rate_interval])))",
           "legendFormat": "p90",
           "refId": "B",
           "interval": "",
@@ -1863,7 +1863,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.95, sum by (le) (increase(mongodb_driver_commands_seconds_bucket{service=\"dlq-service\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(mongodb_driver_commands_seconds_bucket{service=\"dlq-service\"}[$__rate_interval])))",
           "legendFormat": "p95",
           "refId": "C",
           "interval": "",
@@ -1874,7 +1874,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.99, sum by (le) (increase(mongodb_driver_commands_seconds_bucket{service=\"dlq-service\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(mongodb_driver_commands_seconds_bucket{service=\"dlq-service\"}[$__rate_interval])))",
           "legendFormat": "p99",
           "refId": "D",
           "interval": "",

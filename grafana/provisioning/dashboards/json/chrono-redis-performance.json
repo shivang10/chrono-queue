@@ -1534,7 +1534,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "max by (application, instance, command) (lettuce_command_completion_seconds_max{service=~\"${service:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"})",
+          "expr": "max by (service, instance, command) (lettuce_command_completion_seconds_max{service=~\"${service:regex}\", instance=~\"$instance\", command=~\"${command:regex}\"})",
           "legendFormat": "max \u2014 {{service}} / {{instance}} / {{command}}",
           "refId": "C",
           "interval": ""
@@ -4194,7 +4194,7 @@
           "type": "prometheus",
           "uid": "${datasource}"
         },
-        "definition": "label_values(lettuce_command_completion_seconds_count{instance=~\"$instance\"}, application)",
+        "definition": "label_values(lettuce_command_completion_seconds_count{instance=~\"$instance\"}, service)",
         "hide": 0,
         "includeAll": true,
         "multi": true,
@@ -4284,7 +4284,7 @@
       "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
-      "version": "10.0.0"
+      "version": "10.2.3"
     },
     {
       "type": "datasource",

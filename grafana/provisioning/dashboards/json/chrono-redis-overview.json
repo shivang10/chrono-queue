@@ -6024,7 +6024,7 @@
       "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
-      "version": "10.0.0"
+      "version": "10.2.3"
     },
     {
       "type": "datasource",
