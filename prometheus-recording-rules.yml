@@ -191,6 +191,12 @@ groups:
             rate(lettuce_command_completion_seconds_bucket[5m])
           ))
 
+      - record: chrono:lettuce_command_completion_p90_seconds:5m
+        expr: >-
+          histogram_quantile(0.90, sum by (le, service, instance, command) (
+            rate(lettuce_command_completion_seconds_bucket[5m])
+          ))
+
       - record: chrono:lettuce_command_completion_p95_seconds:5m
         expr: >-
           histogram_quantile(0.95, sum by (le, service, instance, command) (
@@ -318,3 +324,115 @@ groups:
                 1e-9
               )
           )
+
+  # ============================================================================
+  # chrono-queue · DLQ service alerting rules
+  #
+  # These alerts are aligned with the DLQ production dashboard:
+  # - Kafka backlog risk (lag level + lag growth)
+  # - Mongo persistence health (failed command ratio)
+  # - HTTP API reliability (5xx rate)
+  # - Processing stall (lag grows while consumer throughput is near zero)
+  # ============================================================================
+  - name: chrono_dlq_alerts
+    interval: 15s
+    rules:
+
+      - alert: ChronoDlqConsumerLagHigh
+        expr: >-
+          max(kafka_consumer_fetch_manager_records_lag_max{service="dlq-service"})
+          > 200
+        for: 10m
+        labels:
+          severity: warning
+          service: dlq-service
+          team: platform
+        annotations:
+          summary: "DLQ consumer lag is elevated"
+          description: >-
+            dlq-service max consumer lag has stayed above 200 for 10 minutes,
+            indicating backlog accumulation on the DLQ topic.
+
+      - alert: ChronoDlqConsumerLagCritical
+        expr: >-
+          max(kafka_consumer_fetch_manager_records_lag_max{service="dlq-service"})
+          > 1000
+        for: 10m
+        labels:
+          severity: critical
+          service: dlq-service
+          team: platform
+        annotations:
+          summary: "DLQ consumer lag is critical"
+          description: >-
+            dlq-service max consumer lag has remained above 1000 for 10 minutes.
+            Failed-job persistence may not keep up with incoming DLQ traffic.
+
+      - alert: ChronoDlqLagGrowing
+        expr: >-
+          (
+            sum(deriv(kafka_consumer_fetch_manager_records_lag_max{service="dlq-service"}[10m])) > 0
+          ) and (
+            max(kafka_consumer_fetch_manager_records_lag_max{service="dlq-service"}) > 100
+          )
+        for: 15m
+        labels:
+          severity: warning
+          service: dlq-service
+          team: platform
+        annotations:
+          summary: "DLQ lag is growing"
+          description: >-
+            DLQ max lag trend is positive for 15 minutes while lag is already
+            above 100, suggesting sustained backlog growth.
+
+      - alert: ChronoDlqMongoFailureRatioHigh
+        expr: >-
+          (
+            sum(rate(mongodb_driver_commands_seconds_count{service="dlq-service",status="FAILED"}[5m]))
+            /
+            clamp_min(sum(rate(mongodb_driver_commands_seconds_count{service="dlq-service"}[5m])), 1e-9)
+          ) > 0.05
+        for: 10m
+        labels:
+          severity: critical
+          service: dlq-service
+          team: platform
+        annotations:
+          summary: "DLQ MongoDB failure ratio is high"
+          description: >-
+            More than 5% of MongoDB driver commands are failing for dlq-service
+            over the last 10 minutes.
+
+      - alert: ChronoDlqHttp5xxRateHigh
+        expr: >-
+          sum(rate(http_server_requests_seconds_count{service="dlq-service",uri!~"/actuator.*",status=~"5.."}[5m]))
+          > 0.2
+        for: 10m
+        labels:
+          severity: warning
+          service: dlq-service
+          team: platform
+        annotations:
+          summary: "DLQ API 5xx rate is elevated"
+          description: >-
+            dlq-service is returning more than 0.2 HTTP 5xx responses per second
+            on non-actuator endpoints for 10 minutes.
+
+      - alert: ChronoDlqConsumerStallRisk
+        expr: >-
+          (
+            max(kafka_consumer_fetch_manager_records_lag_max{service="dlq-service"}) > 200
+          ) and (
+            sum(rate(kafka_consumer_fetch_manager_records_consumed_total{service="dlq-service"}[5m])) < 0.1
+          )
+        for: 10m
+        labels:
+          severity: critical
+          service: dlq-service
+          team: platform
+        annotations:
+          summary: "DLQ consumer may be stalled"
+          description: >-
+            dlq-service lag is high while consume throughput is near zero,
+            indicating potential consumer stall or processing blockage.

@@ -28,7 +28,7 @@
       }
     ]
   },
-  "description": "HTTP API endpoint monitoring for Chrono Queue \u2014 request rates, status codes, p50/p90/p95/p99 latency, Kafka publish performance, and API log stream.",
+  "description": "HTTP API endpoint monitoring for Chrono Queue \u2014 request rates, status codes, p50/p90/p95/p99 latency, Kafka publish performance, and API log stream.\n\nHow to use this dashboard: Start from the top Overview row to verify SLO health, then drill into throughput, latency, errors, and capacity sections to isolate bottlenecks. Use the template filters (environment, instance, topic, job type, endpoint, and command where available) to narrow scope during incidents and compare behavior across dimensions. Panel info icon meaning: Click the i icon in each panel header to see what the metric represents, how to interpret normal vs abnormal values, and what operational signal it provides.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 2,
@@ -2081,7 +2081,7 @@
     ]
   },
   "timezone": "browser",
-  "title": "Chrono Queue \u2014 API Endpoints",
+  "title": "API Endpoints",
   "uid": "chrono-api-endpoints",
   "version": 6,
   "__inputs": [

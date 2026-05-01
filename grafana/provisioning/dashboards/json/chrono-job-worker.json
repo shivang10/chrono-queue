@@ -1,0 +1,1530 @@
+{
+    "__inputs": [
+        {
+            "name": "DS_PROMETHEUS",
+            "label": "Prometheus",
+            "description": "",
+            "type": "datasource",
+            "pluginId": "prometheus",
+            "pluginName": "Prometheus"
+        }
+    ],
+    "__requires": [
+        {
+            "type": "grafana",
+            "id": "grafana",
+            "name": "Grafana",
+            "version": "10.2.3"
+        },
+        {
+            "type": "datasource",
+            "id": "prometheus",
+            "name": "Prometheus",
+            "version": "1.0.0"
+        },
+        {
+            "type": "panel",
+            "id": "stat",
+            "name": "Stat",
+            "version": ""
+        },
+        {
+            "type": "panel",
+            "id": "timeseries",
+            "name": "Time series",
+            "version": ""
+        },
+        {
+            "type": "panel",
+            "id": "table",
+            "name": "Table",
+            "version": ""
+        }
+    ],
+    "annotations": {
+        "list": [
+            {
+                "builtIn": 1,
+                "datasource": {
+                    "type": "grafana",
+                    "uid": "-- Grafana --"
+                },
+                "enable": true,
+                "hide": true,
+                "iconColor": "rgba(0, 211, 255, 1)",
+                "name": "Annotations & Alerts",
+                "type": "dashboard"
+            }
+        ]
+    },
+    "description": "Production observability dashboard for job-worker. Covers consumer throughput and lag, listener latency, custom job outcomes, Redis latency, and runtime capacity.\n\nHow to use this dashboard: Start from the top Overview row to verify SLO health, then drill into throughput, latency, errors, and capacity sections to isolate bottlenecks. Use the template filters (environment, instance, topic, job type, endpoint, and command where available) to narrow scope during incidents and compare behavior across dimensions. Panel info icon meaning: Click the i icon in each panel header to see what the metric represents, how to interpret normal vs abnormal values, and what operational signal it provides.",
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 2,
+    "id": null,
+    "links": [
+        {
+            "asDropdown": true,
+            "icon": "external link",
+            "includeVars": true,
+            "keepTime": true,
+            "tags": [
+                "chrono-queue"
+            ],
+            "title": "Chrono Queue Dashboards",
+            "type": "dashboards"
+        }
+    ],
+    "panels": [
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 0
+            },
+            "id": 100,
+            "title": "Overview - SLO Signals",
+            "type": "row"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "description": "Successful jobs over selected time range.",
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "none",
+                    "decimals": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    },
+                    "color": {
+                        "mode": "thresholds"
+                    }
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 4,
+                "x": 0,
+                "y": 1
+            },
+            "id": 1,
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "textMode": "auto",
+                "colorMode": "background",
+                "graphMode": "area",
+                "justifyMode": "center"
+            },
+            "targets": [
+                {
+                    "expr": "round(sum(increase(chrono_jobs_consumed_total{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\",job_type=~\"${job_type:regex}\",result=\"success\"}[$__range])) or vector(0))",
+                    "instant": true,
+                    "legendFormat": "success",
+                    "refId": "A"
+                }
+            ],
+            "title": "Jobs Consumed Success (range)",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "description": "Current successful job processing rate.",
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "ops",
+                    "decimals": 2,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    },
+                    "color": {
+                        "mode": "thresholds"
+                    }
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 4,
+                "x": 4,
+                "y": 1
+            },
+            "id": 2,
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "textMode": "auto",
+                "colorMode": "background",
+                "graphMode": "area",
+                "justifyMode": "center"
+            },
+            "targets": [
+                {
+                    "expr": "sum(clamp_min(rate(chrono_jobs_consumed_total{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\",job_type=~\"${job_type:regex}\",result=\"success\"}[$__rate_interval]),0)) or vector(0)",
+                    "instant": true,
+                    "legendFormat": "success/s",
+                    "refId": "A"
+                }
+            ],
+            "title": "Success Rate",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "description": "Kafka records consumed per second.",
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "ops",
+                    "decimals": 2,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    },
+                    "color": {
+                        "mode": "thresholds"
+                    }
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 4,
+                "x": 8,
+                "y": 1
+            },
+            "id": 3,
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "textMode": "auto",
+                "colorMode": "background",
+                "graphMode": "area",
+                "justifyMode": "center"
+            },
+            "targets": [
+                {
+                    "expr": "sum(clamp_min(rate(kafka_consumer_fetch_manager_records_consumed_total{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}[$__rate_interval]),0)) or vector(0)",
+                    "instant": true,
+                    "legendFormat": "records/s",
+                    "refId": "A"
+                }
+            ],
+            "title": "Kafka Consumed Rate",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "description": "Maximum consumer lag.",
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "none",
+                    "decimals": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    },
+                    "color": {
+                        "mode": "thresholds"
+                    }
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 4,
+                "x": 12,
+                "y": 1
+            },
+            "id": 4,
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "textMode": "auto",
+                "colorMode": "background",
+                "graphMode": "none",
+                "justifyMode": "center"
+            },
+            "targets": [
+                {
+                    "expr": "max(kafka_consumer_fetch_manager_records_lag_max{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}) or vector(0)",
+                    "instant": true,
+                    "legendFormat": "max lag",
+                    "refId": "A"
+                }
+            ],
+            "title": "Max Lag",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "description": "Malformed payload percentage.",
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "percent",
+                    "decimals": 2,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    },
+                    "color": {
+                        "mode": "thresholds"
+                    }
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 4,
+                "x": 16,
+                "y": 1
+            },
+            "id": 5,
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "textMode": "auto",
+                "colorMode": "background",
+                "graphMode": "none",
+                "justifyMode": "center"
+            },
+            "targets": [
+                {
+                    "expr": "100 * (sum(clamp_min(rate(chrono_jobs_consumed_total{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\",result=\"malformed\"}[$__rate_interval]),0)) or vector(0)) / clamp_min(sum(clamp_min(rate(chrono_jobs_consumed_total{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\"}[$__rate_interval]),0)),1e-9)",
+                    "instant": true,
+                    "legendFormat": "malformed %",
+                    "refId": "A"
+                }
+            ],
+            "title": "Malformed %",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "description": "Target availability.",
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "percent",
+                    "decimals": 2,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    },
+                    "color": {
+                        "mode": "thresholds"
+                    }
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 4,
+                "x": 20,
+                "y": 1
+            },
+            "id": 6,
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "textMode": "auto",
+                "colorMode": "background",
+                "graphMode": "none",
+                "justifyMode": "center"
+            },
+            "targets": [
+                {
+                    "expr": "100 * avg(up{job=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\"})",
+                    "instant": true,
+                    "legendFormat": "up %",
+                    "refId": "A"
+                }
+            ],
+            "title": "Availability",
+            "type": "stat"
+        },
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 5
+            },
+            "id": 110,
+            "title": "Consumption & Lag",
+            "type": "row"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 6
+            },
+            "id": 10,
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "displayMode": "table",
+                    "placement": "bottom",
+                    "calcs": [
+                        "mean",
+                        "max",
+                        "lastNotNull"
+                    ]
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "targets": [
+                {
+                    "expr": "sum(clamp_min(rate(chrono_jobs_consumed_total{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\",job_type=~\"${job_type:regex}\",result=\"success\"}[$__rate_interval]),0))",
+                    "legendFormat": "success/s",
+                    "refId": "A"
+                },
+                {
+                    "expr": "sum(clamp_min(rate(chrono_jobs_consumed_total{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\",result=\"malformed\"}[$__rate_interval]),0))",
+                    "legendFormat": "malformed/s",
+                    "refId": "B"
+                },
+                {
+                    "expr": "sum(clamp_min(rate(kafka_consumer_fetch_manager_records_consumed_total{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}[$__rate_interval]),0))",
+                    "legendFormat": "kafka consumed/s",
+                    "refId": "C"
+                }
+            ],
+            "title": "Worker Consumption Flow",
+            "type": "timeseries",
+            "description": "Shows end-to-end worker intake health by comparing successful consumption, malformed payload detection, and Kafka consumed rate. Use this to confirm the worker is processing messages at expected volume and to spot ingestion anomalies quickly."
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 6
+            },
+            "id": 11,
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "displayMode": "table",
+                    "placement": "bottom",
+                    "calcs": [
+                        "mean",
+                        "max",
+                        "lastNotNull"
+                    ]
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "targets": [
+                {
+                    "expr": "sum by (topic) (clamp_min(rate(kafka_consumer_fetch_manager_records_consumed_total{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}[$__rate_interval]),0))",
+                    "legendFormat": "topic={{topic}}",
+                    "refId": "A"
+                },
+                {
+                    "expr": "sum by (job_type) (clamp_min(rate(chrono_jobs_consumed_total{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\",job_type=~\"${job_type:regex}\",result=\"success\"}[$__rate_interval]),0))",
+                    "legendFormat": "job_type={{job_type}} success",
+                    "refId": "B"
+                }
+            ],
+            "title": "Consumed Rate by Topic and Job Type",
+            "type": "timeseries",
+            "description": "Breaks down successful consumption throughput by Kafka topic and business job type. Use this panel to identify traffic distribution shifts, hot partitions or job classes, and unexpected drops for specific workloads."
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 14
+            },
+            "id": 12,
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "displayMode": "table",
+                    "placement": "bottom",
+                    "calcs": [
+                        "mean",
+                        "max",
+                        "lastNotNull"
+                    ]
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "targets": [
+                {
+                    "expr": "sum by (topic) (kafka_consumer_fetch_manager_records_lag{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}) or vector(0)",
+                    "legendFormat": "{{topic}} current",
+                    "refId": "A"
+                },
+                {
+                    "expr": "sum by (topic) (kafka_consumer_fetch_manager_records_lag_max{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}) or vector(0)",
+                    "legendFormat": "{{topic}} max",
+                    "refId": "B"
+                }
+            ],
+            "title": "Lag by Topic (Current and Max)",
+            "type": "timeseries",
+            "description": "Tracks both current consumer lag and lag max per topic. Current lag reflects present backlog; max lag highlights worst observed pressure. Rising values indicate consumer throughput is not keeping up with producer rate."
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 14
+            },
+            "id": 13,
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "displayMode": "table",
+                    "placement": "bottom",
+                    "calcs": [
+                        "mean",
+                        "max",
+                        "lastNotNull"
+                    ]
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "targets": [
+                {
+                    "expr": "sum(clamp_min(rate(kafka_consumer_fetch_manager_bytes_consumed_total{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}[$__rate_interval]),0))",
+                    "legendFormat": "bytes consumed/s",
+                    "refId": "A"
+                },
+                {
+                    "expr": "avg(kafka_consumer_fetch_manager_records_per_request_avg{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\"}) or vector(0)",
+                    "legendFormat": "records/request avg",
+                    "refId": "B"
+                },
+                {
+                    "expr": "avg(kafka_consumer_fetch_manager_fetch_size_avg{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\"}) or vector(0)",
+                    "legendFormat": "fetch size avg",
+                    "refId": "C"
+                }
+            ],
+            "title": "Consumer Efficiency",
+            "type": "timeseries",
+            "description": "Shows byte throughput and fetch efficiency metrics (records per request and fetch size). Use this to validate poll efficiency and identify under-fetched or oversized fetch patterns that can impact latency and broker load."
+        },
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 22
+            },
+            "id": 120,
+            "title": "Latency",
+            "type": "row"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 23
+            },
+            "id": 20,
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "displayMode": "table",
+                    "placement": "bottom",
+                    "calcs": [
+                        "mean",
+                        "max",
+                        "lastNotNull"
+                    ]
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "targets": [
+                {
+                    "expr": "histogram_quantile(0.50, sum by (le) (clamp_min(rate(spring_kafka_listener_seconds_bucket{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\",name=~\"${listener:regex}\"}[$__rate_interval]),0)))",
+                    "legendFormat": "p50",
+                    "refId": "A"
+                },
+                {
+                    "expr": "histogram_quantile(0.90, sum by (le) (clamp_min(rate(spring_kafka_listener_seconds_bucket{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\",name=~\"${listener:regex}\"}[$__rate_interval]),0)))",
+                    "legendFormat": "p90",
+                    "refId": "B"
+                },
+                {
+                    "expr": "histogram_quantile(0.95, sum by (le) (clamp_min(rate(spring_kafka_listener_seconds_bucket{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\",name=~\"${listener:regex}\"}[$__rate_interval]),0)))",
+                    "legendFormat": "p95",
+                    "refId": "C"
+                },
+                {
+                    "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(spring_kafka_listener_seconds_bucket{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\",name=~\"${listener:regex}\"}[$__rate_interval]),0)))",
+                    "legendFormat": "p99",
+                    "refId": "D"
+                }
+            ],
+            "title": "Kafka Listener Latency (p50/p90/p95/p99)",
+            "type": "timeseries",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "axisCenteredZero": false,
+                        "axisColorMode": "text",
+                        "axisLabel": "seconds",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "drawStyle": "line",
+                        "fillOpacity": 12,
+                        "gradientMode": "opacity",
+                        "lineInterpolation": "smooth",
+                        "lineWidth": 2,
+                        "pointSize": 4,
+                        "scaleDistribution": {
+                            "type": "linear"
+                        },
+                        "showPoints": "never",
+                        "spanNulls": false,
+                        "stacking": {
+                            "group": "A",
+                            "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                            "mode": "line"
+                        }
+                    },
+                    "mappings": [],
+                    "unit": "s",
+                    "min": 0
+                },
+                "overrides": []
+            },
+            "description": "Displays Kafka listener execution latency percentiles. p50 indicates typical processing time, while p95 and p99 expose tail latency and outliers. Persistent tail growth usually signals downstream bottlenecks or contention."
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 23
+            },
+            "id": 21,
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "displayMode": "table",
+                    "placement": "bottom",
+                    "calcs": [
+                        "mean",
+                        "max",
+                        "lastNotNull"
+                    ]
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "targets": [
+                {
+                    "expr": "sum(clamp_min(rate(spring_kafka_listener_seconds_count{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\",name=~\"${listener:regex}\"}[$__rate_interval]),0))",
+                    "legendFormat": "listener processed/s",
+                    "refId": "A"
+                },
+                {
+                    "expr": "sum(clamp_min(rate(spring_kafka_listener_seconds_sum{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\",name=~\"${listener:regex}\"}[$__rate_interval]),0)) / clamp_min(sum(clamp_min(rate(spring_kafka_listener_seconds_count{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\",name=~\"${listener:regex}\"}[$__rate_interval]),0)),1e-9)",
+                    "legendFormat": "listener avg latency",
+                    "refId": "B"
+                }
+            ],
+            "title": "Listener Throughput and Mean Latency",
+            "type": "timeseries",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "axisCenteredZero": false,
+                        "axisColorMode": "text",
+                        "axisLabel": "seconds",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "drawStyle": "line",
+                        "fillOpacity": 12,
+                        "gradientMode": "opacity",
+                        "lineInterpolation": "smooth",
+                        "lineWidth": 2,
+                        "pointSize": 4,
+                        "scaleDistribution": {
+                            "type": "linear"
+                        },
+                        "showPoints": "never",
+                        "spanNulls": false,
+                        "stacking": {
+                            "group": "A",
+                            "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                            "mode": "line"
+                        }
+                    },
+                    "mappings": [],
+                    "unit": "s",
+                    "min": 0
+                },
+                "overrides": []
+            },
+            "description": "Correlates listener throughput (messages per second) with mean listener latency. Use this to detect saturation scenarios where throughput plateaus while average processing latency continues to rise."
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 31
+            },
+            "id": 22,
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "displayMode": "table",
+                    "placement": "bottom",
+                    "calcs": [
+                        "mean",
+                        "max",
+                        "lastNotNull"
+                    ]
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "targets": [
+                {
+                    "expr": "avg(kafka_consumer_fetch_manager_fetch_latency_avg{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\"}) or vector(0)",
+                    "legendFormat": "fetch latency avg",
+                    "refId": "A"
+                },
+                {
+                    "expr": "avg(kafka_consumer_fetch_manager_fetch_latency_max{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\"}) or vector(0)",
+                    "legendFormat": "fetch latency max",
+                    "refId": "B"
+                },
+                {
+                    "expr": "avg(kafka_consumer_coordinator_commit_latency_avg{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\"}) or vector(0)",
+                    "legendFormat": "commit latency avg",
+                    "refId": "C"
+                }
+            ],
+            "title": "Kafka Consumer Internal Latency",
+            "type": "timeseries",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "axisCenteredZero": false,
+                        "axisColorMode": "text",
+                        "axisLabel": "seconds",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "drawStyle": "line",
+                        "fillOpacity": 12,
+                        "gradientMode": "opacity",
+                        "lineInterpolation": "smooth",
+                        "lineWidth": 2,
+                        "pointSize": 4,
+                        "scaleDistribution": {
+                            "type": "linear"
+                        },
+                        "showPoints": "never",
+                        "spanNulls": false,
+                        "stacking": {
+                            "group": "A",
+                            "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                            "mode": "line"
+                        }
+                    },
+                    "mappings": [],
+                    "unit": "s",
+                    "min": 0
+                },
+                "overrides": []
+            },
+            "description": "Shows internal Kafka consumer latency signals such as fetch and commit timing. Elevated values suggest consumer-side coordination or broker interaction delays that can contribute to lag accumulation."
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 31
+            },
+            "id": 23,
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "displayMode": "table",
+                    "placement": "bottom",
+                    "calcs": [
+                        "mean",
+                        "max",
+                        "lastNotNull"
+                    ]
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "targets": [
+                {
+                    "expr": "chrono:lettuce_command_completion_p50_seconds:5m{service=\"job-worker\",instance=~\"${instance:regex}\",command=~\"${command:regex}\"}",
+                    "legendFormat": "p50 {{command}}",
+                    "refId": "A"
+                },
+                {
+                    "expr": "chrono:lettuce_command_completion_p90_seconds:5m{service=\"job-worker\",instance=~\"${instance:regex}\",command=~\"${command:regex}\"}",
+                    "legendFormat": "p90 {{command}}",
+                    "refId": "B"
+                },
+                {
+                    "expr": "chrono:lettuce_command_completion_p95_seconds:5m{service=\"job-worker\",instance=~\"${instance:regex}\",command=~\"${command:regex}\"}",
+                    "legendFormat": "p95 {{command}}",
+                    "refId": "C"
+                },
+                {
+                    "expr": "chrono:lettuce_command_completion_p99_seconds:5m{service=\"job-worker\",instance=~\"${instance:regex}\",command=~\"${command:regex}\"}",
+                    "legendFormat": "p99 {{command}}",
+                    "refId": "D"
+                }
+            ],
+            "title": "Redis Lettuce Latency",
+            "type": "timeseries",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "axisCenteredZero": false,
+                        "axisColorMode": "text",
+                        "axisLabel": "seconds",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "drawStyle": "line",
+                        "fillOpacity": 12,
+                        "gradientMode": "opacity",
+                        "lineInterpolation": "smooth",
+                        "lineWidth": 2,
+                        "pointSize": 4,
+                        "scaleDistribution": {
+                            "type": "linear"
+                        },
+                        "showPoints": "never",
+                        "spanNulls": false,
+                        "stacking": {
+                            "group": "A",
+                            "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                            "mode": "line"
+                        }
+                    },
+                    "mappings": [],
+                    "unit": "s",
+                    "min": 0
+                },
+                "overrides": []
+            },
+            "description": "Displays Redis command latency percentiles from precomputed Lettuce recording rules. Compare p50 to p99 to understand tail behavior; widening spread usually indicates network jitter, Redis pressure, or command-level hotspots."
+        },
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 39
+            },
+            "id": 130,
+            "title": "Errors & Reliability",
+            "type": "row"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 40
+            },
+            "id": 30,
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "displayMode": "table",
+                    "placement": "bottom",
+                    "calcs": [
+                        "mean",
+                        "max",
+                        "lastNotNull"
+                    ]
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "targets": [
+                {
+                    "expr": "sum(clamp_min(rate(chrono_jobs_consumed_total{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\",result=\"malformed\"}[$__rate_interval]),0))",
+                    "legendFormat": "malformed/s",
+                    "refId": "A"
+                },
+                {
+                    "expr": "sum(clamp_min(rate(chrono_jobs_consumed_total{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\"}[$__rate_interval]),0))",
+                    "legendFormat": "all outcomes/s",
+                    "refId": "B"
+                }
+            ],
+            "title": "Outcome Error Signal",
+            "type": "timeseries",
+            "description": "Compares malformed outcome rate against overall outcome rate to quantify ingestion quality degradation over time. Use this as an early warning for serialization, schema, or producer payload regressions."
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 40
+            },
+            "id": 31,
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "displayMode": "table",
+                    "placement": "bottom",
+                    "calcs": [
+                        "mean",
+                        "max",
+                        "lastNotNull"
+                    ]
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "targets": [
+                {
+                    "expr": "sum by (topic) (deriv(kafka_consumer_fetch_manager_records_lag_max{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}[$__rate_interval])) or vector(0)",
+                    "legendFormat": "{{topic}} lag growth",
+                    "refId": "A"
+                }
+            ],
+            "title": "Lag Growth by Topic",
+            "type": "timeseries",
+            "description": "Shows the slope of lag max over time per topic. Positive sustained growth indicates backlog is accelerating; values near zero indicate stable consumption; negative values indicate backlog recovery."
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 48
+            },
+            "id": 32,
+            "options": {
+                "showHeader": true
+            },
+            "targets": [
+                {
+                    "expr": "sum by (job_type, result) (increase(chrono_jobs_consumed_total{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\",job_type=~\"${job_type:regex}\",result=~\"${result:regex}\"}[$__range]))",
+                    "format": "table",
+                    "instant": true,
+                    "legendFormat": "{{job_type}} {{result}}",
+                    "refId": "A"
+                }
+            ],
+            "title": "Outcome Counts by Job Type",
+            "transformations": [
+                {
+                    "id": "organize",
+                    "options": {
+                        "excludeByName": {
+                            "Time": true
+                        },
+                        "indexByName": {
+                            "job_type": 0,
+                            "result": 1,
+                            "Value": 2
+                        },
+                        "renameByName": {
+                            "Value": "count"
+                        }
+                    }
+                }
+            ],
+            "type": "table",
+            "description": "Tabular view of consumed outcome totals by job type and result over the selected window. Use this for quick reconciliation of success vs malformed counts and to support incident triage."
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 48
+            },
+            "id": 33,
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "displayMode": "table",
+                    "placement": "bottom",
+                    "calcs": [
+                        "mean",
+                        "max",
+                        "lastNotNull"
+                    ]
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "targets": [
+                {
+                    "expr": "sum(clamp_min(rate(kafka_producer_record_send_total{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\"}[$__rate_interval]),0)) or vector(0)",
+                    "legendFormat": "dlq send/s",
+                    "refId": "A"
+                },
+                {
+                    "expr": "sum(clamp_min(rate(kafka_producer_record_error_total{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\"}[$__rate_interval]),0)) or vector(0)",
+                    "legendFormat": "dlq error/s",
+                    "refId": "B"
+                },
+                {
+                    "expr": "sum(clamp_min(rate(kafka_producer_record_retry_total{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\"}[$__rate_interval]),0)) or vector(0)",
+                    "legendFormat": "dlq retry/s",
+                    "refId": "C"
+                }
+            ],
+            "title": "DLQ Producer Path",
+            "type": "timeseries",
+            "description": "Tracks worker-to-DLQ producer behavior including send, error, and retry rates. Use this to validate DLQ routing health and identify failures in the fallback path during malformed or failed processing bursts."
+        },
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 56
+            },
+            "id": 140,
+            "title": "Resource & Capacity",
+            "type": "row"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 57
+            },
+            "id": 40,
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "displayMode": "table",
+                    "placement": "bottom",
+                    "calcs": [
+                        "mean",
+                        "max",
+                        "lastNotNull"
+                    ]
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "targets": [
+                {
+                    "expr": "sum(jvm_memory_used_bytes{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\",area=\"heap\"})",
+                    "legendFormat": "heap used",
+                    "refId": "A"
+                },
+                {
+                    "expr": "sum(jvm_memory_max_bytes{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\",area=\"heap\"})",
+                    "legendFormat": "heap max",
+                    "refId": "B"
+                },
+                {
+                    "expr": "sum(jvm_memory_used_bytes{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\",area=\"nonheap\"})",
+                    "legendFormat": "non-heap used",
+                    "refId": "C"
+                }
+            ],
+            "title": "JVM Memory",
+            "type": "timeseries",
+            "description": "Shows heap and non-heap JVM memory utilization for worker instances. Use this to monitor memory pressure trends, detect leak-like growth, and correlate GC behavior with throughput and latency changes."
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 57
+            },
+            "id": 41,
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "displayMode": "table",
+                    "placement": "bottom",
+                    "calcs": [
+                        "mean",
+                        "max",
+                        "lastNotNull"
+                    ]
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "targets": [
+                {
+                    "expr": "max(process_resident_memory_bytes{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\"})",
+                    "legendFormat": "rss",
+                    "refId": "A"
+                },
+                {
+                    "expr": "100 * max(process_cpu_usage{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\"})",
+                    "legendFormat": "cpu %",
+                    "refId": "B"
+                }
+            ],
+            "title": "Process RSS and CPU",
+            "type": "timeseries",
+            "description": "Displays process resident memory and CPU utilization. Use this to identify host-level resource saturation, runaway memory growth, or CPU spikes affecting message processing stability."
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 65
+            },
+            "id": 42,
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "displayMode": "table",
+                    "placement": "bottom",
+                    "calcs": [
+                        "mean",
+                        "max",
+                        "lastNotNull"
+                    ]
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "targets": [
+                {
+                    "expr": "max(jvm_threads_live_threads{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\"})",
+                    "legendFormat": "live threads",
+                    "refId": "A"
+                },
+                {
+                    "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(jvm_gc_pause_seconds_bucket{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\"}[$__rate_interval]),0)))",
+                    "legendFormat": "gc pause p99",
+                    "refId": "B"
+                },
+                {
+                    "expr": "max(process_uptime_seconds{service=\"job-worker\",env=~\"$env\",instance=~\"${instance:regex}\"})",
+                    "legendFormat": "uptime",
+                    "refId": "C"
+                }
+            ],
+            "title": "Threads, GC, Uptime",
+            "type": "timeseries",
+            "description": "Combines runtime stability indicators: live thread count, GC pause tail latency, and process uptime. Useful for detecting thread leaks, GC pause regressions, and frequent restarts."
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 65
+            },
+            "id": 43,
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "displayMode": "table",
+                    "placement": "bottom",
+                    "calcs": [
+                        "mean",
+                        "max",
+                        "lastNotNull"
+                    ]
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "targets": [
+                {
+                    "expr": "chrono:lettuce_command_completion_seconds_count:rate5m{service=\"job-worker\",instance=~\"${instance:regex}\",command=~\"${command:regex}\"}",
+                    "legendFormat": "{{command}}",
+                    "refId": "A"
+                }
+            ],
+            "title": "Redis Lettuce Throughput",
+            "type": "timeseries",
+            "description": "Shows command throughput rate for Redis operations by command type. Use this to understand Redis dependency load profile and correlate command spikes with latency or failure patterns."
+        }
+    ],
+    "refresh": "30s",
+    "schemaVersion": 38,
+    "style": "dark",
+    "tags": [
+        "chrono-queue",
+        "job-worker",
+        "kafka",
+        "redis",
+        "production"
+    ],
+    "templating": {
+        "list": [
+            {
+                "name": "datasource",
+                "type": "datasource",
+                "label": "Prometheus",
+                "query": "prometheus",
+                "refresh": 1,
+                "multi": false,
+                "includeAll": false,
+                "current": {}
+            },
+            {
+                "name": "env",
+                "type": "query",
+                "label": "Environment",
+                "query": "label_values(up{job=\"job-worker\"}, env)",
+                "definition": "label_values(up{job=\"job-worker\"}, env)",
+                "refresh": 2,
+                "multi": true,
+                "includeAll": true,
+                "allValue": ".*",
+                "current": {
+                    "text": "All",
+                    "value": "$__all",
+                    "selected": true
+                }
+            },
+            {
+                "name": "instance",
+                "type": "query",
+                "label": "Instance",
+                "query": "label_values(up{job=\"job-worker\",env=~\"$env\"}, instance)",
+                "definition": "label_values(up{job=\"job-worker\",env=~\"$env\"}, instance)",
+                "refresh": 2,
+                "multi": true,
+                "includeAll": true,
+                "allValue": ".*",
+                "current": {
+                    "text": "All",
+                    "value": "$__all",
+                    "selected": true
+                }
+            },
+            {
+                "name": "topic",
+                "type": "query",
+                "label": "Topic",
+                "query": "label_values(kafka_consumer_fetch_manager_records_consumed_total{service=\"job-worker\",instance=~\"${instance:regex}\"}, topic)",
+                "definition": "label_values(kafka_consumer_fetch_manager_records_consumed_total{service=\"job-worker\",instance=~\"${instance:regex}\"}, topic)",
+                "refresh": 2,
+                "multi": true,
+                "includeAll": true,
+                "allValue": ".*",
+                "current": {
+                    "text": "All",
+                    "value": "$__all",
+                    "selected": true
+                }
+            },
+            {
+                "name": "job_type",
+                "type": "query",
+                "label": "Job Type",
+                "query": "label_values(chrono_jobs_consumed_total{service=\"job-worker\",instance=~\"${instance:regex}\"}, job_type)",
+                "definition": "label_values(chrono_jobs_consumed_total{service=\"job-worker\",instance=~\"${instance:regex}\"}, job_type)",
+                "refresh": 2,
+                "multi": true,
+                "includeAll": true,
+                "allValue": ".*",
+                "current": {
+                    "text": "All",
+                    "value": "$__all",
+                    "selected": true
+                }
+            },
+            {
+                "name": "result",
+                "type": "query",
+                "label": "Result",
+                "query": "label_values(chrono_jobs_consumed_total{service=\"job-worker\",instance=~\"${instance:regex}\"}, result)",
+                "definition": "label_values(chrono_jobs_consumed_total{service=\"job-worker\",instance=~\"${instance:regex}\"}, result)",
+                "refresh": 2,
+                "multi": true,
+                "includeAll": true,
+                "allValue": ".*",
+                "current": {
+                    "text": "All",
+                    "value": "$__all",
+                    "selected": true
+                }
+            },
+            {
+                "name": "listener",
+                "type": "query",
+                "label": "Listener",
+                "query": "label_values(spring_kafka_listener_seconds_count{service=\"job-worker\",instance=~\"${instance:regex}\"}, name)",
+                "definition": "label_values(spring_kafka_listener_seconds_count{service=\"job-worker\",instance=~\"${instance:regex}\"}, name)",
+                "refresh": 2,
+                "multi": true,
+                "includeAll": true,
+                "allValue": ".*",
+                "current": {
+                    "text": "All",
+                    "value": "$__all",
+                    "selected": true
+                }
+            },
+            {
+                "name": "command",
+                "type": "query",
+                "label": "Redis Command",
+                "query": "label_values(lettuce_command_completion_seconds_count{service=\"job-worker\",instance=~\"${instance:regex}\"}, command)",
+                "definition": "label_values(lettuce_command_completion_seconds_count{service=\"job-worker\",instance=~\"${instance:regex}\"}, command)",
+                "refresh": 2,
+                "multi": true,
+                "includeAll": true,
+                "allValue": ".*",
+                "current": {
+                    "text": "All",
+                    "value": "$__all",
+                    "selected": true
+                }
+            }
+        ]
+    },
+    "time": {
+        "from": "now-6h",
+        "to": "now"
+    },
+    "timepicker": {
+        "refresh_intervals": [
+            "30s",
+            "1m",
+            "5m",
+            "15m",
+            "30m",
+            "1h"
+        ],
+        "time_options": [
+            "15m",
+            "1h",
+            "6h",
+            "12h",
+            "24h",
+            "2d",
+            "7d",
+            "30d"
+        ]
+    },
+    "timezone": "browser",
+    "title": "Job Worker",
+    "uid": "chrono-job-worker",
+    "version": 1
+}

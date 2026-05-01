@@ -15,7 +15,7 @@
       }
     ]
   },
-  "description": "Error and exception monitoring \u2014 HTTP 4xx/5xx rates, DLQ events, worker failures, Kafka producer errors, MongoDB failures, deserialization errors, and error log streams.",
+  "description": "Error and exception monitoring \u2014 HTTP 4xx/5xx rates, DLQ events, worker failures, Kafka producer errors, MongoDB failures, deserialization errors, and error log streams.\n\nHow to use this dashboard: Start from the top Overview row to verify SLO health, then drill into throughput, latency, errors, and capacity sections to isolate bottlenecks. Use the template filters (environment, instance, topic, job type, endpoint, and command where available) to narrow scope during incidents and compare behavior across dimensions. Panel info icon meaning: Click the i icon in each panel header to see what the metric represents, how to interpret normal vs abnormal values, and what operational signal it provides.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 2,
@@ -258,7 +258,7 @@
           "refId": "A"
         }
       ],
-      "description": "Total DLQ messages received via Kafka by the dlq-service. Zero means no jobs reached the DLQ in this window (healthy state) — this is independent of dlq-service HTTP traffic."
+      "description": "Total DLQ messages received via Kafka by the dlq-service. Zero means no jobs reached the DLQ in this window (healthy state) \u2014 this is independent of dlq-service HTTP traffic."
     },
     {
       "datasource": {
@@ -794,8 +794,7 @@
           "calcs": [
             "mean",
             "max",
-            "lastNotNull",
-            "sum"
+            "lastNotNull"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -889,8 +888,7 @@
           "calcs": [
             "mean",
             "max",
-            "lastNotNull",
-            "sum"
+            "lastNotNull"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -981,8 +979,7 @@
           "calcs": [
             "mean",
             "max",
-            "lastNotNull",
-            "sum"
+            "lastNotNull"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -1056,8 +1053,7 @@
           "calcs": [
             "mean",
             "max",
-            "lastNotNull",
-            "sum"
+            "lastNotNull"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -1159,8 +1155,7 @@
           "calcs": [
             "mean",
             "max",
-            "lastNotNull",
-            "sum"
+            "lastNotNull"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -1281,8 +1276,7 @@
           "calcs": [
             "mean",
             "max",
-            "lastNotNull",
-            "sum"
+            "lastNotNull"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -1391,8 +1385,7 @@
           "calcs": [
             "mean",
             "max",
-            "lastNotNull",
-            "sum"
+            "lastNotNull"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -1501,8 +1494,7 @@
           "calcs": [
             "mean",
             "max",
-            "lastNotNull",
-            "sum"
+            "lastNotNull"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -1576,8 +1568,7 @@
           "calcs": [
             "mean",
             "max",
-            "lastNotNull",
-            "sum"
+            "lastNotNull"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -1640,8 +1631,7 @@
           "calcs": [
             "mean",
             "max",
-            "lastNotNull",
-            "sum"
+            "lastNotNull"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -1808,7 +1798,7 @@
     ]
   },
   "timezone": "browser",
-  "title": "Chrono Queue \u2014 Error Monitoring",
+  "title": "Error Monitoring",
   "uid": "chrono-error-monitoring",
   "version": 8,
   "__inputs": [

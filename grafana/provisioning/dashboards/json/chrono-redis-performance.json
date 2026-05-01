@@ -15,7 +15,7 @@
       }
     ]
   },
-  "description": "Production Redis observability for chrono-queue: throughput, network I/O, CPU utilization, slowlog, cache hit rate, Lettuce client latency and command mix, connection pool health, per-instance breakdown bar gauges, Top-N rankings, and alert-reference SLO guardrails. Variables support multi-instance and multi-application analysis at scale.",
+  "description": "Production Redis observability for chrono-queue: throughput, network I/O, CPU utilization, slowlog, cache hit rate, Lettuce client latency and command mix, connection pool health, per-instance breakdown bar gauges, Top-N rankings, and alert-reference SLO guardrails. Variables support multi-instance and multi-application analysis at scale.\n\nHow to use this dashboard: Start from the top Overview row to verify SLO health, then drill into throughput, latency, errors, and capacity sections to isolate bottlenecks. Use the template filters (environment, instance, topic, job type, endpoint, and command where available) to narrow scope during incidents and compare behavior across dimensions. Panel info icon meaning: Click the i icon in each panel header to see what the metric represents, how to interpret normal vs abnormal values, and what operational signal it provides.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 2,
@@ -125,8 +125,8 @@
         "legend": {
           "calcs": [
             "mean",
-            "lastNotNull",
-            "max"
+            "max",
+            "lastNotNull"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -221,8 +221,8 @@
         "legend": {
           "calcs": [
             "mean",
-            "lastNotNull",
-            "max"
+            "max",
+            "lastNotNull"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -317,8 +317,8 @@
         "legend": {
           "calcs": [
             "mean",
-            "lastNotNull",
-            "max"
+            "max",
+            "lastNotNull"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -591,7 +591,11 @@
       "id": 14,
       "options": {
         "legend": {
-          "calcs": [],
+          "calcs": [
+            "mean",
+            "max",
+            "lastNotNull"
+          ],
           "displayMode": "list",
           "placement": "bottom",
           "showLegend": true
@@ -701,7 +705,11 @@
       "id": 16,
       "options": {
         "legend": {
-          "calcs": [],
+          "calcs": [
+            "mean",
+            "max",
+            "lastNotNull"
+          ],
           "displayMode": "list",
           "placement": "bottom",
           "showLegend": true
@@ -803,8 +811,8 @@
         "legend": {
           "calcs": [
             "mean",
-            "lastNotNull",
-            "max"
+            "max",
+            "lastNotNull"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -998,8 +1006,8 @@
         "legend": {
           "calcs": [
             "mean",
-            "lastNotNull",
-            "max"
+            "max",
+            "lastNotNull"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -1116,8 +1124,8 @@
         "legend": {
           "calcs": [
             "mean",
-            "lastNotNull",
-            "max"
+            "max",
+            "lastNotNull"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -1212,8 +1220,8 @@
         "legend": {
           "calcs": [
             "mean",
-            "lastNotNull",
-            "max"
+            "max",
+            "lastNotNull"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -1338,8 +1346,8 @@
         "legend": {
           "calcs": [
             "mean",
-            "lastNotNull",
-            "max"
+            "max",
+            "lastNotNull"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -1494,8 +1502,8 @@
         "legend": {
           "calcs": [
             "mean",
-            "lastNotNull",
-            "max"
+            "max",
+            "lastNotNull"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -1618,8 +1626,8 @@
         "legend": {
           "calcs": [
             "mean",
-            "lastNotNull",
-            "max"
+            "max",
+            "lastNotNull"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -1734,8 +1742,8 @@
         "legend": {
           "calcs": [
             "mean",
-            "lastNotNull",
-            "max"
+            "max",
+            "lastNotNull"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -2209,8 +2217,8 @@
         "legend": {
           "calcs": [
             "mean",
-            "lastNotNull",
-            "max"
+            "max",
+            "lastNotNull"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -2336,8 +2344,8 @@
         "legend": {
           "calcs": [
             "mean",
-            "lastNotNull",
-            "max"
+            "max",
+            "lastNotNull"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -2431,8 +2439,8 @@
         "legend": {
           "calcs": [
             "mean",
-            "lastNotNull",
-            "max"
+            "max",
+            "lastNotNull"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -2526,8 +2534,8 @@
         "legend": {
           "calcs": [
             "mean",
-            "lastNotNull",
-            "max"
+            "max",
+            "lastNotNull"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -2686,8 +2694,8 @@
         "legend": {
           "calcs": [
             "mean",
-            "lastNotNull",
-            "max"
+            "max",
+            "lastNotNull"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -2837,8 +2845,8 @@
         "legend": {
           "calcs": [
             "mean",
-            "lastNotNull",
-            "max"
+            "max",
+            "lastNotNull"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -2967,8 +2975,8 @@
         "legend": {
           "calcs": [
             "mean",
-            "lastNotNull",
-            "max"
+            "max",
+            "lastNotNull"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -3118,8 +3126,8 @@
         "legend": {
           "calcs": [
             "mean",
-            "lastNotNull",
-            "max"
+            "max",
+            "lastNotNull"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -3255,7 +3263,7 @@
         "legend": {
           "calcs": [
             "mean",
-            "min",
+            "max",
             "lastNotNull"
           ],
           "displayMode": "table",

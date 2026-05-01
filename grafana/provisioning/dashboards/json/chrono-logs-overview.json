@@ -15,7 +15,7 @@
       }
     ]
   },
-  "description": "Log volume and exploration \u2014 total/ERROR/WARN/INFO counts, log rate per service, level distribution, and live log explorer with full-text search.",
+  "description": "Log volume and exploration \u2014 total/ERROR/WARN/INFO counts, log rate per service, level distribution, and live log explorer with full-text search.\n\nHow to use this dashboard: Start from the top Overview row to verify SLO health, then drill into throughput, latency, errors, and capacity sections to isolate bottlenecks. Use the template filters (environment, instance, topic, job type, endpoint, and command where available) to narrow scope during incidents and compare behavior across dimensions. Panel info icon meaning: Click the i icon in each panel header to see what the metric represents, how to interpret normal vs abnormal values, and what operational signal it provides.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -467,8 +467,7 @@
           "calcs": [
             "mean",
             "max",
-            "lastNotNull",
-            "sum"
+            "lastNotNull"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -706,8 +705,7 @@
           "calcs": [
             "mean",
             "max",
-            "lastNotNull",
-            "sum"
+            "lastNotNull"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -785,8 +783,7 @@
           "calcs": [
             "mean",
             "max",
-            "lastNotNull",
-            "sum"
+            "lastNotNull"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -848,8 +845,7 @@
           "calcs": [
             "mean",
             "max",
-            "lastNotNull",
-            "sum"
+            "lastNotNull"
           ],
           "displayMode": "table",
           "placement": "bottom",
@@ -1102,7 +1098,7 @@
     ]
   },
   "timezone": "browser",
-  "title": "Chrono Queue \u2014 Logs Overview",
+  "title": "Logs Overview",
   "uid": "chrono-logs-overview",
   "version": 4
 }
