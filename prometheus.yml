@@ -74,6 +74,32 @@ scrape_configs:
         labels:
           service: "dlq-service"
 
+  - job_name: "kafka-jmx-exporter"
+    relabel_configs:
+      - target_label: application
+        replacement: "chrono-queue"
+      - target_label: env
+        replacement: "production"
+      - source_labels: [ __address__ ]
+        target_label: instance
+    static_configs:
+      - targets: [ "kafka-jmx-exporter:5556" ]
+        labels:
+          service: "kafka-broker"
+
+  - job_name: "mongodb-exporter"
+    relabel_configs:
+      - target_label: application
+        replacement: "chrono-queue"
+      - target_label: env
+        replacement: "production"
+      - source_labels: [ __address__ ]
+        target_label: instance
+    static_configs:
+      - targets: [ "mongodb-exporter:9216" ]
+        labels:
+          service: "mongodb"
+
   - job_name: "redis-exporter"
     relabel_configs:
       - target_label: application

@@ -15,7 +15,7 @@
       }
     ]
   },
-  "description": "Production MongoDB observability dashboard for chrono-queue DLQ persistence. Covers command latency distributions, command throughput by operation, failed command rates, read/write mix, and DLQ persistence activity backed by logs.",
+  "description": "Production MongoDB observability dashboard for chrono-queue. Covers server health, opcounters, connections, WiredTiger cache, replication lag, query latency percentiles, index vs scan efficiency, global lock, DLQ persistence and command-level latency/throughput.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 2,
@@ -82,6 +82,290 @@
       "gridPos": {
         "h": 4,
         "w": 4,
+        "x": 0,
+        "y": 1
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "title": "MongoDB Command p99 Latency",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(mongodb_driver_commands_seconds_bucket{service=\"dlq-service\"}[$__rate_interval])))",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "editorMode": "code"
+        }
+      ],
+      "description": "99th percentile MongoDB driver command latency for dlq-service. Yellow >100ms, Red >500ms."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 150
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "—",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 1
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "title": "Current Connections",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "mongodb_ss_connections{service=\"mongodb\",instance=~\"$instance\",conn_type=\"current\"}",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "editorMode": "code"
+        }
+      ],
+      "description": "Current active MongoDB connections. Yellow >80, Red >150."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "unit": "percent",
+          "noValue": "—",
+          "decimals": 1
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 1
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "title": "WiredTiger Cache Usage %",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "100 * mongodb_ss_wt_cache_bytes_currently_in_the_cache{service=\"mongodb\",instance=~\"$instance\"} / clamp_min(mongodb_ss_wt_cache_maximum_bytes_configured{service=\"mongodb\",instance=~\"$instance\"}, 1)",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "editorMode": "code"
+        }
+      ],
+      "description": "WiredTiger cache fill percentage. Yellow >80%, Red >90%. High values risk cache pressure and disk I/O spikes."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 5
+              },
+              {
+                "color": "red",
+                "value": 15
+              }
+            ]
+          },
+          "unit": "s",
+          "noValue": "—",
+          "decimals": 1
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 1
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "title": "Replication Lag (max)",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "clamp_min(max(mongodb_rs_members_optimeDate{service=\"mongodb\",instance=~\"$instance\",member_state!=\"PRIMARY\"} - on() group_left() mongodb_rs_members_optimeDate{service=\"mongodb\",instance=~\"$instance\",member_state=\"PRIMARY\"}), 0) or vector(0)",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "editorMode": "code"
+        }
+      ],
+      "description": "Max replication lag across secondaries in seconds. Yellow >5s, Red >15s — SRE escalation threshold."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 5
+              },
+              {
+                "color": "red",
+                "value": 20
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "—",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
         "x": 16,
         "y": 1
       },
@@ -100,7 +384,7 @@
         },
         "textMode": "auto"
       },
-      "title": "MongoDB p99 Latency (dlq-service)",
+      "title": "Global Lock Active Clients",
       "type": "stat",
       "targets": [
         {
@@ -108,15 +392,14 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.99, sum by (le) (rate(mongodb_driver_commands_seconds_bucket{service=\"dlq-service\"}[$__rate_interval])))",
+          "expr": "mongodb_ss_globalLock_activeClients_total{service=\"mongodb\",instance=~\"$instance\"}",
           "legendFormat": "",
           "refId": "A",
-          "interval": "",
           "instant": true,
           "editorMode": "code"
         }
       ],
-      "description": "99th percentile MongoDB driver command latency for dlq-service."
+      "description": "Total active clients waiting on global lock. Sustained elevation indicates contention. Yellow >5, Red >20."
     },
     {
       "datasource": {
@@ -164,7 +447,7 @@
         },
         "textMode": "auto"
       },
-      "title": "Jobs Saved to MongoDB (Range)",
+      "title": "DLQ Jobs Saved to MongoDB (Range)",
       "type": "stat",
       "targets": [
         {
@@ -186,10 +469,1124 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 88
+        "y": 5
       },
-      "id": 104,
-      "title": "MongoDB Performance (dlq-service)",
+      "id": 110,
+      "title": "Opcounters — Operations/s",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "drawStyle": "line",
+            "spanNulls": false,
+            "lineInterpolation": "smooth"
+          },
+          "unit": "reqps",
+          "min": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "insert"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "query"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "update"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "delete"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "getmore"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "purple",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "command"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "yellow",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 6
+      },
+      "id": 11,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "Opcounters — Insert/Query/Update/Delete/Getmore (ops/s)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "rate(mongodb_ss_opcounters{service=\"mongodb\",instance=~\"$instance\",legacy_op_type=\"insert\"}[$__rate_interval])",
+          "legendFormat": "insert",
+          "refId": "A",
+          "editorMode": "code"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "rate(mongodb_ss_opcounters{service=\"mongodb\",instance=~\"$instance\",legacy_op_type=\"query\"}[$__rate_interval])",
+          "legendFormat": "query",
+          "refId": "B",
+          "editorMode": "code"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "rate(mongodb_ss_opcounters{service=\"mongodb\",instance=~\"$instance\",legacy_op_type=\"update\"}[$__rate_interval])",
+          "legendFormat": "update",
+          "refId": "C",
+          "editorMode": "code"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "rate(mongodb_ss_opcounters{service=\"mongodb\",instance=~\"$instance\",legacy_op_type=\"delete\"}[$__rate_interval])",
+          "legendFormat": "delete",
+          "refId": "D",
+          "editorMode": "code"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "rate(mongodb_ss_opcounters{service=\"mongodb\",instance=~\"$instance\",legacy_op_type=\"getmore\"}[$__rate_interval])",
+          "legendFormat": "getmore",
+          "refId": "E",
+          "editorMode": "code"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "rate(mongodb_ss_opcounters{service=\"mongodb\",instance=~\"$instance\",legacy_op_type=\"command\"}[$__rate_interval])",
+          "legendFormat": "command",
+          "refId": "F",
+          "editorMode": "code"
+        }
+      ],
+      "description": "MongoDB operations per second by type. Sudden spikes in deletes or inserts are worth investigating."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "drawStyle": "line",
+            "spanNulls": false
+          },
+          "unit": "reqps",
+          "min": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "replicated insert"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "replicated update"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "replicated delete"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 6
+      },
+      "id": 12,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "Replication Opcounters (ops/s)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "rate(mongodb_ss_opcountersRepl{service=\"mongodb\",instance=~\"$instance\",legacy_op_type=\"insert\"}[$__rate_interval])",
+          "legendFormat": "replicated insert",
+          "refId": "A",
+          "editorMode": "code"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "rate(mongodb_ss_opcountersRepl{service=\"mongodb\",instance=~\"$instance\",legacy_op_type=\"update\"}[$__rate_interval])",
+          "legendFormat": "replicated update",
+          "refId": "B",
+          "editorMode": "code"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "rate(mongodb_ss_opcountersRepl{service=\"mongodb\",instance=~\"$instance\",legacy_op_type=\"delete\"}[$__rate_interval])",
+          "legendFormat": "replicated delete",
+          "refId": "C",
+          "editorMode": "code"
+        }
+      ],
+      "description": "Replication oplog replay rates. These should track primary opcounters with a small lag."
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 14
+      },
+      "id": 111,
+      "title": "Connections & Global Lock",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "drawStyle": "line",
+            "spanNulls": false
+          },
+          "unit": "short",
+          "min": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "current"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.thresholdsStyle",
+                "value": {
+                  "mode": "line"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "transparent",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 80
+                    },
+                    {
+                      "color": "red",
+                      "value": 150
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "available"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "totalCreated/s"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 15
+      },
+      "id": 13,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "Connections — Current vs Available",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "mongodb_ss_connections{service=\"mongodb\",instance=~\"$instance\",conn_type=\"current\"}",
+          "legendFormat": "current",
+          "refId": "A",
+          "editorMode": "code"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "mongodb_ss_connections{service=\"mongodb\",instance=~\"$instance\",conn_type=\"available\"}",
+          "legendFormat": "available",
+          "refId": "B",
+          "editorMode": "code"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "rate(mongodb_ss_connections{service=\"mongodb\",instance=~\"$instance\",conn_type=\"totalCreated\"}[$__rate_interval])",
+          "legendFormat": "totalCreated/s",
+          "refId": "C",
+          "editorMode": "code"
+        }
+      ],
+      "description": "Current vs available connections. Available approaching 0 = connection exhaustion. Yellow >80 current, Red >150."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 20,
+            "showPoints": "never",
+            "drawStyle": "line",
+            "spanNulls": false
+          },
+          "unit": "short",
+          "min": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "readers"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "writers"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "total"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 15
+      },
+      "id": 14,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "Global Lock — Active Clients (readers / writers / total)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "mongodb_ss_globalLock_activeClients_readers{service=\"mongodb\",instance=~\"$instance\"}",
+          "legendFormat": "readers",
+          "refId": "A",
+          "editorMode": "code"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "mongodb_ss_globalLock_activeClients_writers{service=\"mongodb\",instance=~\"$instance\"}",
+          "legendFormat": "writers",
+          "refId": "B",
+          "editorMode": "code"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "mongodb_ss_globalLock_activeClients_total{service=\"mongodb\",instance=~\"$instance\"}",
+          "legendFormat": "total",
+          "refId": "C",
+          "editorMode": "code"
+        }
+      ],
+      "description": "Active clients holding global lock by readers and writers. Sustained high writers indicates write contention."
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 23
+      },
+      "id": 112,
+      "title": "WiredTiger Cache & Memory",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "drawStyle": "line",
+            "spanNulls": false
+          },
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.8
+              },
+              {
+                "color": "red",
+                "value": 0.9
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      },
+      "id": 20,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "WiredTiger Cache Usage % (bytes in cache / max configured)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "mongodb_ss_wt_cache_bytes_currently_in_the_cache{service=\"mongodb\",instance=~\"$instance\"} / clamp_min(mongodb_ss_wt_cache_maximum_bytes_configured{service=\"mongodb\",instance=~\"$instance\"}, 1)",
+          "legendFormat": "cache fill %",
+          "refId": "A",
+          "editorMode": "code"
+        }
+      ],
+      "description": "WiredTiger cache fill ratio. Yellow >80%, Red >90%. High fill risks eviction and increased disk I/O."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "showPoints": "never",
+            "drawStyle": "line",
+            "spanNulls": false
+          },
+          "unit": "bytes",
+          "min": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "max configured"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    10
+                  ],
+                  "fill": "dash"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      },
+      "id": 21,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "WiredTiger Cache — Bytes In Cache vs Max Configured",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "mongodb_ss_wt_cache_bytes_currently_in_the_cache{service=\"mongodb\",instance=~\"$instance\"}",
+          "legendFormat": "bytes in cache",
+          "refId": "A",
+          "editorMode": "code"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "mongodb_ss_wt_cache_maximum_bytes_configured{service=\"mongodb\",instance=~\"$instance\"}",
+          "legendFormat": "max configured",
+          "refId": "B",
+          "editorMode": "code"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "mongodb_ss_wt_cache_dirty_bytes_belonging_to_the_history_store_table_in_the_cache{service=\"mongodb\",instance=~\"$instance\"}",
+          "legendFormat": "dirty bytes",
+          "refId": "C",
+          "editorMode": "code"
+        }
+      ],
+      "description": "WiredTiger cache in bytes. Dirty bytes rising close to total indicates checkpoint pressure."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "drawStyle": "line",
+            "spanNulls": false
+          },
+          "unit": "Bps",
+          "min": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "bytes read into cache/s"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "bytes written from cache/s"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "eviction attempts/s"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "unit",
+                "value": "reqps"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 32
+      },
+      "id": 22,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "WiredTiger Cache — Bytes Read/Write + Eviction Attempts Rate",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "rate(mongodb_ss_wt_cache_bytes_read_into_cache{service=\"mongodb\",instance=~\"$instance\"}[$__rate_interval])",
+          "legendFormat": "bytes read into cache/s",
+          "refId": "A",
+          "editorMode": "code"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "rate(mongodb_ss_wt_cache_bytes_written_from_cache{service=\"mongodb\",instance=~\"$instance\"}[$__rate_interval])",
+          "legendFormat": "bytes written from cache/s",
+          "refId": "B",
+          "editorMode": "code"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "rate(mongodb_ss_wt_cache_evict_page_attempts_by_eviction_server{service=\"mongodb\",instance=~\"$instance\"}[$__rate_interval])",
+          "legendFormat": "eviction attempts/s",
+          "refId": "C",
+          "editorMode": "code"
+        }
+      ],
+      "description": "WiredTiger cache byte-throughput and eviction pressure. Rising eviction attempts with high cache fill indicates memory pressure and potential latency impact."
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 40
+      },
+      "id": 113,
+      "title": "Replication",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "showPoints": "never",
+            "drawStyle": "line",
+            "spanNulls": false
+          },
+          "unit": "s",
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 5
+              },
+              {
+                "color": "red",
+                "value": 15
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 41
+      },
+      "id": 30,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "Replication Lag per Member",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "clamp_min(mongodb_rs_members_optimeDate{service=\"mongodb\",instance=~\"$instance\",member_state!=\"PRIMARY\"} - on() group_left() mongodb_rs_members_optimeDate{service=\"mongodb\",instance=~\"$instance\",member_state=\"PRIMARY\"}, 0)",
+          "legendFormat": "{{name}}",
+          "refId": "A",
+          "editorMode": "code"
+        }
+      ],
+      "description": "Replication lag per member in seconds. Yellow >5s warning, Red >15s critical."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "drawStyle": "line",
+            "spanNulls": false
+          },
+          "unit": "short",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 41
+      },
+      "id": 31,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "Replica Set Member State",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "mongodb_rs_members_state{service=\"mongodb\",instance=~\"$instance\"}",
+          "legendFormat": "{{name}} state",
+          "refId": "A",
+          "editorMode": "code"
+        }
+      ],
+      "description": "Replica set member states: 1=PRIMARY, 2=SECONDARY, 6=UNKNOWN, 8=DOWN. Sudden state changes require immediate investigation."
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 49
+      },
+      "id": 114,
+      "title": "Query Latency — p50 / p90 / p95 / p99",
       "type": "row"
     },
     {
@@ -218,9 +1615,9 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 89
+        "y": 50
       },
-      "id": 15,
+      "id": 40,
       "options": {
         "legend": {
           "calcs": [
@@ -237,7 +1634,7 @@
           "sort": "desc"
         }
       },
-      "title": "MongoDB Command Latency — p50/p90/p95/p99",
+      "title": "MongoDB Driver Command Latency — p50/p90/p95/p99 (all commands)",
       "type": "timeseries",
       "targets": [
         {
@@ -248,7 +1645,6 @@
           "expr": "histogram_quantile(0.50, sum by (le) (rate(mongodb_driver_commands_seconds_bucket{service=\"dlq-service\"}[$__rate_interval])))",
           "legendFormat": "p50",
           "refId": "A",
-          "interval": "",
           "editorMode": "code"
         },
         {
@@ -259,7 +1655,6 @@
           "expr": "histogram_quantile(0.90, sum by (le) (rate(mongodb_driver_commands_seconds_bucket{service=\"dlq-service\"}[$__rate_interval])))",
           "legendFormat": "p90",
           "refId": "B",
-          "interval": "",
           "editorMode": "code"
         },
         {
@@ -270,7 +1665,6 @@
           "expr": "histogram_quantile(0.95, sum by (le) (rate(mongodb_driver_commands_seconds_bucket{service=\"dlq-service\"}[$__rate_interval])))",
           "legendFormat": "p95",
           "refId": "C",
-          "interval": "",
           "editorMode": "code"
         },
         {
@@ -281,11 +1675,447 @@
           "expr": "histogram_quantile(0.99, sum by (le) (rate(mongodb_driver_commands_seconds_bucket{service=\"dlq-service\"}[$__rate_interval])))",
           "legendFormat": "p99",
           "refId": "D",
-          "interval": "",
           "editorMode": "code"
         }
       ],
-      "description": "p50/p90/p95/p99 MongoDB driver command latency for dlq-service."
+      "description": "Spring Data MongoDB driver command latency percentiles for dlq-service. p99 >100ms is worth investigating."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "showPoints": "never",
+            "drawStyle": "line",
+            "spanNulls": false
+          },
+          "unit": "s",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 50
+      },
+      "id": 41,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "Driver Command Latency per Operation — p99",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "histogram_quantile(0.99, sum by (le, command) (rate(mongodb_driver_commands_seconds_bucket{service=\"dlq-service\"}[$__rate_interval])))",
+          "legendFormat": "p99 {{command}}",
+          "refId": "A",
+          "editorMode": "code"
+        }
+      ],
+      "description": "p99 latency per command type. Useful to pinpoint which operations are slow."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "showPoints": "never",
+            "drawStyle": "line",
+            "spanNulls": false
+          },
+          "unit": "s",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 58
+      },
+      "id": 42,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "Driver Command Mean Latency by Command",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (command) (rate(mongodb_driver_commands_seconds_sum{service=\"dlq-service\"}[$__rate_interval])) / clamp_min(sum by (command) (rate(mongodb_driver_commands_seconds_count{service=\"dlq-service\"}[$__rate_interval])), 1e-9)",
+          "legendFormat": "mean {{command}}",
+          "refId": "A",
+          "editorMode": "code"
+        }
+      ],
+      "description": "Mean per-command latency. Divide-by-zero safe via clamp_min."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "showPoints": "never",
+            "drawStyle": "line",
+            "spanNulls": false
+          },
+          "unit": "µs",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 58
+      },
+      "id": 43,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "Server-Side Query Latency (reads/writes/commands µs)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(rate(mongodb_top_queries_time{service=\"mongodb\",instance=~\"$instance\"}[$__rate_interval])) / clamp_min(sum(rate(mongodb_top_queries_count{service=\"mongodb\",instance=~\"$instance\"}[$__rate_interval])), 1e-9)",
+          "legendFormat": "read avg µs",
+          "refId": "A",
+          "editorMode": "code"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "(sum(rate(mongodb_top_insert_time{service=\"mongodb\",instance=~\"$instance\"}[$__rate_interval])) + sum(rate(mongodb_top_update_time{service=\"mongodb\",instance=~\"$instance\"}[$__rate_interval])) + sum(rate(mongodb_top_remove_time{service=\"mongodb\",instance=~\"$instance\"}[$__rate_interval]))) / clamp_min((sum(rate(mongodb_top_insert_count{service=\"mongodb\",instance=~\"$instance\"}[$__rate_interval])) + sum(rate(mongodb_top_update_count{service=\"mongodb\",instance=~\"$instance\"}[$__rate_interval])) + sum(rate(mongodb_top_remove_count{service=\"mongodb\",instance=~\"$instance\"}[$__rate_interval]))), 1e-9)",
+          "legendFormat": "write avg µs",
+          "refId": "B",
+          "editorMode": "code"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(rate(mongodb_top_commands_time{service=\"mongodb\",instance=~\"$instance\"}[$__rate_interval])) / clamp_min(sum(rate(mongodb_top_commands_count{service=\"mongodb\",instance=~\"$instance\"}[$__rate_interval])), 1e-9)",
+          "legendFormat": "command avg µs",
+          "refId": "C",
+          "editorMode": "code"
+        }
+      ],
+      "description": "Average server-side operation latency in microseconds from mongodb top. Spikes correlate with slow queries, index scans, or lock contention."
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 66
+      },
+      "id": 115,
+      "title": "Index Efficiency — Scan vs Index Usage",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "drawStyle": "line",
+            "spanNulls": false
+          },
+          "unit": "reqps",
+          "min": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "scanAndOrder/s"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 25
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "scanned objects/s"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "scanned index keys/s"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 67
+      },
+      "id": 50,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "Query Scan Rates — Index Keys vs Documents vs ScanAndOrder",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "rate(mongodb_ss_metrics_queryExecutor_scannedObjects{service=\"mongodb\",instance=~\"$instance\"}[$__rate_interval])",
+          "legendFormat": "scanned objects/s",
+          "refId": "A",
+          "editorMode": "code"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "rate(mongodb_ss_metrics_queryExecutor_scanned{service=\"mongodb\",instance=~\"$instance\"}[$__rate_interval])",
+          "legendFormat": "scanned index keys/s",
+          "refId": "B",
+          "editorMode": "code"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "rate(mongodb_ss_metrics_operation_scanAndOrder{service=\"mongodb\",instance=~\"$instance\"}[$__rate_interval])",
+          "legendFormat": "scanAndOrder/s",
+          "refId": "C",
+          "editorMode": "code"
+        }
+      ],
+      "description": "High scanned objects vs index keys ratio = collection scans. High scanAndOrder = sort without covering index."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 12,
+            "showPoints": "never",
+            "drawStyle": "line",
+            "spanNulls": false,
+            "lineInterpolation": "smooth"
+          },
+          "unit": "short",
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 5
+              },
+              {
+                "color": "red",
+                "value": 10
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 67
+      },
+      "id": 51,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "Scan-to-Index Key Ratio (scannedObjects / scannedIndexKeys)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "rate(mongodb_ss_metrics_queryExecutor_scannedObjects{service=\"mongodb\",instance=~\"$instance\"}[$__rate_interval]) / clamp_min(rate(mongodb_ss_metrics_queryExecutor_scanned{service=\"mongodb\",instance=~\"$instance\"}[$__rate_interval]), 1e-9)",
+          "legendFormat": "objects per index key",
+          "refId": "A",
+          "editorMode": "code"
+        }
+      ],
+      "description": "Ratio near 1.0 = efficient index usage. >5 = partial index. >10 = collection scan. Yellow >5, Red >10."
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 75
+      },
+      "id": 116,
+      "title": "Driver Command Throughput (dlq-service)",
+      "type": "row"
     },
     {
       "datasource": {
@@ -347,10 +2177,10 @@
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 12,
-        "y": 89
+        "x": 0,
+        "y": 76
       },
-      "id": 16,
+      "id": 60,
       "options": {
         "legend": {
           "calcs": [
@@ -367,7 +2197,7 @@
           "sort": "desc"
         }
       },
-      "title": "MongoDB Commands/s by Operation (Success vs Failed)",
+      "title": "Commands/s by Operation (Success vs Failed)",
       "type": "timeseries",
       "targets": [
         {
@@ -378,7 +2208,6 @@
           "expr": "sum by (command) (rate(mongodb_driver_commands_seconds_count{service=\"dlq-service\", status=\"SUCCESS\"}[$__rate_interval]))",
           "legendFormat": "ok {{command}}",
           "refId": "A",
-          "interval": "",
           "editorMode": "code"
         },
         {
@@ -389,73 +2218,10 @@
           "expr": "sum by (command) (rate(mongodb_driver_commands_seconds_count{service=\"dlq-service\", status=\"FAILED\"}[$__rate_interval]))",
           "legendFormat": "FAIL {{command}}",
           "refId": "B",
-          "interval": "",
           "editorMode": "code"
         }
       ],
-      "description": "MongoDB command throughput by operation, separating successful from failed commands."
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "lineWidth": 2,
-            "fillOpacity": 5,
-            "showPoints": "never",
-            "drawStyle": "line",
-            "spanNulls": false
-          },
-          "unit": "s",
-          "min": 0
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 97
-      },
-      "id": 37,
-      "options": {
-        "legend": {
-          "calcs": [
-            "mean",
-            "max",
-            "lastNotNull"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "title": "MongoDB Mean Latency by Command",
-      "type": "timeseries",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "sum by (command) (rate(mongodb_driver_commands_seconds_sum{service=\"dlq-service\"}[$__rate_interval])) / clamp_min(sum by (command) (rate(mongodb_driver_commands_seconds_count{service=\"dlq-service\"}[$__rate_interval])), 1e-9)",
-          "legendFormat": "{{command}}",
-          "refId": "A",
-          "interval": "",
-          "editorMode": "code"
-        }
-      ],
-      "description": "Mean MongoDB driver command latency broken down by command type."
+      "description": "Driver command throughput split by status. Red FAIL series need immediate investigation."
     },
     {
       "datasource": {
@@ -481,7 +2247,7 @@
           {
             "matcher": {
               "id": "byRegexp",
-              "options": "/failed .*/"
+              "options": "/^failed .*/"
             },
             "properties": [
               {
@@ -503,9 +2269,9 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 97
+        "y": 76
       },
-      "id": 38,
+      "id": 61,
       "options": {
         "legend": {
           "calcs": [
@@ -522,7 +2288,7 @@
           "sort": "desc"
         }
       },
-      "title": "MongoDB Failed Commands Rate",
+      "title": "Failed Commands Rate by Operation",
       "type": "timeseries",
       "targets": [
         {
@@ -533,11 +2299,10 @@
           "expr": "sum by (command) (rate(mongodb_driver_commands_seconds_count{service=\"dlq-service\", status=\"FAILED\"}[$__rate_interval]))",
           "legendFormat": "failed {{command}}",
           "refId": "A",
-          "interval": "",
           "editorMode": "code"
         }
       ],
-      "description": "MongoDB failed command rate by command type for dlq-service."
+      "description": "Failed MongoDB commands by operation type. Any sustained insert/update failures = data loss risk."
     },
     {
       "datasource": {
@@ -565,9 +2330,9 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 105
+        "y": 84
       },
-      "id": 201,
+      "id": 62,
       "options": {
         "legend": {
           "calcs": [
@@ -595,11 +2360,10 @@
           "expr": "sum by (command) (rate(mongodb_driver_commands_seconds_count{service=\"dlq-service\", command=~\"find|findAndModify|getMore|count|distinct|aggregate\", status=\"SUCCESS\"}[$__rate_interval]))",
           "legendFormat": "{{command}}",
           "refId": "A",
-          "interval": "",
           "editorMode": "code"
         }
       ],
-      "description": "MongoDB read command throughput (find, findAndModify, getMore, count, distinct, aggregate) for dlq-service, successful operations/s only."
+      "description": "Successful read operation rates (find, findAndModify, getMore, count, distinct, aggregate)."
     },
     {
       "datasource": {
@@ -627,9 +2391,9 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 105
+        "y": 84
       },
-      "id": 202,
+      "id": 63,
       "options": {
         "legend": {
           "calcs": [
@@ -657,11 +2421,10 @@
           "expr": "sum by (command) (rate(mongodb_driver_commands_seconds_count{service=\"dlq-service\", command=~\"insert|update|delete|findAndModify|bulkWrite|replace\", status=\"SUCCESS\"}[$__rate_interval]))",
           "legendFormat": "{{command}}",
           "refId": "A",
-          "interval": "",
           "editorMode": "code"
         }
       ],
-      "description": "MongoDB write command throughput (insert, update, delete, findAndModify, bulkWrite, replace) for dlq-service, successful operations/s only."
+      "description": "Successful write operation rates (insert, update, delete, findAndModify, bulkWrite, replace)."
     },
     {
       "collapsed": false,
@@ -669,10 +2432,10 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 113
+        "y": 92
       },
-      "id": 105,
-      "title": "MongoDB Persistence Activity (Log-based)",
+      "id": 117,
+      "title": "DLQ Persistence Activity (Log-based)",
       "type": "row"
     },
     {
@@ -725,16 +2488,35 @@
                 }
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Persist Failed"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 30
+              }
+            ]
           }
         ]
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 114
+        "w": 24,
+        "x": 0,
+        "y": 93
       },
-      "id": 18,
+      "id": 70,
       "options": {
         "legend": {
           "calcs": [
@@ -751,7 +2533,7 @@
           "sort": "desc"
         }
       },
-      "title": "DLQ Saves & Requeue Context",
+      "title": "DLQ Saves, Requeue & Persist Failures",
       "type": "timeseries",
       "targets": [
         {
@@ -775,9 +2557,20 @@
           "queryType": "range",
           "refId": "B",
           "legendFormat": "Requeued"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum(count_over_time({job=\"dlq\"} |= \"Failed to persist DLQ\" [$__interval]))",
+          "editorMode": "code",
+          "queryType": "range",
+          "refId": "C",
+          "legendFormat": "Persist Failed"
         }
       ],
-      "description": "Log-based DLQ saves to MongoDB with retry-dispatcher requeue context."
+      "description": "Log-derived DLQ persistence activity. Persist Failed in red — any sustained non-zero value means data loss risk."
     },
     {
       "datasource": {
@@ -788,9 +2581,9 @@
         "h": 10,
         "w": 24,
         "x": 0,
-        "y": 132
+        "y": 101
       },
-      "id": 19,
+      "id": 71,
       "options": {
         "dedupStrategy": "none",
         "enableLogDetails": true,
@@ -815,7 +2608,7 @@
           "refId": "A"
         }
       ],
-      "description": "Live stream of DLQ persistence and requeue outcomes relevant to MongoDB-backed DLQ flow."
+      "description": "Live log stream of DLQ persistence and retry-dispatcher outcomes."
     }
   ],
   "refresh": "30s",
@@ -826,6 +2619,34 @@
   ],
   "templating": {
     "list": [
+      {
+        "name": "instance",
+        "label": "Mongo Instance",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "definition": "label_values(mongodb_ss_connections{service=\"mongodb\"}, instance)",
+        "query": {
+          "query": "label_values(mongodb_ss_connections{service=\"mongodb\"}, instance)",
+          "refId": "MongoInstanceVar"
+        },
+        "refresh": 2,
+        "sort": 1,
+        "includeAll": true,
+        "multi": true,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "allValue": ".*"
+      },
       {
         "current": {
           "selected": true,
@@ -882,61 +2703,5 @@
   "timezone": "browser",
   "title": "MongoDB",
   "uid": "chrono-mongodb",
-  "version": 1,
-  "__inputs": [
-    {
-      "name": "DS_PROMETHEUS",
-      "label": "Prometheus",
-      "description": "",
-      "type": "datasource",
-      "pluginId": "prometheus",
-      "pluginName": "Prometheus"
-    },
-    {
-      "name": "DS_LOKI",
-      "label": "Loki",
-      "description": "",
-      "type": "datasource",
-      "pluginId": "loki",
-      "pluginName": "Loki"
-    }
-  ],
-  "__requires": [
-    {
-      "type": "grafana",
-      "id": "grafana",
-      "name": "Grafana",
-      "version": "10.2.3"
-    },
-    {
-      "type": "datasource",
-      "id": "prometheus",
-      "name": "Prometheus",
-      "version": "1.0.0"
-    },
-    {
-      "type": "datasource",
-      "id": "loki",
-      "name": "Loki",
-      "version": "1.0.0"
-    },
-    {
-      "type": "panel",
-      "id": "logs",
-      "name": "Logs",
-      "version": ""
-    },
-    {
-      "type": "panel",
-      "id": "stat",
-      "name": "Stat",
-      "version": ""
-    },
-    {
-      "type": "panel",
-      "id": "timeseries",
-      "name": "Time series",
-      "version": ""
-    }
-  ]
+  "version": 2
 }

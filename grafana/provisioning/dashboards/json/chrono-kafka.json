@@ -1654,6 +1654,711 @@
         "h": 1,
         "w": 24,
         "x": 0,
+        "y": 88
+      },
+      "id": 106,
+      "title": "Kafka Broker Cluster Health (JMX)",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 0.1
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "—",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 89
+      },
+      "id": 210,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "title": "Under-Replicated Partitions",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(kafka_server_replicamanager_underreplicatedpartitions) or vector(0)",
+          "legendFormat": "",
+          "refId": "A",
+          "interval": "",
+          "instant": true,
+          "editorMode": "code"
+        }
+      ],
+      "description": "Kafka broker under-replicated partitions from JMX exporter. Production threshold: > 0 is critical."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 0.1
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "—",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 89
+      },
+      "id": 211,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "title": "Offline Partitions",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "max(kafka_controller_kafkacontroller_offlinepartitionscount) or vector(0)",
+          "legendFormat": "",
+          "refId": "A",
+          "interval": "",
+          "instant": true,
+          "editorMode": "code"
+        }
+      ],
+      "description": "Kafka offline partitions from JMX exporter. Any value > 0 indicates partition availability impact."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 10
+              }
+            ]
+          },
+          "unit": "cps",
+          "noValue": "—",
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 89
+      },
+      "id": 212,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "title": "Lag Growth (10m Continuous)",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "min_over_time((sum(deriv(kafka_consumer_fetch_manager_records_lag_max{service=~\"job-worker|dlq-service\"}[5m])))[10m:1m])",
+          "legendFormat": "",
+          "refId": "A",
+          "interval": "",
+          "instant": true,
+          "editorMode": "code"
+        }
+      ],
+      "description": "If this value stays above zero, lag has been continuously increasing for the last 10 minutes."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "drawStyle": "line",
+            "spanNulls": false
+          },
+          "unit": "cps",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 89
+      },
+      "id": 213,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "ISR Shrink/Expand Rate",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(rate(kafka_server_replicamanager_isrshrinks_total[$__rate_interval])) or sum(rate(kafka_server_replicamanager_isrshrinkspersec_count[$__rate_interval])) or vector(0)",
+          "legendFormat": "ISR shrinks/s",
+          "refId": "A",
+          "interval": "",
+          "editorMode": "code"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(rate(kafka_server_replicamanager_isrexpands_total[$__rate_interval])) or sum(rate(kafka_server_replicamanager_isrexpandspersec_count[$__rate_interval])) or vector(0)",
+          "legendFormat": "ISR expands/s",
+          "refId": "B",
+          "interval": "",
+          "editorMode": "code"
+        }
+      ],
+      "description": "ISR churn from Kafka broker JMX exporter. Sustained shrink spikes often precede availability incidents."
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 97
+      },
+      "id": 107,
+      "title": "Kafka Broker Resource Usage (JMX)",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "drawStyle": "line",
+            "spanNulls": false
+          },
+          "unit": "percent",
+          "min": 0,
+          "max": 100
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 98
+      },
+      "id": 214,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "Broker CPU Usage %",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "100 * avg by (instance) (process_cpu_usage{job=~\".*kafka.*\"}) or vector(0)",
+          "legendFormat": "{{instance}}",
+          "refId": "A",
+          "interval": "",
+          "editorMode": "code"
+        }
+      ],
+      "description": "Broker JVM process CPU from JMX exporter."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "drawStyle": "line",
+            "spanNulls": false
+          },
+          "unit": "Bps",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 98
+      },
+      "id": 215,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "Broker Network Throughput",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(rate(kafka_server_brokertopicmetrics_bytesin_total[$__rate_interval])) or sum(rate(kafka_server_brokertopicmetrics_bytesinpersec_count[$__rate_interval])) or vector(0)",
+          "legendFormat": "bytes in/s",
+          "refId": "A",
+          "interval": "",
+          "editorMode": "code"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(rate(kafka_server_brokertopicmetrics_bytesout_total[$__rate_interval])) or sum(rate(kafka_server_brokertopicmetrics_bytesoutpersec_count[$__rate_interval])) or vector(0)",
+          "legendFormat": "bytes out/s",
+          "refId": "B",
+          "interval": "",
+          "editorMode": "code"
+        }
+      ],
+      "description": "Kafka broker network in/out from BrokerTopicMetrics JMX exporter counters."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "drawStyle": "line",
+            "spanNulls": false
+          },
+          "unit": "ops",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 98
+      },
+      "id": 216,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "Broker Disk Flush Throughput",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(rate(kafka_log_logflushstats_logflushrateandtimems_count[$__rate_interval])) or sum(rate(kafka_log_log_flush_rate_and_time_ms_count[$__rate_interval])) or vector(0)",
+          "legendFormat": "flush ops/s",
+          "refId": "A",
+          "interval": "",
+          "editorMode": "code"
+        }
+      ],
+      "description": "Disk flush throughput proxy from Kafka LogFlushStats JMX exporter metrics."
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 106
+      },
+      "id": 108,
+      "title": "Kafka Broker Request Latency (JMX)",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "showPoints": "never",
+            "drawStyle": "line",
+            "spanNulls": false
+          },
+          "unit": "ms",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 107
+      },
+      "id": 217,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "Produce Request Latency — p50/p90/p95/p99",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "max(kafka_network_requestmetrics_totaltimems{request=~\"Produce|produce\",quantile=~\"0.50|50thPercentile\"}) or max(kafka_network_requestmetrics_totaltimems_50thpercentile{request=~\"Produce|produce\"}) or vector(0)",
+          "legendFormat": "p50",
+          "refId": "A",
+          "interval": "",
+          "editorMode": "code"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "max(kafka_network_requestmetrics_totaltimems{request=~\"Produce|produce\",quantile=~\"0.90|90thPercentile\"}) or max(kafka_network_requestmetrics_totaltimems_90thpercentile{request=~\"Produce|produce\"}) or vector(0)",
+          "legendFormat": "p90",
+          "refId": "B",
+          "interval": "",
+          "editorMode": "code"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "max(kafka_network_requestmetrics_totaltimems{request=~\"Produce|produce\",quantile=~\"0.95|95thPercentile\"}) or max(kafka_network_requestmetrics_totaltimems_95thpercentile{request=~\"Produce|produce\"}) or vector(0)",
+          "legendFormat": "p95",
+          "refId": "C",
+          "interval": "",
+          "editorMode": "code"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "max(kafka_network_requestmetrics_totaltimems{request=~\"Produce|produce\",quantile=~\"0.99|99thPercentile\"}) or max(kafka_network_requestmetrics_totaltimems_99thpercentile{request=~\"Produce|produce\"}) or vector(0)",
+          "legendFormat": "p99",
+          "refId": "D",
+          "interval": "",
+          "editorMode": "code"
+        }
+      ],
+      "description": "Broker-side produce request latency percentiles from Kafka JMX exporter RequestMetrics."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "showPoints": "never",
+            "drawStyle": "line",
+            "spanNulls": false
+          },
+          "unit": "ms",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 107
+      },
+      "id": 218,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "Fetch Request Latency — p50/p90/p95/p99",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "max(kafka_network_requestmetrics_totaltimems{request=~\"Fetch|FetchConsumer|fetch|fetchconsumer\",quantile=~\"0.50|50thPercentile\"}) or max(kafka_network_requestmetrics_totaltimems_50thpercentile{request=~\"Fetch|FetchConsumer|fetch|fetchconsumer\"}) or vector(0)",
+          "legendFormat": "p50",
+          "refId": "A",
+          "interval": "",
+          "editorMode": "code"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "max(kafka_network_requestmetrics_totaltimems{request=~\"Fetch|FetchConsumer|fetch|fetchconsumer\",quantile=~\"0.90|90thPercentile\"}) or max(kafka_network_requestmetrics_totaltimems_90thpercentile{request=~\"Fetch|FetchConsumer|fetch|fetchconsumer\"}) or vector(0)",
+          "legendFormat": "p90",
+          "refId": "B",
+          "interval": "",
+          "editorMode": "code"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "max(kafka_network_requestmetrics_totaltimems{request=~\"Fetch|FetchConsumer|fetch|fetchconsumer\",quantile=~\"0.95|95thPercentile\"}) or max(kafka_network_requestmetrics_totaltimems_95thpercentile{request=~\"Fetch|FetchConsumer|fetch|fetchconsumer\"}) or vector(0)",
+          "legendFormat": "p95",
+          "refId": "C",
+          "interval": "",
+          "editorMode": "code"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "max(kafka_network_requestmetrics_totaltimems{request=~\"Fetch|FetchConsumer|fetch|fetchconsumer\",quantile=~\"0.99|99thPercentile\"}) or max(kafka_network_requestmetrics_totaltimems_99thpercentile{request=~\"Fetch|FetchConsumer|fetch|fetchconsumer\"}) or vector(0)",
+          "legendFormat": "p99",
+          "refId": "D",
+          "interval": "",
+          "editorMode": "code"
+        }
+      ],
+      "description": "Broker-side fetch request latency percentiles from Kafka JMX exporter RequestMetrics."
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
         "y": 113
       },
       "id": 105,
@@ -2131,7 +2836,7 @@
   "timezone": "browser",
   "title": "Kafka",
   "uid": "chrono-kafka",
-  "version": 4,
+  "version": 6,
   "__inputs": [
     {
       "name": "DS_PROMETHEUS",

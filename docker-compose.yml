@@ -24,6 +24,8 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: ${KAFKA_REPLICATION_FACTOR}
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
       KAFKA_NUM_PARTITIONS: ${KAFKA_NUM_PARTITIONS}
+      KAFKA_JMX_PORT: 9999
+      KAFKA_JMX_HOSTNAME: kafka
     networks:
       - chrono-queue-network
     healthcheck:
@@ -31,6 +33,21 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  kafka-jmx-exporter:
+    image: bitnami/jmx-exporter:0.20.0
+    container_name: kafka-jmx-exporter
+    command:
+      - "5556"
+      - "/etc/jmx-exporter/config.yml"
+    volumes:
+      - ./kafka-jmx-exporter.yml:/etc/jmx-exporter/config.yml:ro
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - chrono-queue-network
+    restart: unless-stopped
 
   redis:
     image: redis:7-alpine
@@ -219,6 +236,24 @@ services:
       timeout: 5s
       retries: 10
       start_period: 30s
+    networks:
+      - chrono-queue-network
+    restart: unless-stopped
+
+  mongodb-exporter:
+    image: percona/mongodb_exporter:0.40
+    container_name: mongodb-exporter
+    ports:
+      - "9216:9216"
+    environment:
+      MONGODB_URI: "mongodb://${MONGODB_USER}:${MONGODB_PASSWORD}@mongodb:27017/admin\
+        ?authSource=admin"
+    command:
+      - "--collect-all"
+      - "--compatible-mode"
+    depends_on:
+      mongodb:
+        condition: service_healthy
     networks:
       - chrono-queue-network
     restart: unless-stopped

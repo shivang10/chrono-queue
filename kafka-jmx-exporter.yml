@@ -1,0 +1,53 @@
+hostPort: "kafka:9999"
+startDelaySeconds: 0
+lowercaseOutputName: true
+lowercaseOutputLabelNames: true
+rules:
+  # Under-replicated partitions — canonical key order: name < type
+  - pattern: "kafka.server<name=UnderReplicatedPartitions, type=ReplicaManager><>Value"
+    name: kafka_server_replicamanager_underreplicatedpartitions
+    type: GAUGE
+
+  # Offline partitions — canonical key order: name < type
+  - pattern: "kafka.controller<name=OfflinePartitionsCount,
+      type=KafkaController><>Value"
+    name: kafka_controller_kafkacontroller_offlinepartitionscount
+    type: GAUGE
+
+  # ISR shrink/expand — canonical key order: name < type
+  - pattern: "kafka.server<name=IsrShrinksPerSec, type=ReplicaManager><>Count"
+    name: kafka_server_replicamanager_isrshrinks_total
+    type: COUNTER
+
+  - pattern: "kafka.server<name=IsrExpandsPerSec, type=ReplicaManager><>Count"
+    name: kafka_server_replicamanager_isrexpands_total
+    type: COUNTER
+
+  # Broker network throughput — canonical key order: name < type
+  - pattern: "kafka.server<name=BytesInPerSec, type=BrokerTopicMetrics><>Count"
+    name: kafka_server_brokertopicmetrics_bytesin_total
+    type: COUNTER
+
+  - pattern: "kafka.server<name=BytesOutPerSec, type=BrokerTopicMetrics><>Count"
+    name: kafka_server_brokertopicmetrics_bytesout_total
+    type: COUNTER
+
+  # Log flush throughput — canonical key order: name < type
+  - pattern: "kafka.log<name=LogFlushRateAndTimeMs, type=LogFlushStats><>Count"
+    name: kafka_log_logflushstats_logflushrateandtimems_count
+    type: COUNTER
+
+  # Request latency percentiles — canonical key order: name < request < type
+  - pattern: "kafka.network<name=TotalTimeMs, request=(.+),
+      type=RequestMetrics><>(50thPercentile|90thPercentile|95thPercentile|99thP\
+      ercentile)"
+    name: kafka_network_requestmetrics_totaltimems
+    labels:
+      request: "$1"
+      quantile: "$2"
+    type: GAUGE
+
+  # Broker JVM CPU load
+  - pattern: "java.lang<type=OperatingSystem><>ProcessCpuLoad"
+    name: process_cpu_usage
+    type: GAUGE
