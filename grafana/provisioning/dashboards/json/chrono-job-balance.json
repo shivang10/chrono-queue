@@ -71,7 +71,7 @@
       }
     ]
   },
-  "description": "Tracks whether every produced job has been fully consumed (success + DLQ). Balance should equal 0 when all jobs are accounted for.\n\nHow to use this dashboard: Start from the top Overview row to verify SLO health, then drill into throughput, latency, errors, and capacity sections to isolate bottlenecks. Use the template filters (environment, instance, topic, job type, endpoint, and command where available) to narrow scope during incidents and compare behavior across dimensions. Panel info icon meaning: Click the i icon in each panel header to see what the metric represents, how to interpret normal vs abnormal values, and what operational signal it provides.",
+  "description": "Canonical end-to-end system correctness dashboard for Chrono Queue. Proves that every job produced is fully accounted for: either successfully consumed by job-worker or persisted to the DLQ after exhausting retries. The fundamental invariant is: Produced = Consumed(success) + DLQ(persisted). Any deviation signals job loss, pipeline stall, or counter drift.\n\nHow to use: Check the Imbalance Threshold Alert (top row) first — green means balanced within tolerance. Drill into the Balance Range Totals to see absolute counts, then the Pipeline Delivery Status section to verify Kafka lag is draining. The Processing Activity section shows processing vs failure vs retry rates over time. Use the Loki cross-check row to validate Prometheus counters against log-line counts independently. Adjust the Imbalance Threshold variable to tune alert sensitivity for your SLO.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 2,
@@ -548,6 +548,167 @@
         "type": "prometheus",
         "uid": "${datasource}"
       },
+      "description": "Primary on-call signal. Fires ALERT (red) when the absolute job balance delta exceeds the configured imbalance threshold (currently ${imbalance_threshold} jobs). A threshold breach means more jobs are unaccounted for than the tolerance allows — investigate consumer lag, DLQ routing, or job-worker restarts. Tune the threshold variable to match your SLO. Green = system is balanced within tolerance.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [
+            {
+              "type": "range",
+              "options": {
+                "from": null,
+                "to": 0,
+                "result": {
+                  "color": "green",
+                  "index": 0,
+                  "text": "OK \u2713 Within tolerance"
+                }
+              }
+            },
+            {
+              "type": "range",
+              "options": {
+                "from": 1,
+                "to": null,
+                "result": {
+                  "color": "red",
+                  "index": 1,
+                  "text": "ALERT \u2717 Imbalance exceeds threshold"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 5
+      },
+      "id": 300,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "title": "Imbalance Threshold Alert (\u2265 ${imbalance_threshold} jobs)",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "clamp_min(round((sum(increase(chrono_jobs_produced_total{service=\"job-producer\"}[$__range])) or vector(0)) - (sum(increase(chrono_jobs_consumed_total{service=\"job-worker\", result=\"success\"}[$__range])) or vector(0)) - (sum(increase(chrono_jobs_dlq_total{service=\"dlq-service\"}[$__range])) or vector(0))) - ${imbalance_threshold}, 0)",
+          "legendFormat": "Threshold Breach",
+          "instant": true
+        }
+      ],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Percentage of produced jobs that were fully resolved — either processed successfully by job-worker or persisted to the DLQ after exhausting retries. Should be 100% within any complete time window. A value below 99% means jobs are still in-flight, stuck in consumer lag, or were lost. SLO target: 100% resolution rate.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 1,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 95
+              },
+              {
+                "color": "green",
+                "value": 99
+              }
+            ]
+          },
+          "unit": "percent",
+          "min": 0,
+          "max": 100
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 5
+      },
+      "id": 301,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "title": "Job Resolution Rate (SLO)",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "100 * ((sum(increase(chrono_jobs_consumed_total{service=\"job-worker\", result=\"success\"}[$__range])) or vector(0)) + (sum(increase(chrono_jobs_dlq_total{service=\"dlq-service\"}[$__range])) or vector(0))) / clamp_min((sum(increase(chrono_jobs_produced_total{service=\"job-producer\"}[$__range])) or vector(0)), 1)",
+          "legendFormat": "Resolution Rate",
+          "instant": true
+        }
+      ],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "description": "Job counts per scrape interval using increase() \u2014 shows absolute job volume trend rather than per-second rate. Produced should broadly track Consumed+DLQ'd in steady state. A persistent gap between Produced and (Consumed+DLQ) means jobs are still in-flight or stuck in Kafka lag.",
       "fieldConfig": {
         "defaults": {
@@ -759,7 +920,7 @@
         "y": 17
       },
       "id": 101,
-      "title": "Consumer Lag \u2014 Are All Kafka Records Consumed?",
+      "title": "Pipeline Delivery Status \u2014 Are All Jobs Consumed?",
       "type": "row"
     },
     {
@@ -1013,7 +1174,7 @@
         "y": 22
       },
       "id": 102,
-      "title": "Cumulative Throughput Over Time",
+      "title": "Job Flow Rate Over Time",
       "type": "row"
     },
     {
@@ -1524,6 +1685,386 @@
         }
       ],
       "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 44
+      },
+      "id": 104,
+      "title": "End-to-End Processing Activity",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "drawStyle": "line",
+            "spanNulls": false
+          },
+          "unit": "short",
+          "min": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Processed"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Failed"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 30
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "→ Retry"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 45
+      },
+      "id": 201,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "job-worker — Jobs Processed vs Failed",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "expr": "sum(count_over_time({job=\"job-worker\"} |= \"Job processed successfully\" [$__interval]))",
+          "editorMode": "code",
+          "queryType": "range",
+          "refId": "A",
+          "legendFormat": "Processed"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "expr": "sum(count_over_time({job=\"job-worker\"} |~ \"Job .* failed\" [$__interval]))",
+          "editorMode": "code",
+          "queryType": "range",
+          "refId": "B",
+          "legendFormat": "Failed"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "expr": "sum(count_over_time({job=\"job-worker\"} |= \"Job scheduled for retry\" [$__interval]))",
+          "editorMode": "code",
+          "queryType": "range",
+          "refId": "C",
+          "legendFormat": "→ Retry"
+        }
+      ],
+      "description": "Log-based rate of jobs processed, failed, and scheduled for retry by job-worker."
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "drawStyle": "line",
+            "spanNulls": false
+          },
+          "unit": "short",
+          "min": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Requeued"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Due Jobs Fetched"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "yellow",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 45
+      },
+      "id": 202,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "retry-dispatcher Requeue & Polling Rate",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "expr": "sum(count_over_time({job=\"retry-dispatcher\"} |= \"Job requeued successfully\" [$__interval]))",
+          "editorMode": "code",
+          "queryType": "range",
+          "refId": "B",
+          "legendFormat": "Requeued"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_datasource}"
+          },
+          "expr": "sum(count_over_time({job=\"retry-dispatcher\"} |= \"Polling retry queue\" [$__interval]))",
+          "editorMode": "code",
+          "queryType": "range",
+          "refId": "C",
+          "legendFormat": "Due Jobs Fetched"
+        }
+      ],
+      "description": "Log-based rate of successful requeues and retry polling by retry-dispatcher."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "drawStyle": "line",
+            "spanNulls": false
+          },
+          "unit": "cps",
+          "min": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Produced/s (job-producer)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Worker consumed/s (job-worker)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "DLQ received/s (dlq-service)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 53
+      },
+      "id": 203,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "Job Flow: Produced vs Worker Consumed vs DLQ",
+      "description": "Compares the rate of jobs published by job-producer with the rate consumed by job-worker (first attempt + retries) and the rate landing in the DLQ. A rising DLQ line or growing gap between produced and consumed indicates a problem.",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(rate(kafka_producer_record_send_total{service=\"job-producer\"}[$__rate_interval]))",
+          "legendFormat": "Produced/s (job-producer)",
+          "refId": "A",
+          "interval": "",
+          "editorMode": "code"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(rate(kafka_consumer_fetch_manager_records_consumed_total{service=\"job-worker\"}[$__rate_interval]))",
+          "legendFormat": "Worker consumed/s (job-worker)",
+          "refId": "B",
+          "interval": "",
+          "editorMode": "code"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(rate(kafka_consumer_fetch_manager_records_consumed_total{service=\"dlq-service\"}[$__rate_interval]))",
+          "legendFormat": "DLQ received/s (dlq-service)",
+          "refId": "C",
+          "interval": "",
+          "editorMode": "code"
+        }
+      ]
     }
   ],
   "refresh": "30s",
@@ -1532,7 +2073,8 @@
     "chrono-queue",
     "jobs",
     "balance",
-    "kafka",
+    "correctness",
+    "slo",
     "monitoring"
   ],
   "templating": {
@@ -1564,6 +2106,47 @@
         "skipUrlSync": false,
         "sort": 1,
         "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "10",
+          "value": "10"
+        },
+        "description": "Minimum absolute job delta that triggers the Imbalance Threshold Alert panel. Lower values catch small losses early; higher values reduce noise during normal in-flight lag.",
+        "hide": 0,
+        "label": "Imbalance Threshold (jobs)",
+        "name": "imbalance_threshold",
+        "options": [
+          {
+            "selected": false,
+            "text": "5",
+            "value": "5"
+          },
+          {
+            "selected": true,
+            "text": "10",
+            "value": "10"
+          },
+          {
+            "selected": false,
+            "text": "25",
+            "value": "25"
+          },
+          {
+            "selected": false,
+            "text": "50",
+            "value": "50"
+          },
+          {
+            "selected": false,
+            "text": "100",
+            "value": "100"
+          }
+        ],
+        "query": "5,10,25,50,100",
+        "skipUrlSync": false,
+        "type": "custom"
       }
     ]
   },
@@ -1592,7 +2175,7 @@
     ]
   },
   "timezone": "browser",
-  "title": "Job Balance",
+  "title": "Chrono Queue — End-to-End System Correctness",
   "uid": "chrono-job-balance",
-  "version": 4
+  "version": 5
 }

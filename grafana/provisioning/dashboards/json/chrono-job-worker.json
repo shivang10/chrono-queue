@@ -93,6 +93,75 @@
                 "type": "prometheus",
                 "uid": "${datasource}"
             },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "orange",
+                                "value": null
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 300
+                            },
+                            {
+                                "color": "green",
+                                "value": 3600
+                            }
+                        ]
+                    },
+                    "unit": "dtdurations",
+                    "noValue": "N/A"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 4,
+                "x": 0,
+                "y": 5
+            },
+            "id": 46,
+            "options": {
+                "colorMode": "background",
+                "graphMode": "none",
+                "justifyMode": "center",
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "textMode": "auto"
+            },
+            "title": "job-worker Uptime",
+            "type": "stat",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "${datasource}"
+                    },
+                    "expr": "max(process_uptime_seconds{service=\"job-worker\", env=~\"$env\"})",
+                    "legendFormat": "",
+                    "refId": "A",
+                    "interval": ""
+                }
+            ],
+            "description": "job-worker process uptime. Orange < 5 min (recently restarted), yellow < 1 h, green ≥ 1 h."
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
             "description": "Successful jobs over selected time range.",
             "fieldConfig": {
                 "defaults": {

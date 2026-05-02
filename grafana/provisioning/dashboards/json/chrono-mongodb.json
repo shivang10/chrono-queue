@@ -2571,44 +2571,6 @@
         }
       ],
       "description": "Log-derived DLQ persistence activity. Persist Failed in red — any sustained non-zero value means data loss risk."
-    },
-    {
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "gridPos": {
-        "h": 10,
-        "w": 24,
-        "x": 0,
-        "y": 101
-      },
-      "id": 71,
-      "options": {
-        "dedupStrategy": "none",
-        "enableLogDetails": true,
-        "prettifyLogMessage": false,
-        "showTime": true,
-        "wrapLogMessage": true,
-        "showCommonLabels": false,
-        "showLabels": false,
-        "sortOrder": "Descending"
-      },
-      "title": "MongoDB/DLQ Activity Logs",
-      "type": "logs",
-      "targets": [
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "{job=~\"dlq|retry-dispatcher\"} |~ \"(DLQ job persisted|Failed job persisted|Failed to persist DLQ|Job requeued successfully|Failed to requeue)\"",
-          "editorMode": "code",
-          "queryType": "range",
-          "refId": "A"
-        }
-      ],
-      "description": "Live log stream of DLQ persistence and retry-dispatcher outcomes."
     }
   ],
   "refresh": "30s",
