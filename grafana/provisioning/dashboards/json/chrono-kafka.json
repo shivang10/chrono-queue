@@ -15,7 +15,7 @@
       }
     ]
   },
-  "description": "Production Kafka observability dashboard for chrono-queue. Covers consumer lag and throughput, listener latency, producer performance and error ratio, retry flow activity, and Kafka-centric logs for incident response.",
+  "description": "Production Kafka infrastructure observability dashboard for chrono-queue. Covers cluster health, consumer lag and throughput, producer reliability and latency, and broker resource/performance signals.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 2,
@@ -43,13 +43,13 @@
         "y": 0
       },
       "id": 100,
-      "title": "Kafka Overview",
+      "title": "Cluster Health",
       "type": "row"
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -106,9 +106,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "max(kafka_consumer_fetch_manager_records_lag_max{service=\"job-worker\"})",
+          "expr": "max(max by (service, topic, partition) (kafka_consumer_fetch_manager_records_lag_max{service=~\"${worker_service:regex}|${dlq_service:regex}\"})) or vector(0)",
           "legendFormat": "",
           "refId": "A",
           "interval": "",
@@ -116,12 +116,12 @@
           "editorMode": "code"
         }
       ],
-      "description": "Maximum consumer lag across all partitions for job-worker."
+      "description": "Maximum consumer lag across topic+partition for selected consumer services."
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -132,14 +132,18 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "blue",
+                "color": "green",
                 "value": null
+              },
+              {
+                "color": "red",
+                "value": 0.1
               }
             ]
           },
-          "unit": "cps",
+          "unit": "short",
           "noValue": "—",
-          "decimals": 1
+          "decimals": 0
         },
         "overrides": []
       },
@@ -164,15 +168,15 @@
         },
         "textMode": "auto"
       },
-      "title": "Records Consumed/s (job-worker)",
+      "title": "Under-Replicated Partitions",
       "type": "stat",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "sum(rate(kafka_consumer_fetch_manager_records_consumed_total{service=\"job-worker\"}[$__rate_interval]))",
+          "expr": "sum(kafka_server_replicamanager_underreplicatedpartitions) or vector(0)",
           "legendFormat": "",
           "refId": "A",
           "interval": "",
@@ -180,12 +184,12 @@
           "editorMode": "code"
         }
       ],
-      "description": "Current record consumption rate for job-worker."
+      "description": "Kafka broker under-replicated partitions. Any value > 0 is critical."
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -196,14 +200,18 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "blue",
+                "color": "green",
                 "value": null
+              },
+              {
+                "color": "red",
+                "value": 0.1
               }
             ]
           },
-          "unit": "cps",
+          "unit": "short",
           "noValue": "—",
-          "decimals": 1
+          "decimals": 0
         },
         "overrides": []
       },
@@ -228,15 +236,15 @@
         },
         "textMode": "auto"
       },
-      "title": "Records Produced/s (job-producer)",
+      "title": "Offline Partitions",
       "type": "stat",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "sum(rate(kafka_producer_record_send_total{service=\"job-producer\"}[$__rate_interval]))",
+          "expr": "max(kafka_controller_kafkacontroller_offlinepartitionscount) or vector(0)",
           "legendFormat": "",
           "refId": "A",
           "interval": "",
@@ -244,12 +252,12 @@
           "editorMode": "code"
         }
       ],
-      "description": "Current record production rate for job-producer."
+      "description": "Kafka offline partitions. Any value > 0 indicates availability impact."
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -264,18 +272,14 @@
                 "value": null
               },
               {
-                "color": "yellow",
-                "value": 1
-              },
-              {
                 "color": "red",
-                "value": 3
+                "value": 0.1
               }
             ]
           },
-          "unit": "s",
+          "unit": "cps",
           "noValue": "—",
-          "decimals": 3
+          "decimals": 2
         },
         "overrides": []
       },
@@ -300,15 +304,15 @@
         },
         "textMode": "auto"
       },
-      "title": "Kafka Listener p99 (job-worker)",
+      "title": "ISR Shrink/s",
       "type": "stat",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.99, sum by (le) (rate(spring_kafka_listener_seconds_bucket{service=\"job-worker\"}[$__rate_interval])))",
+          "expr": "sum(rate(kafka_server_replicamanager_isrshrinks_total[$__rate_interval])) or sum(rate(kafka_server_replicamanager_isrshrinkspersec_count[$__rate_interval])) or vector(0)",
           "legendFormat": "",
           "refId": "A",
           "interval": "",
@@ -316,12 +320,12 @@
           "editorMode": "code"
         }
       ],
-      "description": "99th percentile Spring Kafka listener processing latency for job-worker."
+      "description": "ISR shrink rate from broker JMX. Sustained non-zero indicates replication instability."
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -364,22 +368,22 @@
           "sort": "desc"
         }
       },
-      "title": "Kafka Lag Trend",
+      "title": "Kafka Lag Trend (All Consumers)",
       "type": "timeseries",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "max(kafka_consumer_fetch_manager_records_lag_max{service=~\"$app\"})",
+          "expr": "sum(max by (service, topic, partition) (deriv(kafka_consumer_fetch_manager_records_lag_max{service=~\"${worker_service:regex}|${dlq_service:regex}\"}[10m]))) or vector(0)",
           "legendFormat": "max lag",
           "refId": "A",
           "interval": "",
           "editorMode": "code"
         }
       ],
-      "description": "Trend of the maximum Kafka consumer lag across the selected applications."
+      "description": "Lag trend slope across consumer services. Positive values indicate backlog growth; negative values indicate recovery."
     },
     {
       "collapsed": false,
@@ -390,13 +394,13 @@
         "y": 13
       },
       "id": 101,
-      "title": "Kafka Consumer (job-worker)",
+      "title": "Consumer",
       "type": "row"
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -444,9 +448,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "sum by (topic) (rate(kafka_consumer_fetch_manager_records_consumed_total{service=\"job-worker\"}[$__rate_interval]))",
+          "expr": "sum by (topic) (rate(kafka_consumer_fetch_manager_records_consumed_total{service=~\"${worker_service:regex}\"}[$__rate_interval]))",
           "legendFormat": "{{topic}}",
           "refId": "A",
           "interval": "",
@@ -458,7 +462,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -506,9 +510,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "sum by (topic) (kafka_consumer_fetch_manager_records_lag{service=\"job-worker\"})",
+          "expr": "sum by (topic) (kafka_consumer_fetch_manager_records_lag{service=~\"${worker_service:regex}|${dlq_service:regex}\"})",
           "legendFormat": "lag {{topic}}",
           "refId": "A",
           "interval": "",
@@ -517,21 +521,21 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "sum by (topic) (kafka_consumer_fetch_manager_records_lag_max{service=\"job-worker\"})",
+          "expr": "sum by (topic) (kafka_consumer_fetch_manager_records_lag_max{service=~\"${worker_service:regex}|${dlq_service:regex}\"})",
           "legendFormat": "lag_max {{topic}}",
           "refId": "B",
           "interval": "",
           "editorMode": "code"
         }
       ],
-      "description": "Consumer lag (current and max) by topic for job-worker. Rising lag indicates consumers falling behind."
+      "description": "Consumer lag (current and max) by topic across selected consumer services. Rising lag indicates consumers falling behind."
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -573,27 +577,27 @@
           "sort": "desc"
         }
       },
-      "title": "Kafka Consumer Bytes Consumed Rate (job-worker)",
+      "title": "Consumer Lag by Topic + Partition (Top 25)",
       "type": "timeseries",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "sum by (topic) (rate(kafka_consumer_fetch_manager_bytes_consumed_total{service=\"job-worker\"}[$__rate_interval]))",
-          "legendFormat": "{{topic}}",
+          "expr": "topk(25, max by (service, topic, partition) (kafka_consumer_fetch_manager_records_lag_max{service=~\"${worker_service:regex}|${dlq_service:regex}\"}))",
+          "legendFormat": "{{service}} {{topic}} p{{partition}}",
           "refId": "A",
           "interval": "",
           "editorMode": "code"
         }
       ],
-      "description": "Bytes consumed per second by topic for job-worker."
+      "description": "Partition-level lag visibility for actionable hotspot detection."
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -641,9 +645,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "sum by (topic) (rate(kafka_consumer_fetch_manager_records_consumed_total{service=\"dlq-service\"}[$__rate_interval]))",
+          "expr": "sum by (topic) (rate(kafka_consumer_fetch_manager_records_consumed_total{service=~\"${dlq_service:regex}\"}[$__rate_interval]))",
           "legendFormat": "{{topic}}",
           "refId": "A",
           "interval": "",
@@ -655,7 +659,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -703,9 +707,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "sum by (topic) (kafka_consumer_fetch_manager_records_lag{service=\"dlq-service\"})",
+          "expr": "sum by (topic) (kafka_consumer_fetch_manager_records_lag{service=~\"${dlq_service:regex}\"})",
           "legendFormat": "lag {{topic}}",
           "refId": "A",
           "interval": "",
@@ -714,9 +718,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "sum by (topic) (kafka_consumer_fetch_manager_records_lag_max{service=\"dlq-service\"})",
+          "expr": "sum by (topic) (kafka_consumer_fetch_manager_records_lag_max{service=~\"${dlq_service:regex}\"})",
           "legendFormat": "lag_max {{topic}}",
           "refId": "B",
           "interval": "",
@@ -728,7 +732,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -776,9 +780,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "sum by (service) (rate(kafka_consumer_fetch_manager_records_consumed_total{service=~\"job-worker|dlq-service\"}[$__rate_interval]))",
+          "expr": "sum by (service) (rate(kafka_consumer_fetch_manager_records_consumed_total{service=~\"${worker_service:regex}|${dlq_service:regex}\"}[$__rate_interval]))",
           "legendFormat": "{{service}}",
           "refId": "A",
           "interval": "",
@@ -790,7 +794,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -862,9 +866,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "sum by (service, topic) (deriv(kafka_consumer_fetch_manager_records_lag_max{service=\"job-worker\"}[$__rate_interval]))",
+          "expr": "sum by (service, topic) (deriv(kafka_consumer_fetch_manager_records_lag_max{service=~\"${worker_service:regex}\"}[$__rate_interval]))",
           "legendFormat": "job-worker / {{topic}}",
           "refId": "A",
           "interval": "",
@@ -873,9 +877,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "sum by (service, topic) (deriv(kafka_consumer_fetch_manager_records_lag_max{service=\"dlq-service\"}[$__rate_interval]))",
+          "expr": "sum by (service, topic) (deriv(kafka_consumer_fetch_manager_records_lag_max{service=~\"${dlq_service:regex}\"}[$__rate_interval]))",
           "legendFormat": "dlq-service / {{topic}}",
           "refId": "B",
           "interval": "",
@@ -887,21 +891,9 @@
       "description": "Rate of change of consumer lag (deriv of lag_max). Positive → lag growing (consumers falling behind). Negative → lag shrinking (consumers catching up). Near-zero → stable. Alerts should fire when this stays positive for >2 min."
     },
     {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 38
-      },
-      "id": 102,
-      "title": "Kafka Consume-to-Process Latency (Spring Listener)",
-      "type": "row"
-    },
-    {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -949,9 +941,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.50, sum by (le) (clamp_min(rate(spring_kafka_listener_seconds_bucket{service=\"job-worker\"}[$__rate_interval]), 0)))",
+          "expr": "histogram_quantile(0.50, sum by (le) (clamp_min(rate(spring_kafka_listener_seconds_bucket{service=~\"${worker_service:regex}\"}[$__rate_interval]), 0)))",
           "legendFormat": "p50",
           "refId": "A",
           "interval": "",
@@ -960,9 +952,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.90, sum by (le) (clamp_min(rate(spring_kafka_listener_seconds_bucket{service=\"job-worker\"}[$__rate_interval]), 0)))",
+          "expr": "histogram_quantile(0.90, sum by (le) (clamp_min(rate(spring_kafka_listener_seconds_bucket{service=~\"${worker_service:regex}\"}[$__rate_interval]), 0)))",
           "legendFormat": "p90",
           "refId": "B",
           "interval": "",
@@ -971,9 +963,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.95, sum by (le) (clamp_min(rate(spring_kafka_listener_seconds_bucket{service=\"job-worker\"}[$__rate_interval]), 0)))",
+          "expr": "histogram_quantile(0.95, sum by (le) (clamp_min(rate(spring_kafka_listener_seconds_bucket{service=~\"${worker_service:regex}\"}[$__rate_interval]), 0)))",
           "legendFormat": "p95",
           "refId": "C",
           "interval": "",
@@ -982,9 +974,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(spring_kafka_listener_seconds_bucket{service=\"job-worker\"}[$__rate_interval]), 0)))",
+          "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(spring_kafka_listener_seconds_bucket{service=~\"${worker_service:regex}\"}[$__rate_interval]), 0)))",
           "legendFormat": "p99",
           "refId": "D",
           "interval": "",
@@ -996,7 +988,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1044,9 +1036,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.50, sum by (le) (rate(spring_kafka_listener_seconds_bucket{service=\"dlq-service\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(spring_kafka_listener_seconds_bucket{service=~\"${dlq_service:regex}\"}[$__rate_interval])))",
           "legendFormat": "p50",
           "refId": "A",
           "interval": "",
@@ -1055,9 +1047,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.90, sum by (le) (rate(spring_kafka_listener_seconds_bucket{service=\"dlq-service\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.90, sum by (le) (rate(spring_kafka_listener_seconds_bucket{service=~\"${dlq_service:regex}\"}[$__rate_interval])))",
           "legendFormat": "p90",
           "refId": "B",
           "interval": "",
@@ -1066,9 +1058,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(spring_kafka_listener_seconds_bucket{service=\"dlq-service\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(spring_kafka_listener_seconds_bucket{service=~\"${dlq_service:regex}\"}[$__rate_interval])))",
           "legendFormat": "p95",
           "refId": "C",
           "interval": "",
@@ -1077,9 +1069,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.99, sum by (le) (rate(spring_kafka_listener_seconds_bucket{service=\"dlq-service\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(spring_kafka_listener_seconds_bucket{service=~\"${dlq_service:regex}\"}[$__rate_interval])))",
           "legendFormat": "p99",
           "refId": "D",
           "interval": "",
@@ -1091,7 +1083,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1139,9 +1131,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "sum(rate(spring_kafka_listener_seconds_count{service=\"job-worker\"}[$__rate_interval]))",
+          "expr": "sum(rate(spring_kafka_listener_seconds_count{service=~\"${worker_service:regex}\"}[$__rate_interval]))",
           "legendFormat": "processed/s",
           "refId": "A",
           "interval": "",
@@ -1153,7 +1145,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1201,9 +1193,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "sum by (service) (rate(spring_kafka_listener_seconds_sum{service=~\"job-worker|dlq-service\"}[$__rate_interval])) / clamp_min(sum by (service) (rate(spring_kafka_listener_seconds_count{service=~\"job-worker|dlq-service\"}[$__rate_interval])), 1e-9)",
+          "expr": "sum by (service) (rate(spring_kafka_listener_seconds_sum{service=~\"${worker_service:regex}|${dlq_service:regex}\"}[$__rate_interval])) / clamp_min(sum by (service) (rate(spring_kafka_listener_seconds_count{service=~\"${worker_service:regex}|${dlq_service:regex}\"}[$__rate_interval])), 1e-9)",
           "legendFormat": "{{service}}",
           "refId": "A",
           "interval": "",
@@ -1221,13 +1213,13 @@
         "y": 63
       },
       "id": 103,
-      "title": "Kafka Producer (job-producer & retry-dispatcher)",
+      "title": "Producer",
       "type": "row"
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1275,9 +1267,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "sum by (service) (rate(kafka_producer_record_send_total{service=~\"job-producer|retry-dispatcher\"}[$__rate_interval]))",
+          "expr": "sum by (service) (rate(kafka_producer_record_send_total{service=~\"${producer_service:regex}|${retry_service:regex}\"}[$__rate_interval]))",
           "legendFormat": "{{service}}",
           "refId": "A",
           "interval": "",
@@ -1289,7 +1281,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1331,27 +1323,27 @@
           "sort": "desc"
         }
       },
-      "title": "Kafka Producer Request Latency avg (ms)",
+      "title": "Producer Request Latency p99",
       "type": "timeseries",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "kafka_producer_request_latency_avg{service=~\"job-producer|retry-dispatcher\"}",
-          "legendFormat": "{{service}} {{client_id}}",
+          "expr": "histogram_quantile(0.99, sum by (le, service) (clamp_min(rate(spring_kafka_template_seconds_bucket{service=~\"${producer_service:regex}|${retry_service:regex}\"}[$__rate_interval]), 0)))",
+          "legendFormat": "{{service}} p99",
           "refId": "A",
           "interval": "",
           "editorMode": "code"
         }
       ],
-      "description": "Average Kafka producer request latency for job-producer and retry-dispatcher."
+      "description": "p99 producer request/send latency by service."
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1399,9 +1391,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "sum by (service) (rate(kafka_producer_record_error_total{service=~\"job-producer|retry-dispatcher\"}[$__rate_interval]))",
+          "expr": "sum by (service) (rate(kafka_producer_record_error_total{service=~\"${producer_service:regex}|${retry_service:regex}\"}[$__rate_interval]))",
           "legendFormat": "{{service}}",
           "refId": "A",
           "interval": "",
@@ -1413,7 +1405,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1480,7 +1472,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "sum(rate(kafka_producer_record_error_total[$__rate_interval])) / clamp_min(sum(rate(kafka_producer_record_send_total[$__rate_interval])), 1e-9)",
           "legendFormat": "producer error ratio",
@@ -1494,7 +1486,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1542,9 +1534,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.50, sum by (le) (clamp_min(rate(spring_kafka_template_seconds_bucket{service=\"retry-dispatcher\"}[$__rate_interval]), 0)))",
+          "expr": "histogram_quantile(0.50, sum by (le) (clamp_min(rate(spring_kafka_template_seconds_bucket{service=~\"${retry_service:regex}\"}[$__rate_interval]), 0)))",
           "legendFormat": "p50",
           "refId": "A",
           "interval": "",
@@ -1553,9 +1545,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.90, sum by (le) (clamp_min(rate(spring_kafka_template_seconds_bucket{service=\"retry-dispatcher\"}[$__rate_interval]), 0)))",
+          "expr": "histogram_quantile(0.90, sum by (le) (clamp_min(rate(spring_kafka_template_seconds_bucket{service=~\"${retry_service:regex}\"}[$__rate_interval]), 0)))",
           "legendFormat": "p90",
           "refId": "B",
           "interval": "",
@@ -1564,9 +1556,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.95, sum by (le) (clamp_min(rate(spring_kafka_template_seconds_bucket{service=\"retry-dispatcher\"}[$__rate_interval]), 0)))",
+          "expr": "histogram_quantile(0.95, sum by (le) (clamp_min(rate(spring_kafka_template_seconds_bucket{service=~\"${retry_service:regex}\"}[$__rate_interval]), 0)))",
           "legendFormat": "p95",
           "refId": "C",
           "interval": "",
@@ -1575,9 +1567,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(spring_kafka_template_seconds_bucket{service=\"retry-dispatcher\"}[$__rate_interval]), 0)))",
+          "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(spring_kafka_template_seconds_bucket{service=~\"${retry_service:regex}\"}[$__rate_interval]), 0)))",
           "legendFormat": "p99",
           "refId": "D",
           "interval": "",
@@ -1589,7 +1581,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1631,22 +1623,22 @@
           "sort": "desc"
         }
       },
-      "title": "Kafka Consumer Bytes Consumed Rate — All Services",
+      "title": "Producer Send Throughput — All Producers",
       "type": "timeseries",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "sum by (service) (rate(kafka_consumer_fetch_manager_bytes_consumed_total{service=~\"job-worker|dlq-service\"}[$__rate_interval]))",
+          "expr": "sum by (service) (rate(kafka_producer_record_send_total{service=~\"${producer_service:regex}|${retry_service:regex}\"}[$__rate_interval]))",
           "legendFormat": "{{service}}",
           "refId": "A",
           "interval": "",
           "editorMode": "code"
         }
       ],
-      "description": "Bytes consumed per second by application across all Kafka consumer services."
+      "description": "Producer send throughput by service."
     },
     {
       "collapsed": false,
@@ -1657,13 +1649,13 @@
         "y": 88
       },
       "id": 106,
-      "title": "Kafka Broker Cluster Health (JMX)",
+      "title": "Broker",
       "type": "row"
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1716,7 +1708,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "sum(kafka_server_replicamanager_underreplicatedpartitions) or vector(0)",
           "legendFormat": "",
@@ -1731,7 +1723,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1784,7 +1776,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "max(kafka_controller_kafkacontroller_offlinepartitionscount) or vector(0)",
           "legendFormat": "",
@@ -1799,7 +1791,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1850,15 +1842,15 @@
         },
         "textMode": "auto"
       },
-      "title": "Lag Growth (10m Continuous)",
+      "title": "Lag Growth (Window Continuous)",
       "type": "stat",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "min_over_time((sum(deriv(kafka_consumer_fetch_manager_records_lag_max{service=~\"job-worker|dlq-service\"}[5m])))[10m:1m])",
+          "expr": "min_over_time((sum(deriv(kafka_consumer_fetch_manager_records_lag_max{service=~\"${worker_service:regex}|${dlq_service:regex}\"}[$__rate_interval])))[$__range:$__interval])",
           "legendFormat": "",
           "refId": "A",
           "interval": "",
@@ -1866,12 +1858,12 @@
           "editorMode": "code"
         }
       ],
-      "description": "If this value stays above zero, lag has been continuously increasing for the last 10 minutes."
+      "description": "If this value stays above zero, lag has remained continuously increasing across the selected dashboard window."
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1919,7 +1911,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "sum(rate(kafka_server_replicamanager_isrshrinks_total[$__rate_interval])) or sum(rate(kafka_server_replicamanager_isrshrinkspersec_count[$__rate_interval])) or vector(0)",
           "legendFormat": "ISR shrinks/s",
@@ -1930,7 +1922,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "sum(rate(kafka_server_replicamanager_isrexpands_total[$__rate_interval])) or sum(rate(kafka_server_replicamanager_isrexpandspersec_count[$__rate_interval])) or vector(0)",
           "legendFormat": "ISR expands/s",
@@ -1942,21 +1934,9 @@
       "description": "ISR churn from Kafka broker JMX exporter. Sustained shrink spikes often precede availability incidents."
     },
     {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 97
-      },
-      "id": 107,
-      "title": "Kafka Broker Resource Usage (JMX)",
-      "type": "row"
-    },
-    {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -2005,9 +1985,9 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
-          "expr": "100 * avg by (instance) (process_cpu_usage{job=~\".*kafka.*\"}) or vector(0)",
+          "expr": "100 * avg by (instance) (process_cpu_usage{job=~\"${kafka_broker_job:regex}\"}) or vector(0)",
           "legendFormat": "{{instance}}",
           "refId": "A",
           "interval": "",
@@ -2019,7 +1999,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -2067,7 +2047,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "sum(rate(kafka_server_brokertopicmetrics_bytesin_total[$__rate_interval])) or sum(rate(kafka_server_brokertopicmetrics_bytesinpersec_count[$__rate_interval])) or vector(0)",
           "legendFormat": "bytes in/s",
@@ -2078,7 +2058,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "sum(rate(kafka_server_brokertopicmetrics_bytesout_total[$__rate_interval])) or sum(rate(kafka_server_brokertopicmetrics_bytesoutpersec_count[$__rate_interval])) or vector(0)",
           "legendFormat": "bytes out/s",
@@ -2092,7 +2072,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -2140,7 +2120,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "sum(rate(kafka_log_logflushstats_logflushrateandtimems_count[$__rate_interval])) or sum(rate(kafka_log_log_flush_rate_and_time_ms_count[$__rate_interval])) or vector(0)",
           "legendFormat": "flush ops/s",
@@ -2152,21 +2132,9 @@
       "description": "Disk flush throughput proxy from Kafka LogFlushStats JMX exporter metrics."
     },
     {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 106
-      },
-      "id": 108,
-      "title": "Kafka Broker Request Latency (JMX)",
-      "type": "row"
-    },
-    {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -2208,60 +2176,27 @@
           "sort": "desc"
         }
       },
-      "title": "Produce Request Latency — p50/p90/p95/p99",
+      "title": "Broker Produce Request Latency — p99",
       "type": "timeseries",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "max(kafka_network_requestmetrics_totaltimems{request=~\"Produce|produce\",quantile=~\"0.50|50thPercentile\"}) or max(kafka_network_requestmetrics_totaltimems_50thpercentile{request=~\"Produce|produce\"}) or vector(0)",
-          "legendFormat": "p50",
-          "refId": "A",
-          "interval": "",
-          "editorMode": "code"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "max(kafka_network_requestmetrics_totaltimems{request=~\"Produce|produce\",quantile=~\"0.90|90thPercentile\"}) or max(kafka_network_requestmetrics_totaltimems_90thpercentile{request=~\"Produce|produce\"}) or vector(0)",
-          "legendFormat": "p90",
-          "refId": "B",
-          "interval": "",
-          "editorMode": "code"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "max(kafka_network_requestmetrics_totaltimems{request=~\"Produce|produce\",quantile=~\"0.95|95thPercentile\"}) or max(kafka_network_requestmetrics_totaltimems_95thpercentile{request=~\"Produce|produce\"}) or vector(0)",
-          "legendFormat": "p95",
-          "refId": "C",
-          "interval": "",
-          "editorMode": "code"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "max(kafka_network_requestmetrics_totaltimems{request=~\"Produce|produce\",quantile=~\"0.99|99thPercentile\"}) or max(kafka_network_requestmetrics_totaltimems_99thpercentile{request=~\"Produce|produce\"}) or vector(0)",
-          "legendFormat": "p99",
-          "refId": "D",
+          "legendFormat": "produce p99",
+          "refId": "A",
           "interval": "",
           "editorMode": "code"
         }
       ],
-      "description": "Broker-side produce request latency percentiles from Kafka JMX exporter RequestMetrics."
+      "description": "Broker-side produce request latency p99 from Kafka JMX RequestMetrics."
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "prometheus"
+        "uid": "${datasource}"
       },
       "fieldConfig": {
         "defaults": {
@@ -2303,55 +2238,22 @@
           "sort": "desc"
         }
       },
-      "title": "Fetch Request Latency — p50/p90/p95/p99",
+      "title": "Broker Fetch Request Latency — p99",
       "type": "timeseries",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "max(kafka_network_requestmetrics_totaltimems{request=~\"Fetch|FetchConsumer|fetch|fetchconsumer\",quantile=~\"0.50|50thPercentile\"}) or max(kafka_network_requestmetrics_totaltimems_50thpercentile{request=~\"Fetch|FetchConsumer|fetch|fetchconsumer\"}) or vector(0)",
-          "legendFormat": "p50",
-          "refId": "A",
-          "interval": "",
-          "editorMode": "code"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "max(kafka_network_requestmetrics_totaltimems{request=~\"Fetch|FetchConsumer|fetch|fetchconsumer\",quantile=~\"0.90|90thPercentile\"}) or max(kafka_network_requestmetrics_totaltimems_90thpercentile{request=~\"Fetch|FetchConsumer|fetch|fetchconsumer\"}) or vector(0)",
-          "legendFormat": "p90",
-          "refId": "B",
-          "interval": "",
-          "editorMode": "code"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "max(kafka_network_requestmetrics_totaltimems{request=~\"Fetch|FetchConsumer|fetch|fetchconsumer\",quantile=~\"0.95|95thPercentile\"}) or max(kafka_network_requestmetrics_totaltimems_95thpercentile{request=~\"Fetch|FetchConsumer|fetch|fetchconsumer\"}) or vector(0)",
-          "legendFormat": "p95",
-          "refId": "C",
-          "interval": "",
-          "editorMode": "code"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "uid": "${datasource}"
           },
           "expr": "max(kafka_network_requestmetrics_totaltimems{request=~\"Fetch|FetchConsumer|fetch|fetchconsumer\",quantile=~\"0.99|99thPercentile\"}) or max(kafka_network_requestmetrics_totaltimems_99thpercentile{request=~\"Fetch|FetchConsumer|fetch|fetchconsumer\"}) or vector(0)",
-          "legendFormat": "p99",
-          "refId": "D",
+          "legendFormat": "fetch p99",
+          "refId": "A",
           "interval": "",
           "editorMode": "code"
         }
       ],
-      "description": "Broker-side fetch request latency percentiles from Kafka JMX exporter RequestMetrics."
+      "description": "Broker-side fetch request latency p99 from Kafka JMX RequestMetrics."
     }
   ],
   "refresh": "30s",
@@ -2363,6 +2265,121 @@
   "templating": {
     "list": [
       {
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "label": "Prometheus",
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "datasource"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "job-worker",
+          "value": "job-worker"
+        },
+        "definition": "label_values(kafka_consumer_fetch_manager_records_consumed_total, service)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Worker Service",
+        "multi": false,
+        "name": "worker_service",
+        "options": [],
+        "query": "label_values(kafka_consumer_fetch_manager_records_consumed_total, service)",
+        "refresh": 2,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "definition": "label_values(process_cpu_usage, job)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Kafka Broker Job",
+        "multi": true,
+        "name": "kafka_broker_job",
+        "options": [],
+        "query": "label_values(process_cpu_usage, job)",
+        "refresh": 2,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "dlq-service",
+          "value": "dlq-service"
+        },
+        "definition": "label_values(kafka_consumer_fetch_manager_records_consumed_total, service)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "DLQ Service",
+        "multi": false,
+        "name": "dlq_service",
+        "options": [],
+        "query": "label_values(kafka_consumer_fetch_manager_records_consumed_total, service)",
+        "refresh": 2,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "job-producer",
+          "value": "job-producer"
+        },
+        "definition": "label_values(kafka_producer_record_send_total, service)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Producer Service",
+        "multi": false,
+        "name": "producer_service",
+        "options": [],
+        "query": "label_values(kafka_producer_record_send_total, service)",
+        "refresh": 2,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "retry-dispatcher",
+          "value": "retry-dispatcher"
+        },
+        "definition": "label_values(kafka_producer_record_send_total, service)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Retry Service",
+        "multi": false,
+        "name": "retry_service",
+        "options": [],
+        "query": "label_values(kafka_producer_record_send_total, service)",
+        "refresh": 2,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
         "current": {
           "selected": true,
           "text": [
@@ -2377,12 +2394,12 @@
         "multi": true,
         "name": "app",
         "options": [],
-        "query": "job-producer,job-worker,dlq-service,retry-dispatcher",
-        "queryValue": "",
+        "query": "label_values(up, service)",
+        "definition": "label_values(up, service)",
+        "refresh": 2,
         "skipUrlSync": false,
-        "type": "custom",
-        "label": "Service",
-        "allValue": ".*"
+        "type": "query",
+        "label": "Service"
       }
     ]
   },
@@ -2427,14 +2444,6 @@
       "type": "datasource",
       "pluginId": "prometheus",
       "pluginName": "Prometheus"
-    },
-    {
-      "name": "DS_LOKI",
-      "label": "Loki",
-      "description": "",
-      "type": "datasource",
-      "pluginId": "loki",
-      "pluginName": "Loki"
     }
   ],
   "__requires": [
@@ -2449,18 +2458,6 @@
       "id": "prometheus",
       "name": "Prometheus",
       "version": "1.0.0"
-    },
-    {
-      "type": "datasource",
-      "id": "loki",
-      "name": "Loki",
-      "version": "1.0.0"
-    },
-    {
-      "type": "panel",
-      "id": "logs",
-      "name": "Logs",
-      "version": ""
     },
     {
       "type": "panel",

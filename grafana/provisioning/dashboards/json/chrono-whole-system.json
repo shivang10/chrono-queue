@@ -15,7 +15,7 @@
             }
         ]
     },
-    "description": "System-wide observability dashboard for JVM, CPU, and process resource health across chrono-queue services. Split from service-latency to keep service-level and system-level concerns separate.",
+    "description": "System-wide observability dashboard for JVM, CPU, and process resource health across chrono-queue services. Includes saturation and alert-signal panels for CPU, memory pressure, GC pause, thread anomalies, file descriptor usage, and restarts.",
     "editable": true,
     "fiscalYearStartMonth": 0,
     "graphTooltip": 2,
@@ -100,7 +100,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "sum by (service) (jvm_memory_used_bytes{service=~\"$service\", area=\"heap\", instance=~\"$instance\", env=~\"$env\"})",
+                    "expr": "sum by (service) (jvm_memory_used_bytes{service=~\"${service:regex}\", area=\"heap\", instance=~\"${instance:regex}\", env=~\"${env:regex}\"})",
                     "legendFormat": "{{service}}",
                     "refId": "A",
                     "interval": ""
@@ -162,7 +162,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "clamp_max(clamp_min(100 * sum by (service) (jvm_memory_used_bytes{service=~\"$service\", area=\"heap\", instance=~\"$instance\", env=~\"$env\"}) / clamp_min(sum by (service) (jvm_memory_max_bytes{service=~\"$service\", area=\"heap\", instance=~\"$instance\", env=~\"$env\"}), 1e-9), 0), 100)",
+                    "expr": "clamp_max(clamp_min(100 * sum by (service) (jvm_memory_used_bytes{service=~\"${service:regex}\", area=\"heap\", instance=~\"${instance:regex}\", env=~\"${env:regex}\"}) / clamp_min(sum by (service) (jvm_memory_max_bytes{service=~\"${service:regex}\", area=\"heap\", instance=~\"${instance:regex}\", env=~\"${env:regex}\"}), 1e-9), 0), 100)",
                     "legendFormat": "{{service}}",
                     "refId": "A",
                     "interval": ""
@@ -224,7 +224,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "sum by (service) (clamp_min(rate(jvm_gc_pause_seconds_count{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0))",
+                    "expr": "sum by (service) (clamp_min(rate(jvm_gc_pause_seconds_count{service=~\"${service:regex}\", instance=~\"${instance:regex}\", env=~\"${env:regex}\"}[$__rate_interval]), 0))",
                     "legendFormat": "{{service}}",
                     "refId": "A",
                     "interval": ""
@@ -286,7 +286,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "histogram_quantile(0.99, sum by (le, service) (clamp_min(rate(jvm_gc_pause_seconds_bucket{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
+                    "expr": "histogram_quantile(0.99, sum by (le, service) (clamp_min(rate(jvm_gc_pause_seconds_bucket{service=~\"${service:regex}\", instance=~\"${instance:regex}\", env=~\"${env:regex}\"}[$__rate_interval]), 0)))",
                     "legendFormat": "{{service}}",
                     "refId": "A",
                     "interval": ""
@@ -348,7 +348,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "histogram_quantile(0.95, sum by (le, service) (clamp_min(rate(jvm_gc_pause_seconds_bucket{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
+                    "expr": "histogram_quantile(0.95, sum by (le, service) (clamp_min(rate(jvm_gc_pause_seconds_bucket{service=~\"${service:regex}\", instance=~\"${instance:regex}\", env=~\"${env:regex}\"}[$__rate_interval]), 0)))",
                     "legendFormat": "{{service}}",
                     "refId": "A",
                     "interval": ""
@@ -410,7 +410,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "jvm_threads_live_threads{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}",
+                    "expr": "avg by (service) (jvm_threads_live_threads{service=~\"${service:regex}\", instance=~\"${instance:regex}\", env=~\"${env:regex}\"})",
                     "legendFormat": "{{service}}",
                     "refId": "A",
                     "interval": ""
@@ -472,7 +472,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "sum by (service) (jvm_memory_used_bytes{service=~\"$service\", area=\"nonheap\", instance=~\"$instance\", env=~\"$env\"})",
+                    "expr": "sum by (service) (jvm_memory_used_bytes{service=~\"${service:regex}\", area=\"nonheap\", instance=~\"${instance:regex}\", env=~\"${env:regex}\"})",
                     "legendFormat": "{{service}}",
                     "refId": "A",
                     "interval": ""
@@ -534,7 +534,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "jvm_classes_loaded_classes{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}",
+                    "expr": "avg by (service) (jvm_classes_loaded_classes{service=~\"${service:regex}\", instance=~\"${instance:regex}\", env=~\"${env:regex}\"})",
                     "legendFormat": "{{service}}",
                     "refId": "A",
                     "interval": ""
@@ -596,7 +596,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "jvm_threads_live_threads{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}",
+                    "expr": "avg by (service) (jvm_threads_live_threads{service=~\"${service:regex}\", instance=~\"${instance:regex}\", env=~\"${env:regex}\"})",
                     "legendFormat": "total {{service}}",
                     "refId": "A",
                     "interval": ""
@@ -606,7 +606,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "jvm_threads_daemon_threads{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}",
+                    "expr": "avg by (service) (jvm_threads_daemon_threads{service=~\"${service:regex}\", instance=~\"${instance:regex}\", env=~\"${env:regex}\"})",
                     "legendFormat": "daemon {{service}}",
                     "refId": "B",
                     "interval": ""
@@ -621,6 +621,490 @@
                 "w": 24,
                 "x": 0,
                 "y": 25
+            },
+            "id": 9100,
+            "title": "Saturation & Alert Signals",
+            "type": "row"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "lineWidth": 2,
+                        "fillOpacity": 12,
+                        "showPoints": "never",
+                        "drawStyle": "line",
+                        "spanNulls": false,
+                        "lineInterpolation": "smooth",
+                        "thresholdsStyle": {
+                            "mode": "line+area"
+                        }
+                    },
+                    "unit": "percent",
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 80
+                            },
+                            {
+                                "color": "red",
+                                "value": 90
+                            }
+                        ]
+                    }
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 0,
+                "y": 26
+            },
+            "id": 9101,
+            "options": {
+                "legend": {
+                    "calcs": [
+                        "mean",
+                        "max",
+                        "lastNotNull"
+                    ],
+                    "displayMode": "table",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "title": "CPU Saturation % — Per Service",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "${datasource}"
+                    },
+                    "expr": "100 * avg by (service) (process_cpu_usage{service=~\"${service:regex}\", instance=~\"${instance:regex}\", env=~\"${env:regex}\"})",
+                    "legendFormat": "{{service}}",
+                    "refId": "A",
+                    "interval": ""
+                }
+            ],
+            "description": "Per-service CPU saturation signal. Sustained values >80% indicate CPU pressure."
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "lineWidth": 2,
+                        "fillOpacity": 12,
+                        "showPoints": "never",
+                        "drawStyle": "line",
+                        "spanNulls": false,
+                        "lineInterpolation": "smooth",
+                        "thresholdsStyle": {
+                            "mode": "line+area"
+                        }
+                    },
+                    "unit": "percent",
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 75
+                            },
+                            {
+                                "color": "red",
+                                "value": 90
+                            }
+                        ]
+                    }
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 8,
+                "y": 26
+            },
+            "id": 9102,
+            "options": {
+                "legend": {
+                    "calcs": [
+                        "mean",
+                        "max",
+                        "lastNotNull"
+                    ],
+                    "displayMode": "table",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "title": "Memory Pressure % — Per Service",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "${datasource}"
+                    },
+                    "expr": "clamp_max(clamp_min(100 * sum by (service) (jvm_memory_used_bytes{service=~\"${service:regex}\", area=\"heap\", instance=~\"${instance:regex}\", env=~\"${env:regex}\"}) / clamp_min(sum by (service) (jvm_memory_max_bytes{service=~\"${service:regex}\", area=\"heap\", instance=~\"${instance:regex}\", env=~\"${env:regex}\"}), 1e-9), 0), 100)",
+                    "legendFormat": "{{service}}",
+                    "refId": "A",
+                    "interval": ""
+                }
+            ],
+            "description": "Per-service JVM heap pressure as a saturation indicator."
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "lineWidth": 2,
+                        "fillOpacity": 35,
+                        "showPoints": "never",
+                        "drawStyle": "bars",
+                        "spanNulls": false,
+                        "lineInterpolation": "linear"
+                    },
+                    "unit": "short",
+                    "min": 0
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 16,
+                "y": 26
+            },
+            "id": 9103,
+            "options": {
+                "legend": {
+                    "calcs": [
+                        "sum",
+                        "max",
+                        "lastNotNull"
+                    ],
+                    "displayMode": "table",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "title": "Restart Detection — Per Service",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "${datasource}"
+                    },
+                    "expr": "sum by (service) (changes(process_start_time_seconds{service=~\"${service:regex}\", instance=~\"${instance:regex}\", env=~\"${env:regex}\"}[$__rate_interval]))",
+                    "legendFormat": "{{service}}",
+                    "refId": "A",
+                    "interval": ""
+                }
+            ],
+            "description": "Counts process restarts from start-time changes. Non-zero values indicate restart events."
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "lineWidth": 2,
+                        "fillOpacity": 8,
+                        "showPoints": "never",
+                        "drawStyle": "line",
+                        "spanNulls": false,
+                        "lineInterpolation": "smooth",
+                        "thresholdsStyle": {
+                            "mode": "line+area"
+                        }
+                    },
+                    "unit": "s",
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 0.2
+                            },
+                            {
+                                "color": "red",
+                                "value": 0.5
+                            }
+                        ]
+                    }
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 0,
+                "y": 34
+            },
+            "id": 9104,
+            "options": {
+                "legend": {
+                    "calcs": [
+                        "mean",
+                        "max",
+                        "lastNotNull"
+                    ],
+                    "displayMode": "table",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "title": "GC Pause p99 Signal — Per Service",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "${datasource}"
+                    },
+                    "expr": "histogram_quantile(0.99, sum by (le, service) (clamp_min(rate(jvm_gc_pause_seconds_bucket{service=~\"${service:regex}\", instance=~\"${instance:regex}\", env=~\"${env:regex}\"}[$__rate_interval]), 0)))",
+                    "legendFormat": "{{service}}",
+                    "refId": "A",
+                    "interval": ""
+                }
+            ],
+            "description": "Service-level GC p99 pause signal for alerting on stop-the-world pressure."
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "lineWidth": 2,
+                        "fillOpacity": 8,
+                        "showPoints": "never",
+                        "drawStyle": "line",
+                        "spanNulls": false,
+                        "lineInterpolation": "smooth",
+                        "thresholdsStyle": {
+                            "mode": "line+area"
+                        }
+                    },
+                    "unit": "none",
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 2
+                            },
+                            {
+                                "color": "red",
+                                "value": 3
+                            }
+                        ]
+                    }
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 8,
+                "y": 34
+            },
+            "id": 9105,
+            "options": {
+                "legend": {
+                    "calcs": [
+                        "mean",
+                        "max",
+                        "lastNotNull"
+                    ],
+                    "displayMode": "table",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "title": "Thread Count Anomaly (z-score) — Per Service",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "${datasource}"
+                    },
+                    "expr": "abs((avg by (service) (jvm_threads_live_threads{service=~\"${service:regex}\", instance=~\"${instance:regex}\", env=~\"${env:regex}\"}) - avg_over_time((avg by (service) (jvm_threads_live_threads{service=~\"${service:regex}\", instance=~\"${instance:regex}\", env=~\"${env:regex}\"}))[1h:])) / clamp_min(stddev_over_time((avg by (service) (jvm_threads_live_threads{service=~\"${service:regex}\", instance=~\"${instance:regex}\", env=~\"${env:regex}\"}))[1h:]), 1e-9))",
+                    "legendFormat": "{{service}}",
+                    "refId": "A",
+                    "interval": ""
+                }
+            ],
+            "description": "Absolute z-score of live thread count per service. Values >3 indicate anomalous thread behavior."
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "lineWidth": 2,
+                        "fillOpacity": 8,
+                        "showPoints": "never",
+                        "drawStyle": "line",
+                        "spanNulls": false,
+                        "lineInterpolation": "smooth",
+                        "thresholdsStyle": {
+                            "mode": "line+area"
+                        }
+                    },
+                    "unit": "percent",
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 70
+                            },
+                            {
+                                "color": "red",
+                                "value": 90
+                            }
+                        ]
+                    }
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 16,
+                "y": 34
+            },
+            "id": 9106,
+            "options": {
+                "legend": {
+                    "calcs": [
+                        "mean",
+                        "max",
+                        "lastNotNull"
+                    ],
+                    "displayMode": "table",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "title": "File Descriptor Usage % — Per Service",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "${datasource}"
+                    },
+                    "expr": "100 * sum by (service) (process_files_open_files{service=~\"${service:regex}\", instance=~\"${instance:regex}\", env=~\"${env:regex}\"}) / clamp_min(sum by (service) (process_files_max_files{service=~\"${service:regex}\", instance=~\"${instance:regex}\", env=~\"${env:regex}\"}), 1)",
+                    "legendFormat": "{{service}}",
+                    "refId": "A",
+                    "interval": ""
+                }
+            ],
+            "description": "Open file descriptors as a percent of max per service (saturation indicator)."
+        },
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 42
             },
             "id": 9001,
             "title": "CPU & Memory",
@@ -653,7 +1137,7 @@
                 "h": 8,
                 "w": 8,
                 "x": 0,
-                "y": 26
+                "y": 43
             },
             "id": 50,
             "options": {
@@ -680,7 +1164,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "process_cpu_usage{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}",
+                    "expr": "avg by (service) (process_cpu_usage{service=~\"${service:regex}\", instance=~\"${instance:regex}\", env=~\"${env:regex}\"})",
                     "legendFormat": "{{service}}",
                     "refId": "A",
                     "interval": ""
@@ -715,7 +1199,7 @@
                 "h": 8,
                 "w": 8,
                 "x": 8,
-                "y": 26
+                "y": 43
             },
             "id": 51,
             "options": {
@@ -742,7 +1226,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "system_cpu_usage{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}",
+                    "expr": "avg by (service) (system_cpu_usage{service=~\"${service:regex}\", instance=~\"${instance:regex}\", env=~\"${env:regex}\"})",
                     "legendFormat": "{{service}}",
                     "refId": "A",
                     "interval": ""
@@ -777,7 +1261,7 @@
                 "h": 8,
                 "w": 8,
                 "x": 16,
-                "y": 26
+                "y": 43
             },
             "id": 57,
             "options": {
@@ -804,7 +1288,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "sum by (service) (process_resident_memory_bytes{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"})",
+                    "expr": "sum by (service) (process_resident_memory_bytes{service=~\"${service:regex}\", instance=~\"${instance:regex}\", env=~\"${env:regex}\"})",
                     "legendFormat": "{{service}}",
                     "refId": "A",
                     "interval": ""
@@ -818,7 +1302,7 @@
                 "h": 1,
                 "w": 24,
                 "x": 0,
-                "y": 34
+                "y": 51
             },
             "id": 9002,
             "title": "Process Health",
@@ -851,7 +1335,7 @@
                 "h": 8,
                 "w": 12,
                 "x": 0,
-                "y": 35
+                "y": 52
             },
             "id": 55,
             "options": {
@@ -878,7 +1362,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "process_files_open_files{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}",
+                    "expr": "sum by (service) (process_files_open_files{service=~\"${service:regex}\", instance=~\"${instance:regex}\", env=~\"${env:regex}\"})",
                     "legendFormat": "{{service}}",
                     "refId": "A",
                     "interval": ""
@@ -913,7 +1397,7 @@
                 "h": 8,
                 "w": 12,
                 "x": 12,
-                "y": 35
+                "y": 52
             },
             "id": 58,
             "options": {
@@ -940,7 +1424,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "process_uptime_seconds{service=~\"$service\", instance=~\"$instance\", env=~\"$env\"}",
+                    "expr": "min by (service) (process_uptime_seconds{service=~\"${service:regex}\", instance=~\"${instance:regex}\", env=~\"${env:regex}\"})",
                     "legendFormat": "{{service}}",
                     "refId": "A",
                     "interval": ""
@@ -962,95 +1446,7 @@
     "templating": {
         "list": [
             {
-                "current": {
-                    "selected": false,
-                    "text": "All",
-                    "value": "$__all"
-                },
-                "datasource": {
-                    "type": "prometheus",
-                    "uid": "${datasource}"
-                },
-                "definition": "label_values(up{job=~\"job-producer|job-worker|retry-dispatcher|dlq-service\"}, env)",
-                "hide": 0,
-                "includeAll": true,
-                "allValue": ".*",
-                "label": "Environment",
-                "multi": false,
-                "name": "env",
-                "options": [],
-                "query": {
-                    "query": "label_values(up{job=~\"job-producer|job-worker|retry-dispatcher|dlq-service\"}, env)",
-                    "refId": "StandardVariableQuery"
-                },
-                "refresh": 2,
-                "regex": "",
-                "skipUrlSync": false,
-                "sort": 1,
-                "type": "query"
-            },
-            {
-                "current": {
-                    "selected": true,
-                    "text": "All",
-                    "value": "$__all"
-                },
-                "datasource": {
-                    "type": "prometheus",
-                    "uid": "${datasource}"
-                },
-                "definition": "label_values(up{job=~\"job-producer|job-worker|retry-dispatcher|dlq-service\", env=~\"$env\"}, service)",
-                "hide": 0,
-                "includeAll": true,
-                "allValue": "job-producer|job-worker|retry-dispatcher|dlq-service",
-                "label": "Service",
-                "multi": true,
-                "name": "service",
-                "options": [],
-                "query": {
-                    "query": "label_values(up{job=~\"job-producer|job-worker|retry-dispatcher|dlq-service\", env=~\"$env\"}, service)",
-                    "refId": "StandardVariableQuery"
-                },
-                "refresh": 2,
-                "regex": "",
-                "skipUrlSync": false,
-                "sort": 1,
-                "type": "query"
-            },
-            {
-                "current": {
-                    "selected": true,
-                    "text": "All",
-                    "value": "$__all"
-                },
-                "datasource": {
-                    "type": "prometheus",
-                    "uid": "${datasource}"
-                },
-                "definition": "label_values(up{job=~\"job-producer|job-worker|retry-dispatcher|dlq-service\", env=~\"$env\", service=~\"$service\"}, instance)",
-                "hide": 0,
-                "includeAll": true,
-                "allValue": ".*",
-                "label": "Instance",
-                "multi": true,
-                "name": "instance",
-                "options": [],
-                "query": {
-                    "query": "label_values(up{job=~\"job-producer|job-worker|retry-dispatcher|dlq-service\", env=~\"$env\", service=~\"$service\"}, instance)",
-                    "refId": "StandardVariableQuery"
-                },
-                "refresh": 2,
-                "regex": "",
-                "skipUrlSync": false,
-                "sort": 1,
-                "type": "query"
-            },
-            {
-                "current": {
-                    "selected": false,
-                    "text": "Prometheus",
-                    "value": "prometheus"
-                },
+                "current": {},
                 "hide": 0,
                 "includeAll": false,
                 "label": "Datasource",
@@ -1063,6 +1459,90 @@
                 "skipUrlSync": false,
                 "sort": 0,
                 "type": "datasource"
+            },
+            {
+                "current": {
+                    "selected": false,
+                    "text": "All",
+                    "value": "$__all"
+                },
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "${datasource}"
+                },
+                "definition": "label_values(up, env)",
+                "hide": 0,
+                "includeAll": true,
+                "allValue": ".*",
+                "label": "Environment",
+                "multi": false,
+                "name": "env",
+                "options": [],
+                "query": {
+                    "query": "label_values(up, env)",
+                    "refId": "StandardVariableQuery"
+                },
+                "refresh": 2,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 1,
+                "type": "query"
+            },
+            {
+                "current": {
+                    "selected": true,
+                    "text": "All",
+                    "value": "$__all"
+                },
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "${datasource}"
+                },
+                "definition": "label_values(up{env=~\"${env:regex}\"}, service)",
+                "hide": 0,
+                "includeAll": true,
+                "allValue": ".*",
+                "label": "Service",
+                "multi": true,
+                "name": "service",
+                "options": [],
+                "query": {
+                    "query": "label_values(up{env=~\"${env:regex}\"}, service)",
+                    "refId": "StandardVariableQuery"
+                },
+                "refresh": 2,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 1,
+                "type": "query"
+            },
+            {
+                "current": {
+                    "selected": true,
+                    "text": "All",
+                    "value": "$__all"
+                },
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "${datasource}"
+                },
+                "definition": "label_values(up{env=~\"${env:regex}\", service=~\"${service:regex}\"}, instance)",
+                "hide": 0,
+                "includeAll": true,
+                "allValue": ".*",
+                "label": "Instance",
+                "multi": true,
+                "name": "instance",
+                "options": [],
+                "query": {
+                    "query": "label_values(up{env=~\"${env:regex}\", service=~\"${service:regex}\"}, instance)",
+                    "refId": "StandardVariableQuery"
+                },
+                "refresh": 2,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 1,
+                "type": "query"
             }
         ]
     },
@@ -1085,7 +1565,7 @@
     "timezone": "browser",
     "title": "Whole System — JVM, CPU, Process Resources",
     "uid": "chrono-whole-system",
-    "version": 1,
+    "version": 2,
     "__inputs": [
         {
             "name": "DS_PROMETHEUS",
@@ -1108,18 +1588,6 @@
             "id": "prometheus",
             "name": "Prometheus",
             "version": "1.0.0"
-        },
-        {
-            "type": "panel",
-            "id": "bargauge",
-            "name": "Bar gauge",
-            "version": ""
-        },
-        {
-            "type": "panel",
-            "id": "stat",
-            "name": "Stat",
-            "version": ""
         },
         {
             "type": "panel",

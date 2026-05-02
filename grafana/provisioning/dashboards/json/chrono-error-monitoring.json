@@ -43,13 +43,13 @@
                 "y": 0
             },
             "id": 100,
-            "title": "Error Summary",
+            "title": "Error SLO (Critical)",
             "type": "row"
         },
         {
             "datasource": {
                 "type": "prometheus",
-                "uid": "prometheus"
+                "uid": "$prometheus_ds"
             },
             "fieldConfig": {
                 "defaults": {
@@ -81,8 +81,8 @@
             },
             "gridPos": {
                 "h": 4,
-                "w": 4,
-                "x": 0,
+                "w": 3,
+                "x": 18,
                 "y": 1
             },
             "id": 2,
@@ -106,7 +106,7 @@
                 {
                     "datasource": {
                         "type": "prometheus",
-                        "uid": "prometheus"
+                        "uid": "$prometheus_ds"
                     },
                     "expr": "sum(rate(http_server_requests_seconds_count{service=~\"$app\", status=~\"4..\", uri!~\"/actuator.*\"}[$__rate_interval])) or vector(0)",
                     "legendFormat": "",
@@ -121,7 +121,7 @@
         {
             "datasource": {
                 "type": "prometheus",
-                "uid": "prometheus"
+                "uid": "$prometheus_ds"
             },
             "fieldConfig": {
                 "defaults": {
@@ -153,8 +153,8 @@
             },
             "gridPos": {
                 "h": 4,
-                "w": 4,
-                "x": 4,
+                "w": 3,
+                "x": 21,
                 "y": 1
             },
             "id": 3,
@@ -178,7 +178,7 @@
                 {
                     "datasource": {
                         "type": "prometheus",
-                        "uid": "prometheus"
+                        "uid": "$prometheus_ds"
                     },
                     "expr": "sum(rate(http_server_requests_seconds_count{service=~\"$app\", status=~\"5..\", uri!~\"/actuator.*\"}[$__rate_interval])) or vector(0)",
                     "legendFormat": "",
@@ -193,7 +193,7 @@
         {
             "datasource": {
                 "type": "loki",
-                "uid": "loki"
+                "uid": "$loki_ds"
             },
             "fieldConfig": {
                 "defaults": {
@@ -226,8 +226,8 @@
             "gridPos": {
                 "h": 4,
                 "w": 4,
-                "x": 8,
-                "y": 1
+                "x": 0,
+                "y": 78
             },
             "id": 4,
             "options": {
@@ -250,7 +250,7 @@
                 {
                     "datasource": {
                         "type": "loki",
-                        "uid": "loki"
+                        "uid": "$loki_ds"
                     },
                     "expr": "sum(count_over_time({job=\"dlq\"} |= \"Consuming DLQ message\" [$__range]))",
                     "editorMode": "code",
@@ -263,7 +263,7 @@
         {
             "datasource": {
                 "type": "loki",
-                "uid": "loki"
+                "uid": "$loki_ds"
             },
             "fieldConfig": {
                 "defaults": {
@@ -295,9 +295,9 @@
             },
             "gridPos": {
                 "h": 4,
-                "w": 6,
-                "x": 12,
-                "y": 1
+                "w": 4,
+                "x": 4,
+                "y": 78
             },
             "id": 5,
             "options": {
@@ -320,7 +320,7 @@
                 {
                     "datasource": {
                         "type": "loki",
-                        "uid": "loki"
+                        "uid": "$loki_ds"
                     },
                     "expr": "sum(count_over_time({job=\"job-worker\"} |~ \"Job processing failed|Job .* failed\" [$__range]))",
                     "editorMode": "code",
@@ -333,7 +333,7 @@
         {
             "datasource": {
                 "type": "loki",
-                "uid": "loki"
+                "uid": "$loki_ds"
             },
             "fieldConfig": {
                 "defaults": {
@@ -365,9 +365,9 @@
             },
             "gridPos": {
                 "h": 4,
-                "w": 6,
-                "x": 18,
-                "y": 1
+                "w": 4,
+                "x": 8,
+                "y": 78
             },
             "id": 6,
             "options": {
@@ -390,7 +390,7 @@
                 {
                     "datasource": {
                         "type": "loki",
-                        "uid": "loki"
+                        "uid": "$loki_ds"
                     },
                     "expr": "sum(count_over_time({job=\"job-worker\"} |= \"Retry/DLQ handoff failed\" [$__range]))",
                     "editorMode": "code",
@@ -403,7 +403,7 @@
         {
             "datasource": {
                 "type": "prometheus",
-                "uid": "prometheus"
+                "uid": "$prometheus_ds"
             },
             "fieldConfig": {
                 "defaults": {
@@ -437,7 +437,7 @@
                 "h": 4,
                 "w": 6,
                 "x": 0,
-                "y": 5
+                "y": 61
             },
             "id": 19,
             "options": {
@@ -454,15 +454,15 @@
                 },
                 "textMode": "auto"
             },
-            "title": "Kafka Producer Errors (Range)",
+            "title": "Kafka Producer Error Rate",
             "type": "stat",
             "targets": [
                 {
                     "datasource": {
                         "type": "prometheus",
-                        "uid": "prometheus"
+                        "uid": "$prometheus_ds"
                     },
-                    "expr": "sum(increase(kafka_producer_record_error_total{service=~\"$app\"}[$__range])) or vector(0)",
+                    "expr": "sum(clamp_min(rate(kafka_producer_record_error_total{service=~\"$app\"}[$__rate_interval]),0)) or vector(0)",
                     "legendFormat": "",
                     "refId": "A",
                     "interval": "",
@@ -470,7 +470,7 @@
                     "editorMode": "code"
                 }
             ],
-            "description": "Total Kafka producer record errors across selected applications over the dashboard time range."
+            "description": "Current Kafka producer record error rate across selected applications."
         },
         {
             "fieldConfig": {
@@ -505,7 +505,7 @@
                 "h": 4,
                 "w": 6,
                 "x": 6,
-                "y": 5
+                "y": 61
             },
             "id": 20,
             "options": {
@@ -522,15 +522,15 @@
                 },
                 "textMode": "auto"
             },
-            "title": "MongoDB Failed Commands (Range)",
+            "title": "MongoDB Failed Command Rate",
             "type": "stat",
             "targets": [
                 {
                     "datasource": {
                         "type": "prometheus",
-                        "uid": "prometheus"
+                        "uid": "$prometheus_ds"
                     },
-                    "expr": "sum(increase(mongodb_driver_commands_seconds_count{service=~\"$app\", status=\"FAILED\"}[$__range])) or vector(0)",
+                    "expr": "sum(clamp_min(rate(mongodb_driver_commands_seconds_count{service=~\"$app\", status=\"FAILED\"}[$__rate_interval]),0)) or vector(0)",
                     "legendFormat": "",
                     "refId": "A",
                     "interval": "",
@@ -538,16 +538,16 @@
                     "editorMode": "code"
                 }
             ],
-            "description": "Total failed MongoDB driver commands across selected applications over the dashboard time range.",
+            "description": "Current failed MongoDB command rate across selected applications.",
             "datasource": {
                 "type": "prometheus",
-                "uid": "prometheus"
+                "uid": "$prometheus_ds"
             }
         },
         {
             "datasource": {
                 "type": "loki",
-                "uid": "loki"
+                "uid": "$loki_ds"
             },
             "fieldConfig": {
                 "defaults": {
@@ -579,9 +579,9 @@
             },
             "gridPos": {
                 "h": 4,
-                "w": 6,
+                "w": 4,
                 "x": 12,
-                "y": 5
+                "y": 78
             },
             "id": 25,
             "options": {
@@ -604,7 +604,7 @@
                 {
                     "datasource": {
                         "type": "loki",
-                        "uid": "loki"
+                        "uid": "$loki_ds"
                     },
                     "expr": "sum(count_over_time({job=~\"job-worker|dlq|retry-dispatcher\"} |= \"Failed to deserialize\" [$__range]))",
                     "editorMode": "code",
@@ -617,7 +617,7 @@
         {
             "datasource": {
                 "type": "loki",
-                "uid": "loki"
+                "uid": "$loki_ds"
             },
             "fieldConfig": {
                 "defaults": {
@@ -649,9 +649,9 @@
             },
             "gridPos": {
                 "h": 4,
-                "w": 6,
-                "x": 18,
-                "y": 5
+                "w": 4,
+                "x": 16,
+                "y": 78
             },
             "id": 26,
             "options": {
@@ -674,7 +674,7 @@
                 {
                     "datasource": {
                         "type": "loki",
-                        "uid": "loki"
+                        "uid": "$loki_ds"
                     },
                     "expr": "sum(count_over_time({job=\"retry-dispatcher\"} |~ \"Failed to requeue job\" [$__range]))",
                     "editorMode": "code",
@@ -687,7 +687,7 @@
         {
             "datasource": {
                 "type": "prometheus",
-                "uid": "prometheus"
+                "uid": "$prometheus_ds"
             },
             "fieldConfig": {
                 "defaults": {
@@ -700,7 +700,11 @@
                         "showPoints": "never",
                         "drawStyle": "line",
                         "spanNulls": false,
-                        "lineInterpolation": "smooth"
+                        "lineInterpolation": "smooth",
+                        "stacking": {
+                            "mode": "normal",
+                            "group": "A"
+                        }
                     },
                     "unit": "reqps",
                     "min": 0
@@ -711,7 +715,7 @@
                 "h": 8,
                 "w": 24,
                 "x": 0,
-                "y": 9
+                "y": 10
             },
             "id": 28,
             "options": {
@@ -730,13 +734,13 @@
                     "sort": "desc"
                 }
             },
-            "title": "HTTP Errors by Service",
+            "title": "Errors by Service (stacked)",
             "type": "timeseries",
             "targets": [
                 {
                     "datasource": {
                         "type": "prometheus",
-                        "uid": "prometheus"
+                        "uid": "$prometheus_ds"
                     },
                     "expr": "sum by (service)(rate(http_server_requests_seconds_count{service=~\"$app\", status=~\"4..|5..\", uri!~\"/actuator.*\"}[$__rate_interval]))",
                     "legendFormat": "{{service}}",
@@ -745,7 +749,7 @@
                     "editorMode": "code"
                 }
             ],
-            "description": "HTTP client and server error rate by application over time."
+            "description": "Stacked HTTP error rate (4xx+5xx) by service to prioritize largest contributors first."
         },
         {
             "collapsed": false,
@@ -753,16 +757,16 @@
                 "h": 1,
                 "w": 24,
                 "x": 0,
-                "y": 17
+                "y": 9
             },
             "id": 101,
-            "title": "Error Rates Over Time",
+            "title": "Error Rates",
             "type": "row"
         },
         {
             "datasource": {
                 "type": "loki",
-                "uid": "loki"
+                "uid": "$loki_ds"
             },
             "fieldConfig": {
                 "defaults": {
@@ -786,7 +790,7 @@
                 "h": 8,
                 "w": 12,
                 "x": 0,
-                "y": 18
+                "y": 82
             },
             "id": 7,
             "options": {
@@ -811,7 +815,7 @@
                 {
                     "datasource": {
                         "type": "loki",
-                        "uid": "loki"
+                        "uid": "$loki_ds"
                     },
                     "expr": "sum by (job) (count_over_time({job=~\"$service\"} |~ \"(?i)(error|exception|failed|failure)\" [$__interval]))",
                     "editorMode": "code",
@@ -825,7 +829,7 @@
         {
             "datasource": {
                 "type": "prometheus",
-                "uid": "prometheus"
+                "uid": "$prometheus_ds"
             },
             "fieldConfig": {
                 "defaults": {
@@ -841,7 +845,24 @@
                         "lineInterpolation": "smooth"
                     },
                     "unit": "reqps",
-                    "min": 0
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "orange",
+                                "value": 0.5
+                            },
+                            {
+                                "color": "red",
+                                "value": 2
+                            }
+                        ]
+                    }
                 },
                 "overrides": [
                     {
@@ -878,59 +899,37 @@
             },
             "gridPos": {
                 "h": 8,
-                "w": 12,
-                "x": 12,
+                "w": 24,
+                "x": 0,
                 "y": 18
             },
             "id": 8,
             "options": {
-                "legend": {
-                    "calcs": [
-                        "mean",
-                        "max",
-                        "lastNotNull"
-                    ],
-                    "displayMode": "table",
-                    "placement": "bottom",
-                    "showLegend": true
-                },
-                "tooltip": {
-                    "mode": "multi",
-                    "sort": "desc"
+                "showHeader": true,
+                "footer": {
+                    "show": false
                 }
             },
-            "title": "HTTP 4xx / 5xx Rate by Service",
-            "type": "timeseries",
+            "title": "Errors by Type (table)",
+            "type": "table",
             "targets": [
                 {
                     "datasource": {
                         "type": "prometheus",
-                        "uid": "prometheus"
+                        "uid": "$prometheus_ds"
                     },
-                    "expr": "sum by (service) (rate(http_server_requests_seconds_count{service=~\"$app\", status=~\"4..\", uri!~\"/actuator.*\"}[$__rate_interval]))",
-                    "legendFormat": "4xx {{service}}",
+                    "expr": "sum by (service, status) (clamp_min(rate(http_server_requests_seconds_count{service=~\"$app\", status=~\"4..|5..\", uri!~\"/actuator.*\"}[$__rate_interval]),0))",
                     "refId": "A",
-                    "interval": "",
-                    "editorMode": "code"
-                },
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "prometheus"
-                    },
-                    "expr": "sum by (service) (rate(http_server_requests_seconds_count{service=~\"$app\", status=~\"5..\", uri!~\"/actuator.*\"}[$__rate_interval]))",
-                    "legendFormat": "5xx {{service}}",
-                    "refId": "B",
-                    "interval": "",
+                    "format": "table",
                     "editorMode": "code"
                 }
             ],
-            "description": "HTTP 4xx and 5xx error rates per application over time."
+            "description": "Current HTTP error rate split by service and status code for triage and ownership routing."
         },
         {
             "datasource": {
                 "type": "prometheus",
-                "uid": "prometheus"
+                "uid": "$prometheus_ds"
             },
             "fieldConfig": {
                 "defaults": {
@@ -969,9 +968,9 @@
             },
             "gridPos": {
                 "h": 8,
-                "w": 24,
-                "x": 0,
-                "y": 26
+                "w": 12,
+                "x": 12,
+                "y": 65
             },
             "id": 29,
             "options": {
@@ -990,13 +989,13 @@
                     "sort": "desc"
                 }
             },
-            "title": "Kafka Lag vs Worker Failures",
+            "title": "Kafka Lag vs Error Events",
             "type": "timeseries",
             "targets": [
                 {
                     "datasource": {
                         "type": "prometheus",
-                        "uid": "prometheus"
+                        "uid": "$prometheus_ds"
                     },
                     "expr": "max(kafka_consumer_fetch_manager_records_lag_max{service=~\"$app\"})",
                     "legendFormat": "max lag",
@@ -1007,7 +1006,7 @@
                 {
                     "datasource": {
                         "type": "prometheus",
-                        "uid": "prometheus"
+                        "uid": "$prometheus_ds"
                     },
                     "expr": "sum(rate(logback_events_total{level=\"error\", service=~\"$app\"}[$__rate_interval]))",
                     "legendFormat": "error log rate",
@@ -1016,12 +1015,12 @@
                     "editorMode": "code"
                 }
             ],
-            "description": "Correlation view comparing Kafka consumer lag against the aggregate error-event rate from application logs."
+            "description": "Infrastructure correlation between Kafka consumer lag and error event rate to detect backlog-driven failures."
         },
         {
             "datasource": {
                 "type": "prometheus",
-                "uid": "prometheus"
+                "uid": "$prometheus_ds"
             },
             "fieldConfig": {
                 "defaults": {
@@ -1045,7 +1044,7 @@
                 "h": 8,
                 "w": 12,
                 "x": 0,
-                "y": 34
+                "y": 65
             },
             "id": 21,
             "options": {
@@ -1064,13 +1063,13 @@
                     "sort": "desc"
                 }
             },
-            "title": "Kafka Producer Error Rate (records/s)",
+            "title": "Kafka Producer Errors by Service/Topic",
             "type": "timeseries",
             "targets": [
                 {
                     "datasource": {
                         "type": "prometheus",
-                        "uid": "prometheus"
+                        "uid": "$prometheus_ds"
                     },
                     "expr": "sum by (service, topic) (rate(kafka_producer_record_error_total{service=~\"$app\"}[$__rate_interval]))",
                     "legendFormat": "{{service}} {{topic}}",
@@ -1079,12 +1078,12 @@
                     "editorMode": "code"
                 }
             ],
-            "description": "Kafka producer record error rate by application and topic."
+            "description": "Kafka producer record error rate split by service and topic."
         },
         {
             "datasource": {
                 "type": "prometheus",
-                "uid": "prometheus"
+                "uid": "$prometheus_ds"
             },
             "fieldConfig": {
                 "defaults": {
@@ -1147,7 +1146,7 @@
                 "h": 8,
                 "w": 12,
                 "x": 12,
-                "y": 34
+                "y": 44
             },
             "id": 22,
             "options": {
@@ -1166,33 +1165,21 @@
                     "sort": "desc"
                 }
             },
-            "title": "MongoDB Commands Rate (Success vs Failed)",
+            "title": "Mongo Failed Commands by Service",
             "type": "timeseries",
             "targets": [
                 {
                     "datasource": {
                         "type": "prometheus",
-                        "uid": "prometheus"
+                        "uid": "$prometheus_ds"
                     },
                     "expr": "sum by (service, command) (rate(mongodb_driver_commands_seconds_count{service=~\"$app\", status=\"FAILED\"}[$__rate_interval]))",
                     "legendFormat": "FAIL {{service}}/{{command}}",
                     "refId": "A",
-                    "interval": "",
-                    "editorMode": "code"
-                },
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "prometheus"
-                    },
-                    "expr": "sum by (service, command) (rate(mongodb_driver_commands_seconds_count{service=~\"$app\", status=\"SUCCESS\"}[$__rate_interval]))",
-                    "legendFormat": "ok {{service}}/{{command}}",
-                    "refId": "B",
-                    "interval": "",
                     "editorMode": "code"
                 }
             ],
-            "description": "MongoDB driver command rates comparing successful and failed commands."
+            "description": "MongoDB failed command rate by service and command for exception-impacted persistence troubleshooting."
         },
         {
             "collapsed": false,
@@ -1200,16 +1187,16 @@
                 "h": 1,
                 "w": 24,
                 "x": 0,
-                "y": 42
+                "y": 26
             },
             "id": 102,
-            "title": "Component-Level Error Breakdown",
+            "title": "Error Attribution",
             "type": "row"
         },
         {
             "datasource": {
                 "type": "loki",
-                "uid": "loki"
+                "uid": "$loki_ds"
             },
             "fieldConfig": {
                 "defaults": {
@@ -1267,8 +1254,8 @@
             "gridPos": {
                 "h": 8,
                 "w": 12,
-                "x": 0,
-                "y": 43
+                "x": 12,
+                "y": 82
             },
             "id": 9,
             "options": {
@@ -1293,7 +1280,7 @@
                 {
                     "datasource": {
                         "type": "loki",
-                        "uid": "loki"
+                        "uid": "$loki_ds"
                     },
                     "expr": "sum(count_over_time({job=\"dlq\"} |= \"Consuming DLQ message\" [$__interval]))",
                     "editorMode": "code",
@@ -1304,7 +1291,7 @@
                 {
                     "datasource": {
                         "type": "loki",
-                        "uid": "loki"
+                        "uid": "$loki_ds"
                     },
                     "expr": "sum(count_over_time({job=\"dlq\"} |= \"Failed to persist DLQ job\" [$__interval]))",
                     "editorMode": "code",
@@ -1318,7 +1305,7 @@
         {
             "datasource": {
                 "type": "loki",
-                "uid": "loki"
+                "uid": "$loki_ds"
             },
             "fieldConfig": {
                 "defaults": {
@@ -1376,8 +1363,8 @@
             "gridPos": {
                 "h": 8,
                 "w": 12,
-                "x": 12,
-                "y": 43
+                "x": 0,
+                "y": 90
             },
             "id": 10,
             "options": {
@@ -1402,7 +1389,7 @@
                 {
                     "datasource": {
                         "type": "loki",
-                        "uid": "loki"
+                        "uid": "$loki_ds"
                     },
                     "expr": "sum(count_over_time({job=\"job-worker\"} |~ \"Job processing failed|Job .* failed\" [$__interval]))",
                     "editorMode": "code",
@@ -1413,7 +1400,7 @@
                 {
                     "datasource": {
                         "type": "loki",
-                        "uid": "loki"
+                        "uid": "$loki_ds"
                     },
                     "expr": "sum(count_over_time({job=\"job-worker\"} |= \"Retry/DLQ handoff failed\" [$__interval]))",
                     "editorMode": "code",
@@ -1427,7 +1414,7 @@
         {
             "datasource": {
                 "type": "loki",
-                "uid": "loki"
+                "uid": "$loki_ds"
             },
             "fieldConfig": {
                 "defaults": {
@@ -1485,8 +1472,8 @@
             "gridPos": {
                 "h": 8,
                 "w": 12,
-                "x": 0,
-                "y": 51
+                "x": 12,
+                "y": 90
             },
             "id": 11,
             "options": {
@@ -1511,7 +1498,7 @@
                 {
                     "datasource": {
                         "type": "loki",
-                        "uid": "loki"
+                        "uid": "$loki_ds"
                     },
                     "expr": "sum by (job) (count_over_time({job=~\"job-worker|dlq|retry-dispatcher\"} |= \"Failed to deserialize\" [$__interval]))",
                     "editorMode": "code",
@@ -1522,7 +1509,7 @@
                 {
                     "datasource": {
                         "type": "loki",
-                        "uid": "loki"
+                        "uid": "$loki_ds"
                     },
                     "expr": "sum(count_over_time({job=\"retry-dispatcher\"} |~ \"Failed to requeue job\" [$__interval]))",
                     "editorMode": "code",
@@ -1536,7 +1523,7 @@
         {
             "datasource": {
                 "type": "prometheus",
-                "uid": "prometheus"
+                "uid": "$prometheus_ds"
             },
             "fieldConfig": {
                 "defaults": {
@@ -1559,8 +1546,8 @@
             "gridPos": {
                 "h": 8,
                 "w": 12,
-                "x": 12,
-                "y": 51
+                "x": 0,
+                "y": 44
             },
             "id": 12,
             "options": {
@@ -1585,7 +1572,7 @@
                 {
                     "datasource": {
                         "type": "prometheus",
-                        "uid": "prometheus"
+                        "uid": "$prometheus_ds"
                     },
                     "expr": "sum by (service, exception) (rate(http_server_requests_seconds_count{service=~\"$app\", exception!=\"None\", uri!~\"/actuator.*\"}[$__rate_interval]))",
                     "legendFormat": "{{service}} / {{exception}}",
@@ -1594,12 +1581,12 @@
                     "editorMode": "code"
                 }
             ],
-            "description": "HTTP request rate broken down by exception type and application (excluding 'None')."
+            "description": "HTTP error signals broken down by exception type and application (excluding 'None')."
         },
         {
             "datasource": {
                 "type": "loki",
-                "uid": "loki"
+                "uid": "$loki_ds"
             },
             "fieldConfig": {
                 "defaults": {
@@ -1621,9 +1608,9 @@
             },
             "gridPos": {
                 "h": 8,
-                "w": 24,
+                "w": 12,
                 "x": 0,
-                "y": 59
+                "y": 98
             },
             "id": 27,
             "options": {
@@ -1648,7 +1635,7 @@
                 {
                     "datasource": {
                         "type": "loki",
-                        "uid": "loki"
+                        "uid": "$loki_ds"
                     },
                     "expr": "topk(10, sum by (exception) (count_over_time({job=~\"$service\"} | regexp \"(?P<exception>\\\\b[A-Za-z0-9$]+(?:Exception|Error)\\\\b)\" [$__interval])))",
                     "editorMode": "code",
@@ -1665,16 +1652,16 @@
                 "h": 1,
                 "w": 24,
                 "x": 0,
-                "y": 67
+                "y": 43
             },
             "id": 103,
-            "title": "Alerting & Anomalies",
+            "title": "Exception Analysis",
             "type": "row"
         },
         {
             "datasource": {
                 "type": "prometheus",
-                "uid": "prometheus"
+                "uid": "$prometheus_ds"
             },
             "fieldConfig": {
                 "defaults": {
@@ -1689,7 +1676,7 @@
                                 "value": null
                             },
                             {
-                                "color": "yellow",
+                                "color": "orange",
                                 "value": 1
                             },
                             {
@@ -1708,9 +1695,9 @@
             },
             "gridPos": {
                 "h": 4,
-                "w": 8,
+                "w": 6,
                 "x": 0,
-                "y": 68
+                "y": 1
             },
             "id": 30,
             "options": {
@@ -1727,15 +1714,15 @@
                 },
                 "textMode": "auto"
             },
-            "title": "HTTP 5xx Error Ratio",
+            "title": "Error Rate %",
             "type": "stat",
             "targets": [
                 {
                     "datasource": {
                         "type": "prometheus",
-                        "uid": "prometheus"
+                        "uid": "$prometheus_ds"
                     },
-                    "expr": "100 * ((sum(clamp_min(rate(http_server_requests_seconds_count{service=~\"$app\", status=~\"5..\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)) or vector(0)) / clamp_min(sum(clamp_min(rate(http_server_requests_seconds_count{service=~\"$app\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)), 1e-9))",
+                    "expr": "100 * ((sum(clamp_min(rate(http_server_requests_seconds_count{service=~\"$app\", status=~\"4..|5..\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)) or vector(0)) / clamp_min(sum(clamp_min(rate(http_server_requests_seconds_count{service=~\"$app\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)), 1e-9))",
                     "legendFormat": "",
                     "refId": "A",
                     "interval": "",
@@ -1743,12 +1730,12 @@
                     "editorMode": "code"
                 }
             ],
-            "description": "Alert-friendly percent of total HTTP traffic currently returning 5xx responses across selected applications. Sustained values above 1% indicate active user-facing impact; above 5% should page in production."
+            "description": "SLO-critical percent of HTTP traffic returning errors (4xx + 5xx) across selected applications."
         },
         {
             "datasource": {
                 "type": "prometheus",
-                "uid": "prometheus"
+                "uid": "$prometheus_ds"
             },
             "fieldConfig": {
                 "defaults": {
@@ -1763,7 +1750,7 @@
                                 "value": null
                             },
                             {
-                                "color": "yellow",
+                                "color": "orange",
                                 "value": 1.5
                             },
                             {
@@ -1781,9 +1768,9 @@
             },
             "gridPos": {
                 "h": 4,
-                "w": 8,
-                "x": 8,
-                "y": 68
+                "w": 6,
+                "x": 12,
+                "y": 1
             },
             "id": 31,
             "options": {
@@ -1800,15 +1787,15 @@
                 },
                 "textMode": "auto"
             },
-            "title": "HTTP Error Spike Score",
+            "title": "Error Spike Detector",
             "type": "stat",
             "targets": [
                 {
                     "datasource": {
                         "type": "prometheus",
-                        "uid": "prometheus"
+                        "uid": "$prometheus_ds"
                     },
-                    "expr": "((sum(clamp_min(rate(http_server_requests_seconds_count{service=~\"$app\", status=~\"4..|5..\", uri!~\"/actuator.*\"}[5m]), 0)) or vector(0)) / clamp_min(sum(clamp_min(rate(http_server_requests_seconds_count{service=~\"$app\", status=~\"4..|5..\", uri!~\"/actuator.*\"}[1h]), 0)), 1e-6))",
+                    "expr": "(sum(clamp_min(rate(http_server_requests_seconds_count{service=~\"$app\", status=~\"4..|5..\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)) or vector(0)) / clamp_min(avg_over_time((sum(clamp_min(rate(http_server_requests_seconds_count{service=~\"$app\", status=~\"4..|5..\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)))[30m:]), 1e-9)",
                     "legendFormat": "",
                     "refId": "A",
                     "interval": "",
@@ -1816,12 +1803,12 @@
                     "editorMode": "code"
                 }
             ],
-            "description": "Ratio of the current 5-minute HTTP error rate to the trailing 1-hour baseline. Values above 1.5 indicate an emerging spike; above 3 indicates a sharp regression that is suitable for alerting."
+            "description": "Current error rate divided by 30-minute moving baseline. Values above 1 indicate spike conditions."
         },
         {
             "datasource": {
                 "type": "loki",
-                "uid": "loki"
+                "uid": "$loki_ds"
             },
             "fieldConfig": {
                 "defaults": {
@@ -1843,7 +1830,7 @@
                     {
                         "matcher": {
                             "id": "byName",
-                            "options": "1h baseline per 5m"
+                            "options": "range baseline per interval"
                         },
                         "properties": [
                             {
@@ -1872,10 +1859,10 @@
                 ]
             },
             "gridPos": {
-                "h": 4,
-                "w": 8,
-                "x": 16,
-                "y": 68
+                "h": 8,
+                "w": 24,
+                "x": 0,
+                "y": 106
             },
             "id": 32,
             "options": {
@@ -1900,9 +1887,9 @@
                 {
                     "datasource": {
                         "type": "loki",
-                        "uid": "loki"
+                        "uid": "$loki_ds"
                     },
-                    "expr": "sum(count_over_time({job=~\"$service\"} |~ \"(?i)(error|exception|failed|failure|cannot|unable)\" [5m]))",
+                    "expr": "sum(count_over_time({job=~\"$service\"} |~ \"(?i)(error|exception|failed|failure|cannot|unable)\" [$__interval]))",
                     "legendFormat": "current 5m logs",
                     "refId": "A",
                     "editorMode": "code",
@@ -1911,21 +1898,21 @@
                 {
                     "datasource": {
                         "type": "loki",
-                        "uid": "loki"
+                        "uid": "$loki_ds"
                     },
-                    "expr": "sum(count_over_time({job=~\"$service\"} |~ \"(?i)(error|exception|failed|failure|cannot|unable)\" [1h])) / 12",
-                    "legendFormat": "1h baseline per 5m",
+                    "expr": "(sum(count_over_time({job=~\"$service\"} |~ \"(?i)(error|exception|failed|failure|cannot|unable)\" [$__range])) * $__interval_s) / clamp_min($__range_s, 1)",
+                    "legendFormat": "range baseline per interval",
                     "refId": "B",
                     "editorMode": "code",
                     "queryType": "range"
                 }
             ],
-            "description": "Compares current 5-minute Loki error-log volume to a 1-hour rolling baseline normalized to a 5-minute bucket. A widening gap highlights log-volume anomalies using the actual log backend rather than an app metric proxy."
+            "description": "Compares current Loki error-log volume (per $__interval) against a dashboard-range baseline normalized to the same interval. A widening gap highlights log-volume anomalies using the actual log backend rather than an app metric proxy."
         },
         {
             "datasource": {
                 "type": "prometheus",
-                "uid": "prometheus"
+                "uid": "$prometheus_ds"
             },
             "fieldConfig": {
                 "defaults": {
@@ -1941,54 +1928,69 @@
                         "lineInterpolation": "smooth"
                     },
                     "unit": "reqps",
-                    "min": 0
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "orange",
+                                "value": 0.5
+                            },
+                            {
+                                "color": "red",
+                                "value": 2
+                            }
+                        ]
+                    }
                 },
                 "overrides": []
             },
             "gridPos": {
                 "h": 8,
-                "w": 12,
+                "w": 8,
                 "x": 0,
-                "y": 72
+                "y": 27
             },
             "id": 33,
             "options": {
-                "legend": {
+                "colorMode": "background",
+                "graphMode": "area",
+                "justifyMode": "center",
+                "orientation": "auto",
+                "reduceOptions": {
                     "calcs": [
-                        "mean",
-                        "max",
                         "lastNotNull"
                     ],
-                    "displayMode": "table",
-                    "placement": "bottom",
-                    "showLegend": true
+                    "fields": "",
+                    "values": false
                 },
-                "tooltip": {
-                    "mode": "multi",
-                    "sort": "desc"
-                }
+                "textMode": "auto"
             },
-            "title": "Top Erroring Service / Endpoint",
-            "type": "timeseries",
+            "title": "Top Failing Service",
+            "type": "stat",
             "targets": [
                 {
                     "datasource": {
                         "type": "prometheus",
-                        "uid": "prometheus"
+                        "uid": "$prometheus_ds"
                     },
-                    "expr": "topk(10, sum by (service, uri) (clamp_min(rate(http_server_requests_seconds_count{service=~\"$app\", status=~\"4..|5..\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)))",
-                    "legendFormat": "{{service}} {{uri}}",
+                    "expr": "topk(1, sum by (service) (clamp_min(rate(http_server_requests_seconds_count{service=~\"$app\", status=~\"4..|5..\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)))",
+                    "legendFormat": "{{service}}",
                     "refId": "A",
-                    "interval": "",
+                    "instant": true,
                     "editorMode": "code"
                 }
             ],
-            "description": "Top 10 HTTP service and endpoint combinations by current error rate. Use this to identify the single API surface contributing the most client or server errors during an incident."
+            "description": "Service with highest current HTTP error rate."
         },
         {
             "datasource": {
                 "type": "loki",
-                "uid": "loki"
+                "uid": "$loki_ds"
             },
             "fieldConfig": {
                 "defaults": {
@@ -2012,7 +2014,7 @@
                 "h": 8,
                 "w": 12,
                 "x": 12,
-                "y": 72
+                "y": 98
             },
             "id": 34,
             "options": {
@@ -2037,7 +2039,7 @@
                 {
                     "datasource": {
                         "type": "loki",
-                        "uid": "loki"
+                        "uid": "$loki_ds"
                     },
                     "expr": "sum(count_over_time({job=~\"$service\"} |~ \"(MethodArgumentNotValidException|ConstraintViolationException|BindException|ValidationException)\" [$__interval]))",
                     "editorMode": "code",
@@ -2048,7 +2050,7 @@
                 {
                     "datasource": {
                         "type": "loki",
-                        "uid": "loki"
+                        "uid": "$loki_ds"
                     },
                     "expr": "sum(count_over_time({job=~\"$service\"} |~ \"(TimeoutException|SocketTimeoutException|ReadTimeoutException|ConnectTimeoutException|timed out)\" [$__interval]))",
                     "editorMode": "code",
@@ -2059,7 +2061,7 @@
                 {
                     "datasource": {
                         "type": "loki",
-                        "uid": "loki"
+                        "uid": "$loki_ds"
                     },
                     "expr": "sum(count_over_time({job=~\"$service\"} |~ \"(Failed to deserialize|DeserializationException|SerializationException|JsonProcessingException)\" [$__interval]))",
                     "editorMode": "code",
@@ -2070,7 +2072,7 @@
                 {
                     "datasource": {
                         "type": "loki",
-                        "uid": "loki"
+                        "uid": "$loki_ds"
                     },
                     "expr": "sum(count_over_time({job=~\"$service\"} |~ \"(KafkaException|ProducerFencedException|RecordTooLargeException|MongoException|MongoTimeoutException|MongoSocketException)\" [$__interval]))",
                     "editorMode": "code",
@@ -2087,22 +2089,22 @@
                 "h": 1,
                 "w": 24,
                 "x": 0,
-                "y": 88
+                "y": 60
             },
             "id": 104,
-            "title": "Error Log Stream",
+            "title": "Infra Errors",
             "type": "row"
         },
         {
             "datasource": {
                 "type": "loki",
-                "uid": "loki"
+                "uid": "$loki_ds"
             },
             "gridPos": {
                 "h": 12,
                 "w": 24,
                 "x": 0,
-                "y": 89
+                "y": 114
             },
             "id": 13,
             "options": {
@@ -2121,7 +2123,7 @@
                 {
                     "datasource": {
                         "type": "loki",
-                        "uid": "loki"
+                        "uid": "$loki_ds"
                     },
                     "expr": "{job=~\"$service\"} |~ \"(?i)(error|exception|failed|failure|cannot|unable)\"",
                     "editorMode": "code",
@@ -2134,7 +2136,7 @@
         {
             "datasource": {
                 "type": "prometheus",
-                "uid": "prometheus"
+                "uid": "$prometheus_ds"
             },
             "fieldConfig": {
                 "defaults": {
@@ -2150,54 +2152,60 @@
                         "lineInterpolation": "smooth"
                     },
                     "unit": "reqps",
-                    "min": 0
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "orange",
+                                "value": 0.5
+                            },
+                            {
+                                "color": "red",
+                                "value": 2
+                            }
+                        ]
+                    }
                 },
                 "overrides": []
             },
             "gridPos": {
                 "h": 8,
-                "w": 12,
-                "x": 0,
-                "y": 80
+                "w": 16,
+                "x": 8,
+                "y": 27
             },
             "id": 105,
             "options": {
-                "legend": {
-                    "calcs": [
-                        "mean",
-                        "max",
-                        "lastNotNull"
-                    ],
-                    "displayMode": "table",
-                    "placement": "bottom",
-                    "showLegend": true
-                },
-                "tooltip": {
-                    "mode": "multi",
-                    "sort": "desc"
+                "showHeader": true,
+                "footer": {
+                    "show": false
                 }
             },
-            "title": "Top 5 HTTP 5xx Endpoints",
-            "type": "timeseries",
+            "title": "Top Failing Endpoint",
+            "type": "table",
             "targets": [
                 {
                     "datasource": {
                         "type": "prometheus",
-                        "uid": "prometheus"
+                        "uid": "$prometheus_ds"
                     },
-                    "expr": "topk(5,sum by (service, uri)(clamp_min(rate(http_server_requests_seconds_count{service=~\"$app\", status=~\"5..\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)))",
-                    "legendFormat": "{{service}} {{uri}}",
+                    "expr": "topk(10, sum by (service, uri) (clamp_min(rate(http_server_requests_seconds_count{service=~\"$app\", status=~\"4..|5..\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)))",
                     "refId": "A",
-                    "interval": "",
+                    "format": "table",
                     "editorMode": "code"
                 }
             ],
-            "description": "Top 5 HTTP endpoints by current 5xx response rate, excluding actuator routes."
+            "description": "Top failing HTTP endpoints by current error rate (4xx+5xx)."
         },
         {
             "datasource": {
                 "type": "prometheus",
-                "uid": "prometheus"
+                "uid": "$prometheus_ds"
             },
             "fieldConfig": {
                 "defaults": {
@@ -2234,10 +2242,10 @@
                 "overrides": []
             },
             "gridPos": {
-                "h": 8,
-                "w": 12,
-                "x": 12,
-                "y": 80
+                "h": 4,
+                "w": 6,
+                "x": 6,
+                "y": 1
             },
             "id": 106,
             "options": {
@@ -2256,13 +2264,13 @@
                     "sort": "desc"
                 }
             },
-            "title": "HTTP Error Budget Burn Rate",
+            "title": "Error Budget Burn Rate",
             "type": "timeseries",
             "targets": [
                 {
                     "datasource": {
                         "type": "prometheus",
-                        "uid": "prometheus"
+                        "uid": "$prometheus_ds"
                     },
                     "expr": "(sum(clamp_min(rate(http_server_requests_seconds_count{service=~\"$app\", status=~\"5..\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)) or vector(0)) / clamp_min(sum(clamp_min(rate(http_server_requests_seconds_count{service=~\"$app\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)), 1e-9)",
                     "legendFormat": "burn rate",
@@ -2271,7 +2279,19 @@
                     "editorMode": "code"
                 }
             ],
-            "description": "Ratio of 5xx request rate to total HTTP request rate. Red threshold line marks the 99.9% SLO budget (0.1% error rate)."
+            "description": "Ratio of 5xx errors to total HTTP traffic. Red threshold line marks the 99.9% SLO budget (0.1% error rate)."
+        },
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 77
+            },
+            "id": 107,
+            "title": "Logs (Loki)",
+            "type": "row"
         }
     ],
     "refresh": "30s",
@@ -2284,6 +2304,40 @@
     ],
     "templating": {
         "list": [
+            {
+                "current": {
+                    "selected": true,
+                    "text": "Prometheus",
+                    "value": "prometheus"
+                },
+                "hide": 0,
+                "includeAll": false,
+                "multi": false,
+                "name": "prometheus_ds",
+                "label": "Prometheus Datasource",
+                "query": "prometheus",
+                "type": "datasource",
+                "refresh": 1,
+                "regex": "",
+                "options": []
+            },
+            {
+                "current": {
+                    "selected": true,
+                    "text": "Loki",
+                    "value": "loki"
+                },
+                "hide": 0,
+                "includeAll": false,
+                "multi": false,
+                "name": "loki_ds",
+                "label": "Loki Datasource",
+                "query": "loki",
+                "type": "datasource",
+                "refresh": 1,
+                "regex": "",
+                "options": []
+            },
             {
                 "current": {
                     "selected": true,
@@ -2300,11 +2354,19 @@
                 "name": "app",
                 "label": "App (Prometheus)",
                 "options": [],
-                "query": "job-producer,job-worker,retry-dispatcher,dlq-service",
-                "type": "custom",
-                "sort": 0,
+                "query": {
+                    "query": "label_values(http_server_requests_seconds_count{service!=\"\"}, service)",
+                    "refId": "PrometheusAppVarQuery"
+                },
+                "definition": "label_values(http_server_requests_seconds_count{service!=\"\"}, service)",
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "$prometheus_ds"
+                },
+                "type": "query",
+                "sort": 1,
                 "skipUrlSync": false,
-                "refresh": 0,
+                "refresh": 2,
                 "regex": "",
                 "allValue": null
             },
@@ -2324,11 +2386,19 @@
                 "name": "service",
                 "label": "Service (Loki)",
                 "options": [],
-                "query": "job-producer,job-worker,retry-dispatcher,dlq",
-                "type": "custom",
-                "sort": 0,
+                "query": {
+                    "query": "label_values({job=~\".+\"}, job)",
+                    "refId": "LokiServiceVarQuery"
+                },
+                "definition": "label_values({job=~\".+\"}, job)",
+                "datasource": {
+                    "type": "loki",
+                    "uid": "$loki_ds"
+                },
+                "type": "query",
+                "sort": 1,
                 "skipUrlSync": false,
-                "refresh": 0,
+                "refresh": 2,
                 "regex": "",
                 "allValue": null
             }
@@ -2364,7 +2434,7 @@
     "timezone": "browser",
     "title": "Error Monitoring",
     "uid": "chrono-error-monitoring",
-    "version": 10,
+    "version": 11,
     "__inputs": [
         {
             "name": "DS_PROMETHEUS",

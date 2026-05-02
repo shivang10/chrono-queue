@@ -57,7 +57,7 @@
       }
     ]
   },
-  "description": "Operational dashboard for the retry-dispatcher service. Monitors poll cycles, dispatch throughput, Kafka producer health, Redis latency, and error rates.\n\nHow to use this dashboard: Start from the top Overview row to verify SLO health, then drill into throughput, latency, errors, and capacity sections to isolate bottlenecks. Use the template filters (environment, instance, topic, job type, endpoint, and command where available) to narrow scope during incidents and compare behavior across dimensions. Panel info icon meaning: Click the i icon in each panel header to see what the metric represents, how to interpret normal vs abnormal values, and what operational signal it provides.",
+  "description": "Operational dashboard for retry dispatch monitoring. Monitors poll cycles, dispatch throughput, Kafka producer health, Redis latency, and error rates.\n\nHow to use this dashboard: Start from the top Overview row to verify SLO health, then drill into throughput, latency, errors, and JVM sections to isolate bottlenecks. Use the service template filter to narrow scope during incidents and compare behavior across dimensions. Panel info icon meaning: Click the i icon in each panel header to see what the metric represents, how to interpret normal vs abnormal values, and what operational signal it provides.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 2,
@@ -142,7 +142,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "round(sum(increase(retry_poller_polls_total{service=\"retry-dispatcher\"}[$__range])) or vector(0))",
+          "expr": "round(sum(increase(retry_poller_polls_total{service=~\"${service:regex}\"}[$__range])) or vector(0))",
           "legendFormat": "Polls",
           "instant": true
         }
@@ -203,7 +203,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "round(sum(increase(retry_poller_dispatched_total{service=\"retry-dispatcher\"}[$__range])) or vector(0))",
+          "expr": "round(sum(increase(retry_poller_dispatched_total{service=~\"${service:regex}\"}[$__range])) or vector(0))",
           "legendFormat": "Dispatched",
           "instant": true
         }
@@ -264,7 +264,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "round(sum(increase(retry_producer_requeue_success_total{service=\"retry-dispatcher\"}[$__range])) or vector(0))",
+          "expr": "round(sum(increase(retry_producer_requeue_success_total{service=~\"${service:regex}\"}[$__range])) or vector(0))",
           "legendFormat": "Success",
           "instant": true
         }
@@ -333,7 +333,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "round(sum(increase(retry_producer_requeue_failure_total{service=\"retry-dispatcher\"}[$__range])) or vector(0))",
+          "expr": "round(sum(increase(retry_producer_requeue_failure_total{service=~\"${service:regex}\"}[$__range])) or vector(0))",
           "legendFormat": "Failures",
           "instant": true
         }
@@ -402,7 +402,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "round(sum(increase(retry_poller_deserialization_failures_total{service=\"retry-dispatcher\"}[$__range])) or vector(0))",
+          "expr": "round(sum(increase(retry_poller_deserialization_failures_total{service=~\"${service:regex}\"}[$__range])) or vector(0))",
           "legendFormat": "Deser Failures",
           "instant": true
         }
@@ -471,7 +471,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "round(sum(increase(retry_poller_skipped_total{service=\"retry-dispatcher\"}[$__range])) or vector(0))",
+          "expr": "round(sum(increase(retry_poller_skipped_total{service=~\"${service:regex}\"}[$__range])) or vector(0))",
           "legendFormat": "Skipped",
           "instant": true
         }
@@ -485,6 +485,432 @@
         "w": 24,
         "x": 0,
         "y": 5
+      },
+      "id": 107,
+      "title": "Retry SLO & Queue Health",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Share of retry attempts that are successfully requeued to Kafka. Derived from retry success and failure counters.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 2,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 95
+              },
+              {
+                "color": "green",
+                "value": 99
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 6
+      },
+      "id": 71,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "title": "Retry Success %",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "100 * sum(clamp_min(rate(retry_producer_requeue_success_total{service=~\"${service:regex}\"}[$__rate_interval]), 0)) / clamp_min(sum(clamp_min(rate(retry_producer_requeue_success_total{service=~\"${service:regex}\"}[$__rate_interval]), 0)) + sum(clamp_min(rate(retry_producer_requeue_failure_total{service=~\"${service:regex}\"}[$__rate_interval]), 0)), 1e-9)",
+          "legendFormat": "Success %",
+          "instant": true
+        }
+      ],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Share of retry attempts that fail during Kafka requeue.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 2,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 6
+      },
+      "id": 72,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "title": "Retry Failure %",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "100 * sum(clamp_min(rate(retry_producer_requeue_failure_total{service=~\"${service:regex}\"}[$__rate_interval]), 0)) / clamp_min(sum(clamp_min(rate(retry_producer_requeue_success_total{service=~\"${service:regex}\"}[$__rate_interval]), 0)) + sum(clamp_min(rate(retry_producer_requeue_failure_total{service=~\"${service:regex}\"}[$__rate_interval]), 0)), 1e-9)",
+          "legendFormat": "Failure %",
+          "instant": true
+        }
+      ],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Current retry backlog depth. Uses retry backlog gauges when available; otherwise defaults to 0.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1000
+              },
+              {
+                "color": "red",
+                "value": 5000
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 6
+      },
+      "id": 73,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "title": "Retry Backlog",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "sum(max by (service) (retry_poller_backlog_size{service=~\"${service:regex}\"})) or sum(max by (service) (retry_backlog_size{service=~\"${service:regex}\"})) or sum(max by (service) (retry_queue_backlog{service=~\"${service:regex}\"})) or vector(0)",
+          "legendFormat": "Backlog",
+          "instant": true
+        }
+      ],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Retry dispatch latency, using poll-loop P99 as the end-to-end retry dispatch timing signal.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 1,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 100
+              },
+              {
+                "color": "red",
+                "value": 500
+              }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 6
+      },
+      "id": 74,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "title": "Dispatch Latency P99",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "1000 * max(chrono:retry_poller_poll_duration_p99_seconds:5m{service=~\"${service:regex}\"} or on(service) retry_poller_poll_duration_seconds{service=~\"${service:regex}\",quantile=\"0.99\"})",
+          "legendFormat": "Dispatch P99",
+          "instant": true
+        }
+      ],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Kafka producer error rate as a percent of record send rate.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 3,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.1
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 6
+      },
+      "id": 75,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "title": "Kafka Producer Error Rate",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "100 * sum(clamp_min(rate(kafka_producer_record_error_total{service=~\"${service:regex}\"}[$__rate_interval]), 0)) / clamp_min(sum(clamp_min(rate(kafka_producer_record_send_total{service=~\"${service:regex}\"}[$__rate_interval]), 0)), 1e-9)",
+          "legendFormat": "Kafka Error %",
+          "instant": true
+        }
+      ],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "description": "Redis polling latency from Lettuce command completion P95. Reflects Redis-side contribution to retry polling delay.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 1,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 50
+              },
+              {
+                "color": "red",
+                "value": 100
+              }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 6
+      },
+      "id": 76,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "title": "Redis Poll Latency P95",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "expr": "1000 * max(chrono:lettuce_command_completion_p95_seconds:5m{service=~\"${service:regex}\",command=~\"EVALSHA|ZRANGEBYSCORE|ZPOPMIN|ZREM|ZADD\"}) or 1000 * max(chrono:lettuce_command_completion_p95_seconds:5m{service=~\"${service:regex}\"})",
+          "legendFormat": "Redis Poll P95",
+          "instant": true
+        }
+      ],
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 10
       },
       "id": 101,
       "title": "Dispatch Throughput",
@@ -595,7 +1021,7 @@
         "h": 8,
         "w": 16,
         "x": 0,
-        "y": 6
+        "y": 11
       },
       "id": 10,
       "options": {
@@ -621,7 +1047,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(rate(retry_poller_dispatched_total{service=\"retry-dispatcher\"}[$__rate_interval]))",
+          "expr": "sum(rate(retry_poller_dispatched_total{service=~\"${service:regex}\"}[$__rate_interval]))",
           "legendFormat": "Dispatched"
         },
         {
@@ -629,7 +1055,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(rate(retry_producer_requeue_success_total{service=\"retry-dispatcher\"}[$__rate_interval]))",
+          "expr": "sum(rate(retry_producer_requeue_success_total{service=~\"${service:regex}\"}[$__rate_interval]))",
           "legendFormat": "Kafka Success"
         },
         {
@@ -637,7 +1063,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(rate(retry_producer_requeue_failure_total{service=\"retry-dispatcher\"}[$__rate_interval]))",
+          "expr": "sum(rate(retry_producer_requeue_failure_total{service=~\"${service:regex}\"}[$__rate_interval]))",
           "legendFormat": "Kafka Failure"
         }
       ],
@@ -683,7 +1109,7 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 6
+        "y": 11
       },
       "id": 11,
       "options": {
@@ -705,7 +1131,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "retry_producer_inflight_sends{service=\"retry-dispatcher\"}",
+          "expr": "retry_producer_inflight_sends{service=~\"${service:regex}\"}",
           "legendFormat": "In-flight"
         }
       ],
@@ -717,7 +1143,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 14
+        "y": 19
       },
       "id": 102,
       "title": "Poll Cycle Latency",
@@ -844,7 +1270,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 15
+        "y": 20
       },
       "id": 20,
       "options": {
@@ -870,7 +1296,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "chrono:retry_poller_poll_duration_p50_seconds:5m{service=\"retry-dispatcher\"} or on(service) max by (service) (retry_poller_poll_duration_seconds{service=\"retry-dispatcher\",quantile=\"0.5\"}) or on(service) (rate(retry_poller_poll_duration_seconds_sum{service=\"retry-dispatcher\"}[5m]) / clamp_min(rate(retry_poller_poll_duration_seconds_count{service=\"retry-dispatcher\"}[5m]), 1e-9))",
+          "expr": "chrono:retry_poller_poll_duration_p50_seconds:5m{service=~\"${service:regex}\"} or on(service) max by (service) (retry_poller_poll_duration_seconds{service=~\"${service:regex}\",quantile=\"0.5\"}) or on(service) (rate(retry_poller_poll_duration_seconds_sum{service=~\"${service:regex}\"}[$__rate_interval]) / clamp_min(rate(retry_poller_poll_duration_seconds_count{service=~\"${service:regex}\"}[$__rate_interval]), 1e-9))",
           "legendFormat": "P50"
         },
         {
@@ -878,7 +1304,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "chrono:retry_poller_poll_duration_p90_seconds:5m{service=\"retry-dispatcher\"} or on(service) max by (service) (retry_poller_poll_duration_seconds{service=\"retry-dispatcher\",quantile=\"0.9\"}) or on(service) (rate(retry_poller_poll_duration_seconds_sum{service=\"retry-dispatcher\"}[5m]) / clamp_min(rate(retry_poller_poll_duration_seconds_count{service=\"retry-dispatcher\"}[5m]), 1e-9))",
+          "expr": "chrono:retry_poller_poll_duration_p90_seconds:5m{service=~\"${service:regex}\"} or on(service) max by (service) (retry_poller_poll_duration_seconds{service=~\"${service:regex}\",quantile=\"0.9\"}) or on(service) (rate(retry_poller_poll_duration_seconds_sum{service=~\"${service:regex}\"}[$__rate_interval]) / clamp_min(rate(retry_poller_poll_duration_seconds_count{service=~\"${service:regex}\"}[$__rate_interval]), 1e-9))",
           "legendFormat": "P90"
         },
         {
@@ -886,7 +1312,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "chrono:retry_poller_poll_duration_p95_seconds:5m{service=\"retry-dispatcher\"} or on(service) max by (service) (retry_poller_poll_duration_seconds{service=\"retry-dispatcher\",quantile=\"0.95\"}) or on(service) (rate(retry_poller_poll_duration_seconds_sum{service=\"retry-dispatcher\"}[5m]) / clamp_min(rate(retry_poller_poll_duration_seconds_count{service=\"retry-dispatcher\"}[5m]), 1e-9))",
+          "expr": "chrono:retry_poller_poll_duration_p95_seconds:5m{service=~\"${service:regex}\"} or on(service) max by (service) (retry_poller_poll_duration_seconds{service=~\"${service:regex}\",quantile=\"0.95\"}) or on(service) (rate(retry_poller_poll_duration_seconds_sum{service=~\"${service:regex}\"}[$__rate_interval]) / clamp_min(rate(retry_poller_poll_duration_seconds_count{service=~\"${service:regex}\"}[$__rate_interval]), 1e-9))",
           "legendFormat": "P95"
         },
         {
@@ -894,7 +1320,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "chrono:retry_poller_poll_duration_p99_seconds:5m{service=\"retry-dispatcher\"} or on(service) max by (service) (retry_poller_poll_duration_seconds{service=\"retry-dispatcher\",quantile=\"0.99\"}) or on(service) max_over_time(retry_poller_poll_duration_seconds_max{service=\"retry-dispatcher\"}[5m])",
+          "expr": "chrono:retry_poller_poll_duration_p99_seconds:5m{service=~\"${service:regex}\"} or on(service) max by (service) (retry_poller_poll_duration_seconds{service=~\"${service:regex}\",quantile=\"0.99\"}) or on(service) max_over_time(retry_poller_poll_duration_seconds_max{service=~\"${service:regex}\"}[$__rate_interval])",
           "legendFormat": "P99"
         }
       ],
@@ -938,7 +1364,7 @@
         "h": 4,
         "w": 4,
         "x": 12,
-        "y": 15
+        "y": 20
       },
       "id": 22,
       "options": {
@@ -955,14 +1381,14 @@
         },
         "textMode": "auto"
       },
-      "title": "Poll Duration Sample Count \ud83d\udd0d",
+      "title": "Poll Duration Sample Count",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "retry_poller_poll_duration_seconds_count{service=\"retry-dispatcher\"}",
+          "expr": "retry_poller_poll_duration_seconds_count{service=~\"${service:regex}\"}",
           "legendFormat": "Samples"
         }
       ],
@@ -1020,7 +1446,7 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 15
+        "y": 20
       },
       "id": 21,
       "options": {
@@ -1046,7 +1472,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(rate(retry_poller_dispatched_total{service=\"retry-dispatcher\"}[$__rate_interval])) / clamp_min(sum(rate(retry_poller_polls_total{service=\"retry-dispatcher\"}[$__rate_interval])), 1e-9)",
+          "expr": "sum(rate(retry_poller_dispatched_total{service=~\"${service:regex}\"}[$__rate_interval])) / clamp_min(sum(rate(retry_poller_polls_total{service=~\"${service:regex}\"}[$__rate_interval])), 1e-9)",
           "legendFormat": "Avg jobs/poll"
         }
       ],
@@ -1058,7 +1484,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 23
+        "y": 28
       },
       "id": 103,
       "title": "Kafka Producer Health",
@@ -1154,7 +1580,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 24
+        "y": 29
       },
       "id": 30,
       "options": {
@@ -1180,7 +1606,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(rate(kafka_producer_record_send_total{service=\"retry-dispatcher\"}[$__rate_interval]))",
+          "expr": "sum(rate(kafka_producer_record_send_total{service=~\"${service:regex}\"}[$__rate_interval]))",
           "legendFormat": "Record Send Rate"
         },
         {
@@ -1188,7 +1614,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(rate(kafka_producer_record_error_total{service=\"retry-dispatcher\"}[$__rate_interval]))",
+          "expr": "sum(rate(kafka_producer_record_error_total{service=~\"${service:regex}\"}[$__rate_interval]))",
           "legendFormat": "Record Error Rate"
         }
       ],
@@ -1245,7 +1671,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 24
+        "y": 29
       },
       "id": 31,
       "options": {
@@ -1271,7 +1697,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "kafka_producer_batch_size_avg{service=\"retry-dispatcher\"}",
+          "expr": "kafka_producer_batch_size_avg{service=~\"${service:regex}\"}",
           "legendFormat": "Avg Batch Size"
         },
         {
@@ -1279,7 +1705,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "kafka_producer_buffer_available_bytes{service=\"retry-dispatcher\"}",
+          "expr": "kafka_producer_buffer_available_bytes{service=~\"${service:regex}\"}",
           "legendFormat": "Buffer Available"
         },
         {
@@ -1287,7 +1713,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "kafka_producer_buffer_total_bytes{service=\"retry-dispatcher\"}",
+          "expr": "kafka_producer_buffer_total_bytes{service=~\"${service:regex}\"}",
           "legendFormat": "Buffer Total"
         }
       ],
@@ -1299,7 +1725,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 32
+        "y": 37
       },
       "id": 104,
       "title": "Redis \u2014 Lettuce Client Latency",
@@ -1415,7 +1841,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 33
+        "y": 38
       },
       "id": 40,
       "options": {
@@ -1441,7 +1867,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "chrono:lettuce_command_completion_p50_seconds:5m{service=\"retry-dispatcher\"}",
+          "expr": "chrono:lettuce_command_completion_p50_seconds:5m{service=~\"${service:regex}\"}",
           "legendFormat": "P50 {{command}}"
         },
         {
@@ -1449,7 +1875,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "chrono:lettuce_command_completion_p95_seconds:5m{service=\"retry-dispatcher\"}",
+          "expr": "chrono:lettuce_command_completion_p95_seconds:5m{service=~\"${service:regex}\"}",
           "legendFormat": "P95 {{command}}"
         },
         {
@@ -1457,7 +1883,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "chrono:lettuce_command_completion_p99_seconds:5m{service=\"retry-dispatcher\"}",
+          "expr": "chrono:lettuce_command_completion_p99_seconds:5m{service=~\"${service:regex}\"}",
           "legendFormat": "P99 {{command}}"
         }
       ],
@@ -1514,7 +1940,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 33
+        "y": 38
       },
       "id": 41,
       "options": {
@@ -1540,7 +1966,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "chrono:lettuce_command_completion_seconds_count:rate5m{service=\"retry-dispatcher\"}",
+          "expr": "chrono:lettuce_command_completion_seconds_count:rate5m{service=~\"${service:regex}\"}",
           "legendFormat": "{{command}}"
         }
       ],
@@ -1552,7 +1978,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 41
+        "y": 46
       },
       "id": 105,
       "title": "Errors & Backpressure",
@@ -1656,7 +2082,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 42
+        "y": 47
       },
       "id": 50,
       "options": {
@@ -1682,7 +2108,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(increase(retry_poller_deserialization_failures_total{service=\"retry-dispatcher\"}[$__rate_interval]))",
+          "expr": "sum(increase(retry_poller_deserialization_failures_total{service=~\"${service:regex}\"}[$__rate_interval]))",
           "legendFormat": "Deserialization Failures"
         },
         {
@@ -1690,7 +2116,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(increase(retry_poller_skipped_total{service=\"retry-dispatcher\"}[$__rate_interval]))",
+          "expr": "sum(increase(retry_poller_skipped_total{service=~\"${service:regex}\"}[$__rate_interval]))",
           "legendFormat": "Polls Skipped"
         },
         {
@@ -1698,7 +2124,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(increase(retry_producer_requeue_failure_total{service=\"retry-dispatcher\"}[$__rate_interval]))",
+          "expr": "sum(increase(retry_producer_requeue_failure_total{service=~\"${service:regex}\"}[$__rate_interval]))",
           "legendFormat": "Kafka Requeue Failures"
         }
       ],
@@ -1784,7 +2210,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 42
+        "y": 47
       },
       "id": 51,
       "options": {
@@ -1810,7 +2236,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "retry_producer_inflight_sends{service=\"retry-dispatcher\"}",
+          "expr": "retry_producer_inflight_sends{service=~\"${service:regex}\"}",
           "legendFormat": "In-flight"
         }
       ],
@@ -1822,7 +2248,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 50
+        "y": 55
       },
       "id": 106,
       "title": "JVM \u2014 Resource Utilization",
@@ -1924,7 +2350,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 51
+        "y": 56
       },
       "id": 60,
       "options": {
@@ -1950,7 +2376,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(jvm_memory_used_bytes{service=\"retry-dispatcher\", area=\"heap\"})",
+          "expr": "sum(jvm_memory_used_bytes{service=~\"${service:regex}\", area=\"heap\"})",
           "legendFormat": "Heap Used"
         },
         {
@@ -1958,7 +2384,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum(jvm_memory_max_bytes{service=\"retry-dispatcher\", area=\"heap\"})",
+          "expr": "sum(jvm_memory_max_bytes{service=~\"${service:regex}\", area=\"heap\"})",
           "legendFormat": "Heap Max"
         }
       ],
@@ -2039,7 +2465,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 51
+        "y": 56
       },
       "id": 61,
       "options": {
@@ -2065,7 +2491,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "jvm_threads_live_threads{service=\"retry-dispatcher\"}",
+          "expr": "jvm_threads_live_threads{service=~\"${service:regex}\"}",
           "legendFormat": "Live Threads"
         },
         {
@@ -2073,7 +2499,7 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "histogram_quantile(0.99, sum by (le) (rate(jvm_gc_pause_seconds_bucket{service=\"retry-dispatcher\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(jvm_gc_pause_seconds_bucket{service=~\"${service:regex}\"}[$__rate_interval])))",
           "legendFormat": "GC Pause P99"
         }
       ],
@@ -2091,7 +2517,11 @@
   "templating": {
     "list": [
       {
-        "current": {},
+        "current": {
+          "selected": true,
+          "text": "prometheus",
+          "value": "prometheus"
+        },
         "hide": 0,
         "includeAll": false,
         "label": "Prometheus",
@@ -2103,6 +2533,35 @@
         "skipUrlSync": false,
         "sort": 1,
         "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "definition": "label_values(up, service)",
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "name": "service",
+        "label": "Service",
+        "options": [],
+        "query": "label_values(up, service)",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query",
+        "allValue": ".*"
       }
     ]
   },
@@ -2133,5 +2592,5 @@
   "timezone": "browser",
   "title": "Retry Dispatcher",
   "uid": "chrono-retry-dispatcher",
-  "version": 1
+  "version": 2
 }

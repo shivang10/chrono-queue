@@ -39,6 +39,12 @@
             "id": "table",
             "name": "Table",
             "version": ""
+        },
+        {
+            "type": "panel",
+            "id": "gauge",
+            "name": "Gauge",
+            "version": ""
         }
     ],
     "annotations": {
@@ -85,7 +91,7 @@
                 "y": 0
             },
             "id": 100,
-            "title": "Overview - SLO Signals",
+            "title": "SLO Overview",
             "type": "row"
         },
         {
@@ -93,17 +99,25 @@
                 "type": "prometheus",
                 "uid": "${datasource}"
             },
-            "description": "Total jobs persisted to DLQ storage over selected time range.",
+            "description": "SLO signal for successful DLQ writes using available counters: persisted rate (chrono_jobs_dlq_total) divided by consumed rate (kafka_consumer_fetch_manager_records_consumed_total).",
             "fieldConfig": {
                 "defaults": {
-                    "unit": "none",
-                    "decimals": 0,
+                    "unit": "percent",
+                    "decimals": 2,
                     "thresholds": {
                         "mode": "absolute",
                         "steps": [
                             {
-                                "color": "green",
+                                "color": "red",
                                 "value": null
+                            },
+                            {
+                                "color": "orange",
+                                "value": 95
+                            },
+                            {
+                                "color": "green",
+                                "value": 99
                             }
                         ]
                     },
@@ -135,13 +149,13 @@
             },
             "targets": [
                 {
-                    "expr": "round(sum(increase(chrono_jobs_dlq_total{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",job_type=~\"${job_type:regex}\"}[$__range])) or vector(0))",
+                    "expr": "clamp_max(clamp_min(100 * (sum(clamp_min(rate(chrono_jobs_dlq_total{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",job_type=~\"${job_type:regex}\"}[$__rate_interval]),0)) or vector(0)) / clamp_min((sum(clamp_min(rate(kafka_consumer_fetch_manager_records_consumed_total{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}[$__rate_interval]),0)) or vector(0)),1e-9),0),100)",
                     "instant": true,
-                    "legendFormat": "dlq persisted",
+                    "legendFormat": "persisted/consumed %",
                     "refId": "A"
                 }
             ],
-            "title": "Jobs Persisted (range)",
+            "title": "DLQ Write Success Rate %",
             "type": "stat"
         },
         {
@@ -149,7 +163,7 @@
                 "type": "prometheus",
                 "uid": "${datasource}"
             },
-            "description": "Current DLQ persistence rate.",
+            "description": "Current DLQ persistence write throughput.",
             "fieldConfig": {
                 "defaults": {
                     "unit": "ops",
@@ -191,7 +205,7 @@
             },
             "targets": [
                 {
-                    "expr": "sum(clamp_min(rate(chrono_jobs_dlq_total{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",job_type=~\"${job_type:regex}\"}[$__rate_interval]),0)) or vector(0)",
+                    "expr": "sum(clamp_min(rate(chrono_jobs_dlq_total{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",job_type=~\"${job_type:regex}\"}[$__rate_interval]),0)) or vector(0)",
                     "instant": true,
                     "legendFormat": "persist/s",
                     "refId": "A"
@@ -205,7 +219,7 @@
                 "type": "prometheus",
                 "uid": "${datasource}"
             },
-            "description": "Kafka records consumed by dlq-service per second.",
+            "description": "Current Kafka consumption throughput for DLQ consumer.",
             "fieldConfig": {
                 "defaults": {
                     "unit": "ops",
@@ -247,7 +261,7 @@
             },
             "targets": [
                 {
-                    "expr": "sum(clamp_min(rate(kafka_consumer_fetch_manager_records_consumed_total{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}[$__rate_interval]),0)) or vector(0)",
+                    "expr": "sum(clamp_min(rate(kafka_consumer_fetch_manager_records_consumed_total{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}[$__rate_interval]),0)) or vector(0)",
                     "instant": true,
                     "legendFormat": "records/s",
                     "refId": "A"
@@ -261,7 +275,7 @@
                 "type": "prometheus",
                 "uid": "${datasource}"
             },
-            "description": "Maximum Kafka consumer lag for dlq-service.",
+            "description": "Maximum DLQ consumer lag across selected topics.",
             "fieldConfig": {
                 "defaults": {
                     "unit": "none",
@@ -303,7 +317,7 @@
             },
             "targets": [
                 {
-                    "expr": "max(kafka_consumer_fetch_manager_records_lag_max{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}) or vector(0)",
+                    "expr": "max(kafka_consumer_fetch_manager_records_lag_max{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}) or vector(0)",
                     "instant": true,
                     "legendFormat": "max lag",
                     "refId": "A"
@@ -317,7 +331,7 @@
                 "type": "prometheus",
                 "uid": "${datasource}"
             },
-            "description": "Share of Mongo commands that fail.",
+            "description": "SLO signal for MongoDB write reliability. Share of failed write commands over total write commands.",
             "fieldConfig": {
                 "defaults": {
                     "unit": "percent",
@@ -359,13 +373,13 @@
             },
             "targets": [
                 {
-                    "expr": "100 * (sum(clamp_min(rate(mongodb_driver_commands_seconds_count{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",status=\"FAILED\",command=~\"${command:regex}\"}[$__rate_interval]),0)) or vector(0)) / clamp_min(sum(clamp_min(rate(mongodb_driver_commands_seconds_count{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",command=~\"${command:regex}\"}[$__rate_interval]),0)),1e-9)",
+                    "expr": "clamp_max(clamp_min(100 * (sum(clamp_min(rate(mongodb_driver_commands_seconds_count{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",status=\"FAILED\",command=~\"insert|update|replace|bulkWrite|findAndModify\"}[$__rate_interval]),0)) or vector(0)) / clamp_min((sum(clamp_min(rate(mongodb_driver_commands_seconds_count{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",command=~\"insert|update|replace|bulkWrite|findAndModify\"}[$__rate_interval]),0)) or vector(0)),1e-9),0),100)",
                     "instant": true,
                     "legendFormat": "mongo failed %",
                     "refId": "A"
                 }
             ],
-            "title": "Mongo Failed %",
+            "title": "Mongo Write Error Rate %",
             "type": "stat"
         },
         {
@@ -415,13 +429,13 @@
             },
             "targets": [
                 {
-                    "expr": "100 * avg(up{job=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\"})",
+                    "expr": "100 * avg(up{job=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"})",
                     "instant": true,
                     "legendFormat": "up %",
                     "refId": "A"
                 }
             ],
-            "title": "Availability",
+            "title": "Target Availability %",
             "type": "stat"
         },
         {
@@ -433,7 +447,7 @@
                 "y": 9
             },
             "id": 110,
-            "title": "DLQ Ingestion & Lag",
+            "title": "DLQ Ingestion",
             "type": "row"
         },
         {
@@ -466,19 +480,38 @@
             },
             "targets": [
                 {
-                    "expr": "sum(clamp_min(rate(kafka_consumer_fetch_manager_records_consumed_total{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}[$__rate_interval]),0))",
+                    "expr": "sum(clamp_min(rate(kafka_consumer_fetch_manager_records_consumed_total{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}[$__rate_interval]),0))",
                     "legendFormat": "kafka consumed/s",
                     "refId": "A"
                 },
                 {
-                    "expr": "sum(clamp_min(rate(chrono_jobs_dlq_total{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",job_type=~\"${job_type:regex}\"}[$__rate_interval]),0))",
+                    "expr": "sum(clamp_min(rate(chrono_jobs_dlq_total{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",job_type=~\"${job_type:regex}\"}[$__rate_interval]),0))",
                     "legendFormat": "persisted/s",
                     "refId": "B"
                 }
             ],
             "title": "DLQ Ingestion Flow",
             "type": "timeseries",
-            "description": "Compares Kafka consumed rate with persisted-to-storage rate for DLQ traffic. Use this to verify ingestion-to-persistence continuity and detect when writes fall behind consumption."
+            "description": "Compares Kafka consumed rate with persisted-to-storage rate for DLQ traffic. Use this to verify ingestion-to-persistence continuity and detect when writes fall behind consumption.",
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "ops",
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "orange",
+                                "value": 1e-9
+                            }
+                        ]
+                    }
+                },
+                "overrides": []
+            }
         },
         {
             "datasource": {
@@ -510,19 +543,38 @@
             },
             "targets": [
                 {
-                    "expr": "sum by (job_type) (clamp_min(rate(chrono_jobs_dlq_total{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",job_type=~\"${job_type:regex}\"}[$__rate_interval]),0))",
+                    "expr": "sum by (job_type) (clamp_min(rate(chrono_jobs_dlq_total{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",job_type=~\"${job_type:regex}\"}[$__rate_interval]),0))",
                     "legendFormat": "{{job_type}}",
                     "refId": "A"
                 },
                 {
-                    "expr": "sum by (topic) (clamp_min(rate(kafka_consumer_fetch_manager_records_consumed_total{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}[$__rate_interval]),0))",
+                    "expr": "sum by (topic) (clamp_min(rate(kafka_consumer_fetch_manager_records_consumed_total{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}[$__rate_interval]),0))",
                     "legendFormat": "topic={{topic}}",
                     "refId": "B"
                 }
             ],
             "title": "Persist and Consume Rate by Dimension",
             "type": "timeseries",
-            "description": "Breaks down persist and consume throughput by job type and topic. Helps identify skewed workload patterns, dominant failure classes, and dimension-specific traffic anomalies."
+            "description": "Breaks down persist and consume throughput by job type and topic. Helps identify skewed workload patterns, dominant failure classes, and dimension-specific traffic anomalies.",
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "ops",
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "orange",
+                                "value": 1e-9
+                            }
+                        ]
+                    }
+                },
+                "overrides": []
+            }
         },
         {
             "datasource": {
@@ -554,19 +606,42 @@
             },
             "targets": [
                 {
-                    "expr": "sum by (topic) (kafka_consumer_fetch_manager_records_lag{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}) or vector(0)",
+                    "expr": "sum by (topic) (kafka_consumer_fetch_manager_records_lag{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}) or vector(0)",
                     "legendFormat": "{{topic}} current",
                     "refId": "A"
                 },
                 {
-                    "expr": "sum by (topic) (kafka_consumer_fetch_manager_records_lag_max{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}) or vector(0)",
+                    "expr": "sum by (topic) (kafka_consumer_fetch_manager_records_lag_max{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}) or vector(0)",
                     "legendFormat": "{{topic}} max",
                     "refId": "B"
                 }
             ],
-            "title": "Lag by Topic (Current and Max)",
+            "title": "DLQ Consumer Lag",
             "type": "timeseries",
-            "description": "Tracks current and maximum lag per topic for DLQ consumers. Current lag reflects live backlog; max lag shows worst-case pressure. Sustained growth indicates consumer capacity shortfall."
+            "description": "Primary Kafka lag panel for DLQ consumer. Tracks current lag and max lag by topic for backlog risk detection.",
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "none",
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "orange",
+                                "value": 100
+                            },
+                            {
+                                "color": "red",
+                                "value": 1000
+                            }
+                        ]
+                    }
+                },
+                "overrides": []
+            }
         },
         {
             "datasource": {
@@ -598,24 +673,43 @@
             },
             "targets": [
                 {
-                    "expr": "sum(clamp_min(rate(kafka_consumer_fetch_manager_bytes_consumed_total{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}[$__rate_interval]),0))",
+                    "expr": "sum(clamp_min(rate(kafka_consumer_fetch_manager_bytes_consumed_total{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}[$__rate_interval]),0))",
                     "legendFormat": "bytes consumed/s",
                     "refId": "A"
                 },
                 {
-                    "expr": "avg(kafka_consumer_fetch_manager_records_per_request_avg{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\"}) or vector(0)",
+                    "expr": "avg(kafka_consumer_fetch_manager_records_per_request_avg{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"}) or vector(0)",
                     "legendFormat": "records/request avg",
                     "refId": "B"
                 },
                 {
-                    "expr": "avg(kafka_consumer_fetch_manager_fetch_size_avg{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\"}) or vector(0)",
+                    "expr": "avg(kafka_consumer_fetch_manager_fetch_size_avg{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"}) or vector(0)",
                     "legendFormat": "fetch size avg",
                     "refId": "C"
                 }
             ],
             "title": "Consumer Efficiency",
             "type": "timeseries",
-            "description": "Shows consumer byte rate plus fetch efficiency indicators (records per request and fetch size). Use this to tune fetch behavior and identify inefficient polling patterns that impact lag and latency."
+            "description": "Shows consumer byte rate plus fetch efficiency indicators (records per request and fetch size). Use this to tune fetch behavior and identify inefficient polling patterns that impact lag and latency.",
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "Bps",
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "orange",
+                                "value": 1e-9
+                            }
+                        ]
+                    }
+                },
+                "overrides": []
+            }
         },
         {
             "collapsed": false,
@@ -626,7 +720,7 @@
                 "y": 26
             },
             "id": 120,
-            "title": "Latency",
+            "title": "Kafka Consumption",
             "type": "row"
         },
         {
@@ -635,10 +729,10 @@
                 "h": 1,
                 "w": 24,
                 "x": 0,
-                "y": 27
+                "y": 43
             },
             "id": 104,
-            "title": "dlq-service — HTTP Latency",
+            "title": "MongoDB Persistence",
             "type": "row"
         },
         {
@@ -660,7 +754,20 @@
                         "lineInterpolation": "smooth"
                     },
                     "unit": "s",
-                    "min": 0
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "orange",
+                                "value": 1e-9
+                            }
+                        ]
+                    }
                 },
                 "overrides": []
             },
@@ -668,7 +775,7 @@
                 "h": 8,
                 "w": 12,
                 "x": 0,
-                "y": 28
+                "y": 61
             },
             "id": 204,
             "options": {
@@ -695,7 +802,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "histogram_quantile(0.50, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
+                    "expr": "histogram_quantile(0.50, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=~\"${service:regex}\", uri!~\"/actuator.*\", instance=~\"${instance:regex}\", env=~\"$env\"}[$__rate_interval]), 0)))",
                     "legendFormat": "p50",
                     "refId": "A",
                     "interval": ""
@@ -705,7 +812,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "histogram_quantile(0.90, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
+                    "expr": "histogram_quantile(0.90, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=~\"${service:regex}\", uri!~\"/actuator.*\", instance=~\"${instance:regex}\", env=~\"$env\"}[$__rate_interval]), 0)))",
                     "legendFormat": "p90",
                     "refId": "B",
                     "interval": ""
@@ -715,7 +822,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "histogram_quantile(0.95, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
+                    "expr": "histogram_quantile(0.95, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=~\"${service:regex}\", uri!~\"/actuator.*\", instance=~\"${instance:regex}\", env=~\"$env\"}[$__rate_interval]), 0)))",
                     "legendFormat": "p95",
                     "refId": "C",
                     "interval": ""
@@ -725,7 +832,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
+                    "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=~\"${service:regex}\", uri!~\"/actuator.*\", instance=~\"${instance:regex}\", env=~\"$env\"}[$__rate_interval]), 0)))",
                     "legendFormat": "p99",
                     "refId": "D",
                     "interval": ""
@@ -752,7 +859,20 @@
                         "lineInterpolation": "smooth"
                     },
                     "unit": "s",
-                    "min": 0
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "orange",
+                                "value": 1e-9
+                            }
+                        ]
+                    }
                 },
                 "overrides": []
             },
@@ -760,7 +880,7 @@
                 "h": 8,
                 "w": 12,
                 "x": 12,
-                "y": 28
+                "y": 61
             },
             "id": 107,
             "options": {
@@ -787,7 +907,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "histogram_quantile(0.50, sum by (le, uri) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
+                    "expr": "histogram_quantile(0.50, sum by (le, uri) (clamp_min(rate(http_server_requests_seconds_bucket{service=~\"${service:regex}\", uri!~\"/actuator.*\", instance=~\"${instance:regex}\", env=~\"$env\"}[$__rate_interval]), 0)))",
                     "legendFormat": "p50 {{uri}}",
                     "refId": "A",
                     "interval": ""
@@ -797,7 +917,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "histogram_quantile(0.90, sum by (le, uri) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
+                    "expr": "histogram_quantile(0.90, sum by (le, uri) (clamp_min(rate(http_server_requests_seconds_bucket{service=~\"${service:regex}\", uri!~\"/actuator.*\", instance=~\"${instance:regex}\", env=~\"$env\"}[$__rate_interval]), 0)))",
                     "legendFormat": "p90 {{uri}}",
                     "refId": "B",
                     "interval": ""
@@ -807,7 +927,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "histogram_quantile(0.99, sum by (le, uri) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"dlq-service\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
+                    "expr": "histogram_quantile(0.99, sum by (le, uri) (clamp_min(rate(http_server_requests_seconds_bucket{service=~\"${service:regex}\", uri!~\"/actuator.*\", instance=~\"${instance:regex}\", env=~\"$env\"}[$__rate_interval]), 0)))",
                     "legendFormat": "p99 {{uri}}",
                     "refId": "C",
                     "interval": ""
@@ -824,7 +944,7 @@
                 "h": 8,
                 "w": 12,
                 "x": 0,
-                "y": 44
+                "y": 27
             },
             "id": 20,
             "options": {
@@ -845,22 +965,22 @@
             },
             "targets": [
                 {
-                    "expr": "histogram_quantile(0.50, sum by (le) (clamp_min(rate(spring_kafka_listener_seconds_bucket{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",name=~\"${listener:regex}\"}[$__rate_interval]),0)))",
+                    "expr": "histogram_quantile(0.50, sum by (le) (clamp_min(rate(spring_kafka_listener_seconds_bucket{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",name=~\"${listener:regex}\"}[$__rate_interval]),0)))",
                     "legendFormat": "p50",
                     "refId": "A"
                 },
                 {
-                    "expr": "histogram_quantile(0.90, sum by (le) (clamp_min(rate(spring_kafka_listener_seconds_bucket{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",name=~\"${listener:regex}\"}[$__rate_interval]),0)))",
+                    "expr": "histogram_quantile(0.90, sum by (le) (clamp_min(rate(spring_kafka_listener_seconds_bucket{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",name=~\"${listener:regex}\"}[$__rate_interval]),0)))",
                     "legendFormat": "p90",
                     "refId": "B"
                 },
                 {
-                    "expr": "histogram_quantile(0.95, sum by (le) (clamp_min(rate(spring_kafka_listener_seconds_bucket{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",name=~\"${listener:regex}\"}[$__rate_interval]),0)))",
+                    "expr": "histogram_quantile(0.95, sum by (le) (clamp_min(rate(spring_kafka_listener_seconds_bucket{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",name=~\"${listener:regex}\"}[$__rate_interval]),0)))",
                     "legendFormat": "p95",
                     "refId": "C"
                 },
                 {
-                    "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(spring_kafka_listener_seconds_bucket{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",name=~\"${listener:regex}\"}[$__rate_interval]),0)))",
+                    "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(spring_kafka_listener_seconds_bucket{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",name=~\"${listener:regex}\"}[$__rate_interval]),0)))",
                     "legendFormat": "p99",
                     "refId": "D"
                 }
@@ -899,7 +1019,20 @@
                     },
                     "mappings": [],
                     "unit": "s",
-                    "min": 0
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "orange",
+                                "value": 1e-9
+                            }
+                        ]
+                    }
                 },
                 "overrides": []
             },
@@ -914,7 +1047,7 @@
                 "h": 8,
                 "w": 12,
                 "x": 12,
-                "y": 44
+                "y": 27
             },
             "id": 21,
             "options": {
@@ -935,12 +1068,12 @@
             },
             "targets": [
                 {
-                    "expr": "sum(clamp_min(rate(spring_kafka_listener_seconds_count{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",name=~\"${listener:regex}\"}[$__rate_interval]),0))",
+                    "expr": "sum(clamp_min(rate(spring_kafka_listener_seconds_count{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",name=~\"${listener:regex}\"}[$__rate_interval]),0))",
                     "legendFormat": "listener processed/s",
                     "refId": "A"
                 },
                 {
-                    "expr": "sum(clamp_min(rate(spring_kafka_listener_seconds_sum{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",name=~\"${listener:regex}\"}[$__rate_interval]),0)) / clamp_min(sum(clamp_min(rate(spring_kafka_listener_seconds_count{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",name=~\"${listener:regex}\"}[$__rate_interval]),0)),1e-9)",
+                    "expr": "sum(clamp_min(rate(spring_kafka_listener_seconds_sum{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",name=~\"${listener:regex}\"}[$__rate_interval]),0)) / clamp_min(sum(clamp_min(rate(spring_kafka_listener_seconds_count{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",name=~\"${listener:regex}\"}[$__rate_interval]),0)),1e-9)",
                     "legendFormat": "listener avg latency",
                     "refId": "B"
                 }
@@ -979,7 +1112,20 @@
                     },
                     "mappings": [],
                     "unit": "s",
-                    "min": 0
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "orange",
+                                "value": 1e-9
+                            }
+                        ]
+                    }
                 },
                 "overrides": []
             },
@@ -994,7 +1140,7 @@
                 "h": 8,
                 "w": 12,
                 "x": 0,
-                "y": 52
+                "y": 35
             },
             "id": 22,
             "options": {
@@ -1015,22 +1161,22 @@
             },
             "targets": [
                 {
-                    "expr": "avg(kafka_consumer_fetch_manager_fetch_latency_avg{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\"}) or vector(0)",
+                    "expr": "avg(kafka_consumer_fetch_manager_fetch_latency_avg{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"}) or vector(0)",
                     "legendFormat": "fetch latency avg",
                     "refId": "A"
                 },
                 {
-                    "expr": "max(kafka_consumer_fetch_manager_fetch_latency_max{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\"}) or vector(0)",
+                    "expr": "max(kafka_consumer_fetch_manager_fetch_latency_max{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"}) or vector(0)",
                     "legendFormat": "fetch latency max",
                     "refId": "B"
                 },
                 {
-                    "expr": "avg(kafka_consumer_consumer_coordinator_commit_latency_avg{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\"}) or vector(0)",
+                    "expr": "avg(kafka_consumer_consumer_coordinator_commit_latency_avg{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"}) or vector(0)",
                     "legendFormat": "commit latency avg",
                     "refId": "C"
                 },
                 {
-                    "expr": "max(kafka_consumer_consumer_coordinator_commit_latency_max{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\"}) or vector(0)",
+                    "expr": "max(kafka_consumer_consumer_coordinator_commit_latency_max{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"}) or vector(0)",
                     "legendFormat": "commit latency max",
                     "refId": "D"
                 }
@@ -1069,7 +1215,20 @@
                     },
                     "mappings": [],
                     "unit": "s",
-                    "min": 0
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "orange",
+                                "value": 1e-9
+                            }
+                        ]
+                    }
                 },
                 "overrides": []
             },
@@ -1084,7 +1243,7 @@
                 "h": 8,
                 "w": 12,
                 "x": 12,
-                "y": 52
+                "y": 44
             },
             "id": 23,
             "options": {
@@ -1105,22 +1264,22 @@
             },
             "targets": [
                 {
-                    "expr": "histogram_quantile(0.50, sum by (le) (clamp_min(rate(mongodb_driver_commands_seconds_bucket{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",command=~\"${command:regex}\"}[$__rate_interval]),0)))",
+                    "expr": "histogram_quantile(0.50, sum by (le) (clamp_min(rate(mongodb_driver_commands_seconds_bucket{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",command=~\"${command:regex}\"}[$__rate_interval]),0)))",
                     "legendFormat": "p50",
                     "refId": "A"
                 },
                 {
-                    "expr": "histogram_quantile(0.90, sum by (le) (clamp_min(rate(mongodb_driver_commands_seconds_bucket{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",command=~\"${command:regex}\"}[$__rate_interval]),0)))",
+                    "expr": "histogram_quantile(0.90, sum by (le) (clamp_min(rate(mongodb_driver_commands_seconds_bucket{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",command=~\"${command:regex}\"}[$__rate_interval]),0)))",
                     "legendFormat": "p90",
                     "refId": "B"
                 },
                 {
-                    "expr": "histogram_quantile(0.95, sum by (le) (clamp_min(rate(mongodb_driver_commands_seconds_bucket{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",command=~\"${command:regex}\"}[$__rate_interval]),0)))",
+                    "expr": "histogram_quantile(0.95, sum by (le) (clamp_min(rate(mongodb_driver_commands_seconds_bucket{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",command=~\"${command:regex}\"}[$__rate_interval]),0)))",
                     "legendFormat": "p95",
                     "refId": "C"
                 },
                 {
-                    "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(mongodb_driver_commands_seconds_bucket{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",command=~\"${command:regex}\"}[$__rate_interval]),0)))",
+                    "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(mongodb_driver_commands_seconds_bucket{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",command=~\"${command:regex}\"}[$__rate_interval]),0)))",
                     "legendFormat": "p99",
                     "refId": "D"
                 }
@@ -1159,7 +1318,20 @@
                     },
                     "mappings": [],
                     "unit": "s",
-                    "min": 0
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "orange",
+                                "value": 1e-9
+                            }
+                        ]
+                    }
                 },
                 "overrides": []
             },
@@ -1174,7 +1346,7 @@
                 "y": 60
             },
             "id": 130,
-            "title": "Errors & Reliability",
+            "title": "API Query Layer",
             "type": "row"
         },
         {
@@ -1186,7 +1358,7 @@
                 "h": 8,
                 "w": 12,
                 "x": 0,
-                "y": 61
+                "y": 44
             },
             "id": 30,
             "options": {
@@ -1207,19 +1379,38 @@
             },
             "targets": [
                 {
-                    "expr": "sum by (command) (clamp_min(rate(mongodb_driver_commands_seconds_count{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",status=\"FAILED\",command=~\"${command:regex}\"}[$__rate_interval]),0))",
+                    "expr": "sum by (command) (clamp_min(rate(mongodb_driver_commands_seconds_count{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",status=\"FAILED\",command=~\"${command:regex}\"}[$__rate_interval]),0))",
                     "legendFormat": "failed {{command}}",
                     "refId": "A"
                 },
                 {
-                    "expr": "sum by (command) (clamp_min(rate(mongodb_driver_commands_seconds_count{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",status=\"SUCCESS\",command=~\"${command:regex}\"}[$__rate_interval]),0))",
+                    "expr": "sum by (command) (clamp_min(rate(mongodb_driver_commands_seconds_count{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",status=\"SUCCESS\",command=~\"${command:regex}\"}[$__rate_interval]),0))",
                     "legendFormat": "success {{command}}",
                     "refId": "B"
                 }
             ],
             "title": "Mongo Commands Rate (Success vs Failed)",
             "type": "timeseries",
-            "description": "Compares Mongo command success and failure rates by command type. Use this to detect persistence reliability regressions and isolate failing operation classes quickly."
+            "description": "Compares Mongo command success and failure rates by command type. Use this to detect persistence reliability regressions and isolate failing operation classes quickly.",
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "ops",
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "orange",
+                                "value": 1e-9
+                            }
+                        ]
+                    }
+                },
+                "overrides": []
+            }
         },
         {
             "datasource": {
@@ -1230,7 +1421,7 @@
                 "h": 8,
                 "w": 12,
                 "x": 12,
-                "y": 61
+                "y": 78
             },
             "id": 31,
             "options": {
@@ -1251,24 +1442,43 @@
             },
             "targets": [
                 {
-                    "expr": "sum(clamp_min(rate(http_server_requests_seconds_count{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",uri=~\"${uri:regex}\",uri!~\"/actuator.*\"}[$__rate_interval]),0))",
+                    "expr": "sum(clamp_min(rate(http_server_requests_seconds_count{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",uri=~\"${uri:regex}\",uri!~\"/actuator.*\"}[$__rate_interval]),0))",
                     "legendFormat": "req/s",
                     "refId": "A"
                 },
                 {
-                    "expr": "sum(clamp_min(rate(http_server_requests_seconds_count{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",uri=~\"${uri:regex}\",uri!~\"/actuator.*\",status=~\"4..\"}[$__rate_interval]),0))",
+                    "expr": "sum(clamp_min(rate(http_server_requests_seconds_count{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",uri=~\"${uri:regex}\",uri!~\"/actuator.*\",status=~\"4..\"}[$__rate_interval]),0))",
                     "legendFormat": "4xx/s",
                     "refId": "B"
                 },
                 {
-                    "expr": "sum(clamp_min(rate(http_server_requests_seconds_count{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",uri=~\"${uri:regex}\",uri!~\"/actuator.*\",status=~\"5..\"}[$__rate_interval]),0))",
+                    "expr": "sum(clamp_min(rate(http_server_requests_seconds_count{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",uri=~\"${uri:regex}\",uri!~\"/actuator.*\",status=~\"5..\"}[$__rate_interval]),0))",
                     "legendFormat": "5xx/s",
                     "refId": "C"
                 }
             ],
             "title": "HTTP Traffic and Error Rate",
             "type": "timeseries",
-            "description": "Shows request throughput and HTTP 4xx/5xx rates for DLQ query APIs. Use this to monitor API demand, client misuse trends, and server-side error spikes."
+            "description": "Shows request throughput and HTTP 4xx/5xx rates for DLQ query APIs. Use this to monitor API demand, client misuse trends, and server-side error spikes.",
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "ops",
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "orange",
+                                "value": 1e-9
+                            }
+                        ]
+                    }
+                },
+                "overrides": []
+            }
         },
         {
             "datasource": {
@@ -1279,7 +1489,7 @@
                 "h": 8,
                 "w": 12,
                 "x": 0,
-                "y": 69
+                "y": 78
             },
             "id": 32,
             "options": {
@@ -1300,27 +1510,27 @@
             },
             "targets": [
                 {
-                    "expr": "histogram_quantile(0.50, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",uri=~\"${uri:regex}\",uri!~\"/actuator.*\"}[$__rate_interval]),0)))",
+                    "expr": "histogram_quantile(0.50, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",uri=~\"${uri:regex}\",uri!~\"/actuator.*\"}[$__rate_interval]),0)))",
                     "legendFormat": "http p50",
                     "refId": "A"
                 },
                 {
-                    "expr": "histogram_quantile(0.90, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",uri=~\"${uri:regex}\",uri!~\"/actuator.*\"}[$__rate_interval]),0)))",
+                    "expr": "histogram_quantile(0.90, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",uri=~\"${uri:regex}\",uri!~\"/actuator.*\"}[$__rate_interval]),0)))",
                     "legendFormat": "http p90",
                     "refId": "B"
                 },
                 {
-                    "expr": "histogram_quantile(0.95, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",uri=~\"${uri:regex}\",uri!~\"/actuator.*\"}[$__rate_interval]),0)))",
+                    "expr": "histogram_quantile(0.95, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",uri=~\"${uri:regex}\",uri!~\"/actuator.*\"}[$__rate_interval]),0)))",
                     "legendFormat": "http p95",
                     "refId": "C"
                 },
                 {
-                    "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",uri=~\"${uri:regex}\",uri!~\"/actuator.*\"}[$__rate_interval]),0)))",
+                    "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",uri=~\"${uri:regex}\",uri!~\"/actuator.*\"}[$__rate_interval]),0)))",
                     "legendFormat": "http p99",
                     "refId": "D"
                 },
                 {
-                    "expr": "sum(clamp_min(rate(http_server_requests_seconds_sum{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",uri=~\"${uri:regex}\",uri!~\"/actuator.*\"}[$__rate_interval]),0)) / clamp_min(sum(clamp_min(rate(http_server_requests_seconds_count{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",uri=~\"${uri:regex}\",uri!~\"/actuator.*\"}[$__rate_interval]),0)),1e-9)",
+                    "expr": "sum(clamp_min(rate(http_server_requests_seconds_sum{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",uri=~\"${uri:regex}\",uri!~\"/actuator.*\"}[$__rate_interval]),0)) / clamp_min(sum(clamp_min(rate(http_server_requests_seconds_count{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",uri=~\"${uri:regex}\",uri!~\"/actuator.*\"}[$__rate_interval]),0)),1e-9)",
                     "legendFormat": "http mean",
                     "refId": "E"
                 }
@@ -1359,7 +1569,20 @@
                     },
                     "mappings": [],
                     "unit": "s",
-                    "min": 0
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "orange",
+                                "value": 1e-9
+                            }
+                        ]
+                    }
                 },
                 "overrides": []
             },
@@ -1374,7 +1597,7 @@
                 "h": 8,
                 "w": 12,
                 "x": 12,
-                "y": 69
+                "y": 86
             },
             "id": 33,
             "options": {
@@ -1395,14 +1618,33 @@
             },
             "targets": [
                 {
-                    "expr": "sum by (topic) (deriv(kafka_consumer_fetch_manager_records_lag_max{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}[$__rate_interval])) or vector(0)",
-                    "legendFormat": "{{topic}} lag growth",
+                    "expr": "deriv(sum(clamp_min(rate(http_server_requests_seconds_count{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",uri=~\"${uri:regex}\",uri!~\"/actuator.*\",status=~\"5..\"}[$__rate_interval]),0))[$__range])",
+                    "legendFormat": "5xx growth trend",
                     "refId": "A"
                 }
             ],
-            "title": "Lag Growth by Topic",
+            "title": "API 5xx Error Rate Trend",
             "type": "timeseries",
-            "description": "Shows rate of change for lag max by topic. Positive slope indicates backlog acceleration; near-zero suggests steady-state; negative slope indicates recovery and backlog drain."
+            "description": "Tracks API server error rate trend over time. Sustained upward slope indicates deteriorating query layer reliability.",
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "ops",
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 0
+                            }
+                        ]
+                    }
+                },
+                "overrides": []
+            }
         },
         {
             "datasource": {
@@ -1413,7 +1655,7 @@
                 "h": 8,
                 "w": 12,
                 "x": 0,
-                "y": 77
+                "y": 86
             },
             "id": 34,
             "options": {
@@ -1421,7 +1663,7 @@
             },
             "targets": [
                 {
-                    "expr": "sum by (job_type) (increase(chrono_jobs_dlq_total{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",job_type=~\"${job_type:regex}\"}[$__range]))",
+                    "expr": "sum by (job_type) (sum_over_time(clamp_min(rate(chrono_jobs_dlq_total{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",job_type=~\"${job_type:regex}\"}[$__rate_interval]),0)[$__range:$__rate_interval]))",
                     "format": "table",
                     "instant": true,
                     "legendFormat": "{{job_type}}",
@@ -1447,7 +1689,30 @@
                 }
             ],
             "type": "table",
-            "description": "Table of persisted DLQ job counts by job type over the selected period. Useful for understanding dominant failure categories and validating operational remediation priorities."
+            "description": "Estimated persisted DLQ job volume by type over the selected period from rate integration.",
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "none",
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "orange",
+                                "value": 100
+                            },
+                            {
+                                "color": "red",
+                                "value": 1000
+                            }
+                        ]
+                    }
+                },
+                "overrides": []
+            }
         },
         {
             "datasource": {
@@ -1458,7 +1723,7 @@
                 "h": 8,
                 "w": 12,
                 "x": 12,
-                "y": 77
+                "y": 52
             },
             "id": 35,
             "options": {
@@ -1479,14 +1744,33 @@
             },
             "targets": [
                 {
-                    "expr": "sum by (command, status) (clamp_min(rate(mongodb_driver_commands_seconds_count{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",command=~\"${command:regex}\",status=~\"${status:regex}\"}[$__rate_interval]),0))",
+                    "expr": "sum by (command, status) (clamp_min(rate(mongodb_driver_commands_seconds_count{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",command=~\"${command:regex}\",status=~\"${status:regex}\"}[$__rate_interval]),0))",
                     "legendFormat": "{{command}} {{status}}",
                     "refId": "A"
                 }
             ],
             "title": "Mongo Throughput by Command and Status",
             "type": "timeseries",
-            "description": "Shows Mongo operation throughput split by command and status. Use this to correlate write/read volume with failure states and detect abnormal command mix changes."
+            "description": "Shows Mongo operation throughput split by command and status. Use this to correlate write/read volume with failure states and detect abnormal command mix changes.",
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "ops",
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "orange",
+                                "value": 1e-9
+                            }
+                        ]
+                    }
+                },
+                "overrides": []
+            }
         },
         {
             "collapsed": false,
@@ -1494,10 +1778,10 @@
                 "h": 1,
                 "w": 24,
                 "x": 0,
-                "y": 85
+                "y": 77
             },
             "id": 140,
-            "title": "Resource & Capacity",
+            "title": "Errors",
             "type": "row"
         },
         {
@@ -1509,7 +1793,7 @@
                 "h": 8,
                 "w": 12,
                 "x": 0,
-                "y": 86
+                "y": 95
             },
             "id": 40,
             "options": {
@@ -1530,24 +1814,43 @@
             },
             "targets": [
                 {
-                    "expr": "sum(jvm_memory_used_bytes{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",area=\"heap\"})",
+                    "expr": "sum(jvm_memory_used_bytes{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",area=\"heap\"})",
                     "legendFormat": "heap used",
                     "refId": "A"
                 },
                 {
-                    "expr": "sum(jvm_memory_max_bytes{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",area=\"heap\"})",
+                    "expr": "sum(jvm_memory_max_bytes{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",area=\"heap\"})",
                     "legendFormat": "heap max",
                     "refId": "B"
                 },
                 {
-                    "expr": "sum(jvm_memory_used_bytes{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",area=\"nonheap\"})",
+                    "expr": "sum(jvm_memory_used_bytes{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",area=\"nonheap\"})",
                     "legendFormat": "non-heap used",
                     "refId": "C"
                 }
             ],
             "title": "JVM Memory",
             "type": "timeseries",
-            "description": "Tracks heap and non-heap JVM memory for dlq-service. Helps identify memory pressure, long-term growth patterns, and potential GC stress under high DLQ load."
+            "description": "Tracks heap and non-heap JVM memory for dlq-service. Helps identify memory pressure, long-term growth patterns, and potential GC stress under high DLQ load.",
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "bytes",
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "orange",
+                                "value": 1e-9
+                            }
+                        ]
+                    }
+                },
+                "overrides": []
+            }
         },
         {
             "datasource": {
@@ -1558,7 +1861,7 @@
                 "h": 8,
                 "w": 12,
                 "x": 12,
-                "y": 86
+                "y": 95
             },
             "id": 41,
             "options": {
@@ -1579,19 +1882,38 @@
             },
             "targets": [
                 {
-                    "expr": "max(process_resident_memory_bytes{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\"})",
+                    "expr": "max(process_resident_memory_bytes{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"})",
                     "legendFormat": "rss",
                     "refId": "A"
                 },
                 {
-                    "expr": "100 * max(process_cpu_usage{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\"})",
+                    "expr": "100 * max(process_cpu_usage{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"})",
                     "legendFormat": "cpu %",
                     "refId": "B"
                 }
             ],
             "title": "Process RSS and CPU",
             "type": "timeseries",
-            "description": "Shows process-level resident memory and CPU utilization. Use this to detect host resource bottlenecks that can degrade persistence throughput and API responsiveness."
+            "description": "Shows process-level resident memory and CPU utilization. Use this to detect host resource bottlenecks that can degrade persistence throughput and API responsiveness.",
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "bytes",
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "orange",
+                                "value": 1e-9
+                            }
+                        ]
+                    }
+                },
+                "overrides": []
+            }
         },
         {
             "datasource": {
@@ -1602,7 +1924,7 @@
                 "h": 8,
                 "w": 12,
                 "x": 0,
-                "y": 94
+                "y": 103
             },
             "id": 42,
             "options": {
@@ -1623,24 +1945,43 @@
             },
             "targets": [
                 {
-                    "expr": "max(jvm_threads_live_threads{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\"})",
+                    "expr": "max(jvm_threads_live_threads{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"})",
                     "legendFormat": "live threads",
                     "refId": "A"
                 },
                 {
-                    "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(jvm_gc_pause_seconds_bucket{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\"}[$__rate_interval]),0)))",
+                    "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(jvm_gc_pause_seconds_bucket{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"}[$__rate_interval]),0)))",
                     "legendFormat": "gc pause p99",
                     "refId": "B"
                 },
                 {
-                    "expr": "max(process_uptime_seconds{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\"})",
+                    "expr": "max(process_uptime_seconds{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"})",
                     "legendFormat": "uptime",
                     "refId": "C"
                 }
             ],
             "title": "Threads, GC, Uptime",
             "type": "timeseries",
-            "description": "Combines thread count, GC pause behavior, and uptime for runtime stability monitoring. Useful to spot thread leaks, pause regressions, and restart instability."
+            "description": "Combines thread count, GC pause behavior, and uptime for runtime stability monitoring. Useful to spot thread leaks, pause regressions, and restart instability.",
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "short",
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "orange",
+                                "value": 1e-9
+                            }
+                        ]
+                    }
+                },
+                "overrides": []
+            }
         },
         {
             "datasource": {
@@ -1651,7 +1992,7 @@
                 "h": 8,
                 "w": 12,
                 "x": 12,
-                "y": 94
+                "y": 52
             },
             "id": 43,
             "options": {
@@ -1672,19 +2013,42 @@
             },
             "targets": [
                 {
-                    "expr": "sum(clamp_min(rate(mongodb_driver_commands_seconds_count{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",command=~\"${command:regex}\",status=~\"${status:regex}\"}[$__rate_interval]),0))",
-                    "legendFormat": "mongo commands/s",
+                    "expr": "sum(clamp_min(rate(chrono_jobs_dlq_total{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",job_type=~\"${job_type:regex}\"}[$__rate_interval]),0))",
+                    "legendFormat": "dlq persist/s",
                     "refId": "A"
                 },
                 {
-                    "expr": "sum(clamp_min(rate(http_server_requests_seconds_count{service=\"dlq-service\",env=~\"$env\",instance=~\"${instance:regex}\",uri=~\"${uri:regex}\",uri!~\"/actuator.*\"}[$__rate_interval]),0))",
-                    "legendFormat": "http req/s",
+                    "expr": "histogram_quantile(0.95, sum by (le) (clamp_min(rate(mongodb_driver_commands_seconds_bucket{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",command=~\"${command:regex}\"}[$__rate_interval]),0)))",
+                    "legendFormat": "mongo p95 latency (s)",
                     "refId": "B"
                 }
             ],
-            "title": "Mongo and API Throughput",
+            "title": "DLQ Persist Rate vs Mongo Latency",
             "type": "timeseries",
-            "description": "Correlates Mongo command rate with HTTP request rate to show data-plane and control-plane demand together. Helps validate whether API traffic aligns with backend persistence load."
+            "description": "Correlation overlay to detect persistence bottlenecks. If DLQ persist rate drops while Mongo latency rises, storage is likely constraining ingestion.",
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "ops",
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "orange",
+                                "value": 1
+                            },
+                            {
+                                "color": "red",
+                                "value": 5
+                            }
+                        ]
+                    }
+                },
+                "overrides": []
+            }
         },
         {
             "datasource": {
@@ -1768,7 +2132,7 @@
                 "h": 8,
                 "w": 12,
                 "x": 0,
-                "y": 36
+                "y": 69
             },
             "id": 205,
             "options": {
@@ -1796,7 +2160,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "topk(10, histogram_quantile(0.99, sum by (le, service, uri) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"dlq-service\", env=~\"$env\", uri!~\"/actuator.*\"}[$__rate_interval]), 0))))",
+                    "expr": "topk(10, histogram_quantile(0.99, sum by (le, service, uri) (clamp_min(rate(http_server_requests_seconds_bucket{service=~\"${service:regex}\", env=~\"$env\", uri!~\"/actuator.*\"}[$__rate_interval]), 0))))",
                     "legendFormat": "",
                     "refId": "A",
                     "interval": "",
@@ -1859,7 +2223,7 @@
                             }
                         ]
                     },
-                    "unit": "short",
+                    "unit": "reqps",
                     "noValue": "—",
                     "decimals": 0
                 },
@@ -1886,7 +2250,7 @@
                 },
                 "textMode": "auto"
             },
-            "title": "dlq-service — Total API Requests (Range)",
+            "title": "dlq-service — Total API Requests Rate",
             "type": "stat",
             "targets": [
                 {
@@ -1894,15 +2258,15 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "sum(increase(http_server_requests_seconds_count{service=\"dlq-service\", env=~\"$env\", uri!~\"/actuator.*\"}[$__range]))",
-                    "legendFormat": "total",
+                    "expr": "sum(clamp_min(rate(http_server_requests_seconds_count{service=~\"${service:regex}\", env=~\"$env\", uri!~\"/actuator.*\"}[$__rate_interval]), 0))",
+                    "legendFormat": "req/s",
                     "refId": "A",
                     "interval": "",
                     "instant": true,
                     "editorMode": "code"
                 }
             ],
-            "description": "Total HTTP requests across selected applications (excluding actuator) over the dashboard time range."
+            "description": "Current HTTP request rate across selected applications (excluding actuator). Uses rate-based view for real-time operations."
         },
         {
             "datasource": {
@@ -1958,7 +2322,7 @@
                 },
                 "textMode": "auto"
             },
-            "title": "dlq-service — Success Rate %",
+            "title": "API Success %",
             "type": "stat",
             "targets": [
                 {
@@ -1966,7 +2330,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "clamp_max(clamp_min(100 * sum(clamp_min(rate(http_server_requests_seconds_count{service=\"dlq-service\", env=~\"$env\", outcome=\"SUCCESS\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)) / clamp_min(sum(clamp_min(rate(http_server_requests_seconds_count{service=\"dlq-service\", env=~\"$env\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)), 1e-9), 0), 100)",
+                    "expr": "clamp_max(clamp_min(100 * sum(clamp_min(rate(http_server_requests_seconds_count{service=~\"${service:regex}\", env=~\"$env\", outcome=\"SUCCESS\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)) / clamp_min(sum(clamp_min(rate(http_server_requests_seconds_count{service=~\"${service:regex}\", env=~\"$env\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)), 1e-9), 0), 100)",
                     "legendFormat": "",
                     "refId": "A",
                     "interval": "",
@@ -1974,7 +2338,7 @@
                     "editorMode": "code"
                 }
             ],
-            "description": "Percentage of HTTP requests completing successfully, based on the current rate."
+            "description": "SLO signal for API query layer success rate based on HTTP outcome=SUCCESS."
         },
         {
             "datasource": {
@@ -2038,7 +2402,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "clamp_max(clamp_min(100 * sum(clamp_min(rate(http_server_requests_seconds_count{service=\"dlq-service\", env=~\"$env\", status=~\"4..|5..\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)) / clamp_min(sum(clamp_min(rate(http_server_requests_seconds_count{service=\"dlq-service\", env=~\"$env\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)), 1e-9), 0), 100)",
+                    "expr": "clamp_max(clamp_min(100 * sum(clamp_min(rate(http_server_requests_seconds_count{service=~\"${service:regex}\", env=~\"$env\", status=~\"4..|5..\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)) / clamp_min(sum(clamp_min(rate(http_server_requests_seconds_count{service=~\"${service:regex}\", env=~\"$env\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)), 1e-9), 0), 100)",
                     "legendFormat": "",
                     "refId": "A",
                     "interval": "",
@@ -2110,7 +2474,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "histogram_quantile(0.95, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"dlq-service\", env=~\"$env\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)))",
+                    "expr": "histogram_quantile(0.95, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=~\"${service:regex}\", env=~\"$env\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)))",
                     "legendFormat": "p95",
                     "refId": "A",
                     "interval": "",
@@ -2182,7 +2546,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"dlq-service\", env=~\"$env\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)))",
+                    "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=~\"${service:regex}\", env=~\"$env\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)))",
                     "legendFormat": "p99",
                     "refId": "A",
                     "interval": "",
@@ -2246,7 +2610,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "sum(clamp_min(rate(http_server_requests_seconds_count{service=\"dlq-service\", env=~\"$env\", uri!~\"/actuator.*\"}[$__rate_interval]), 0))",
+                    "expr": "sum(clamp_min(rate(http_server_requests_seconds_count{service=~\"${service:regex}\", env=~\"$env\", uri!~\"/actuator.*\"}[$__rate_interval]), 0))",
                     "legendFormat": "",
                     "refId": "A",
                     "interval": "",
@@ -2305,7 +2669,7 @@
                 "h": 8,
                 "w": 12,
                 "x": 12,
-                "y": 36
+                "y": 69
             },
             "id": 212,
             "options": {
@@ -2330,7 +2694,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "sum by (service) ((http_server_requests_active_seconds_gcount{service=\"dlq-service\", env=~\"$env\", uri!~\"/actuator.*\"}) or (http_server_requests_active_seconds_active_count{service=\"dlq-service\", env=~\"$env\", uri!~\"/actuator.*\"}))",
+                    "expr": "sum by (service) ((http_server_requests_active_seconds_gcount{service=~\"${service:regex}\", env=~\"$env\", uri!~\"/actuator.*\"}) or (http_server_requests_active_seconds_active_count{service=~\"${service:regex}\", env=~\"$env\", uri!~\"/actuator.*\"}))",
                     "legendFormat": "in-flight — {{service}}",
                     "refId": "A",
                     "interval": "",
@@ -2341,7 +2705,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "sum((http_server_requests_active_seconds_gcount{service=\"dlq-service\", env=~\"$env\", uri!~\"/actuator.*\"}) or (http_server_requests_active_seconds_active_count{service=\"dlq-service\", env=~\"$env\", uri!~\"/actuator.*\"}))",
+                    "expr": "sum((http_server_requests_active_seconds_gcount{service=~\"${service:regex}\", env=~\"$env\", uri!~\"/actuator.*\"}) or (http_server_requests_active_seconds_active_count{service=~\"${service:regex}\", env=~\"$env\", uri!~\"/actuator.*\"}))",
                     "legendFormat": "total in-flight",
                     "refId": "B",
                     "interval": "",
@@ -2351,6 +2715,84 @@
             "title": "dlq-service — HTTP In-Flight Requests — Active Concurrency",
             "type": "timeseries",
             "description": "Number of HTTP requests currently being processed (active / in-flight) per application. Uses Micrometer LongTaskTimer active-count metric with compatibility fallback for both OpenMetrics variants (`http_server_requests_active_seconds_gcount` and `http_server_requests_active_seconds_active_count`). Sustained high values indicate thread-pool saturation or upstream blocking. Sudden spikes coinciding with p99 latency rises confirm concurrency-driven slowdowns."
+        },
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 94
+            },
+            "id": 150,
+            "title": "System",
+            "type": "row"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "description": "DLQ backlog growth over last 5m. Positive sustained values indicate accumulating dead-letter pressure.",
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "none",
+                    "decimals": 0,
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 0.0001
+                            }
+                        ]
+                    },
+                    "color": {
+                        "mode": "thresholds"
+                    }
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 52
+            },
+            "id": 213,
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "showThresholdLabels": true,
+                "showThresholdMarkers": true,
+                "orientation": "auto"
+            },
+            "targets": [
+                {
+                    "expr": "sum(clamp_min(increase(chrono_jobs_dlq_total{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",job_type=~\"${job_type:regex}\"}[5m]),0)) or vector(0)",
+                    "instant": true,
+                    "legendFormat": "dlq size delta (5m)",
+                    "refId": "A"
+                }
+            ],
+            "title": "DLQ Size Delta (5m)",
+            "type": "gauge",
+            "alert": {
+                "name": "DLQ size growing",
+                "message": "DLQ size delta over 5m is above 0 and sustained",
+                "noDataState": "no_data",
+                "executionErrorState": "alerting"
+            }
         }
     ],
     "refresh": "30s",
@@ -2376,11 +2818,27 @@
                 "current": {}
             },
             {
+                "name": "service",
+                "type": "query",
+                "label": "Service",
+                "query": "label_values(up, job)",
+                "definition": "label_values(up, job)",
+                "refresh": 2,
+                "multi": true,
+                "includeAll": true,
+                "allValue": ".*",
+                "current": {
+                    "text": "All",
+                    "value": "$__all",
+                    "selected": true
+                }
+            },
+            {
                 "name": "env",
                 "type": "query",
                 "label": "Environment",
-                "query": "label_values(up{job=\"dlq-service\"}, env)",
-                "definition": "label_values(up{job=\"dlq-service\"}, env)",
+                "query": "label_values(up{job=~\"${service:regex}\"}, env)",
+                "definition": "label_values(up{job=~\"${service:regex}\"}, env)",
                 "refresh": 2,
                 "multi": true,
                 "includeAll": true,
@@ -2395,8 +2853,8 @@
                 "name": "instance",
                 "type": "query",
                 "label": "Instance",
-                "query": "label_values(up{job=\"dlq-service\",env=~\"$env\"}, instance)",
-                "definition": "label_values(up{job=\"dlq-service\",env=~\"$env\"}, instance)",
+                "query": "label_values(up{job=~\"${service:regex}\",env=~\"$env\"}, instance)",
+                "definition": "label_values(up{job=~\"${service:regex}\",env=~\"$env\"}, instance)",
                 "refresh": 2,
                 "multi": true,
                 "includeAll": true,
@@ -2411,8 +2869,8 @@
                 "name": "topic",
                 "type": "query",
                 "label": "Topic",
-                "query": "label_values(kafka_consumer_fetch_manager_records_consumed_total{service=\"dlq-service\",instance=~\"${instance:regex}\"}, topic)",
-                "definition": "label_values(kafka_consumer_fetch_manager_records_consumed_total{service=\"dlq-service\",instance=~\"${instance:regex}\"}, topic)",
+                "query": "label_values(kafka_consumer_fetch_manager_records_consumed_total{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"}, topic)",
+                "definition": "label_values(kafka_consumer_fetch_manager_records_consumed_total{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"}, topic)",
                 "refresh": 2,
                 "multi": true,
                 "includeAll": true,
@@ -2427,8 +2885,8 @@
                 "name": "job_type",
                 "type": "query",
                 "label": "Job Type",
-                "query": "label_values(chrono_jobs_dlq_total{service=\"dlq-service\",instance=~\"${instance:regex}\"}, job_type)",
-                "definition": "label_values(chrono_jobs_dlq_total{service=\"dlq-service\",instance=~\"${instance:regex}\"}, job_type)",
+                "query": "label_values(chrono_jobs_dlq_total{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"}, job_type)",
+                "definition": "label_values(chrono_jobs_dlq_total{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"}, job_type)",
                 "refresh": 2,
                 "multi": true,
                 "includeAll": true,
@@ -2443,8 +2901,8 @@
                 "name": "listener",
                 "type": "query",
                 "label": "Listener",
-                "query": "label_values(spring_kafka_listener_seconds_count{service=\"dlq-service\",instance=~\"${instance:regex}\"}, name)",
-                "definition": "label_values(spring_kafka_listener_seconds_count{service=\"dlq-service\",instance=~\"${instance:regex}\"}, name)",
+                "query": "label_values(spring_kafka_listener_seconds_count{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"}, name)",
+                "definition": "label_values(spring_kafka_listener_seconds_count{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"}, name)",
                 "refresh": 2,
                 "multi": true,
                 "includeAll": true,
@@ -2459,8 +2917,8 @@
                 "name": "command",
                 "type": "query",
                 "label": "Mongo Command",
-                "query": "label_values(mongodb_driver_commands_seconds_count{service=\"dlq-service\",instance=~\"${instance:regex}\"}, command)",
-                "definition": "label_values(mongodb_driver_commands_seconds_count{service=\"dlq-service\",instance=~\"${instance:regex}\"}, command)",
+                "query": "label_values(mongodb_driver_commands_seconds_count{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"}, command)",
+                "definition": "label_values(mongodb_driver_commands_seconds_count{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"}, command)",
                 "refresh": 2,
                 "multi": true,
                 "includeAll": true,
@@ -2475,8 +2933,8 @@
                 "name": "status",
                 "type": "query",
                 "label": "Mongo Status",
-                "query": "label_values(mongodb_driver_commands_seconds_count{service=\"dlq-service\",instance=~\"${instance:regex}\"}, status)",
-                "definition": "label_values(mongodb_driver_commands_seconds_count{service=\"dlq-service\",instance=~\"${instance:regex}\"}, status)",
+                "query": "label_values(mongodb_driver_commands_seconds_count{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"}, status)",
+                "definition": "label_values(mongodb_driver_commands_seconds_count{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"}, status)",
                 "refresh": 2,
                 "multi": true,
                 "includeAll": true,
@@ -2491,8 +2949,8 @@
                 "name": "uri",
                 "type": "query",
                 "label": "Endpoint",
-                "query": "label_values(http_server_requests_seconds_count{service=\"dlq-service\",instance=~\"${instance:regex}\",uri!~\"/actuator.*\"}, uri)",
-                "definition": "label_values(http_server_requests_seconds_count{service=\"dlq-service\",instance=~\"${instance:regex}\",uri!~\"/actuator.*\"}, uri)",
+                "query": "label_values(http_server_requests_seconds_count{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",uri!~\"/actuator.*\"}, uri)",
+                "definition": "label_values(http_server_requests_seconds_count{service=~\"${service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",uri!~\"/actuator.*\"}, uri)",
                 "refresh": 2,
                 "multi": true,
                 "includeAll": true,
@@ -2532,5 +2990,5 @@
     "timezone": "browser",
     "title": "DLQ Service",
     "uid": "chrono-dlq-service",
-    "version": 1
+    "version": 2
 }

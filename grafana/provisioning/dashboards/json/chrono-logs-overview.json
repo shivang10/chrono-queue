@@ -15,7 +15,7 @@
       }
     ]
   },
-  "description": "Log volume and exploration \u2014 total/ERROR/WARN/INFO counts, log rate per service, level distribution, and live log explorer with full-text search.\n\nHow to use this dashboard: Start from the top Overview row to verify SLO health, then drill into throughput, latency, errors, and capacity sections to isolate bottlenecks. Use the template filters (environment, instance, topic, job type, endpoint, and command where available) to narrow scope during incidents and compare behavior across dimensions. Panel info icon meaning: Click the i icon in each panel header to see what the metric represents, how to interpret normal vs abnormal values, and what operational signal it provides.",
+  "description": "Signal-first log observability dashboard for Chrono Queue. Focuses on rolling log rates, error/warn pressure, top erroring services, top error messages, and spike detection with live log exploration.\n\nHow to use this dashboard: Start at the overview row (rate + error share), then inspect service-level rates and top offenders. Use the template filters (service, env, instance, and text filter) to narrow blast radius during incidents.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -49,7 +49,7 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "loki"
+        "uid": "${loki_ds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -65,9 +65,9 @@
               }
             ]
           },
-          "unit": "short",
+          "unit": "percent",
           "noValue": "\u2014",
-          "decimals": 0
+          "decimals": 2
         },
         "overrides": []
       },
@@ -92,26 +92,26 @@
         },
         "textMode": "auto"
       },
-      "title": "Total Log Lines",
+      "title": "Log Rate (lines/min)",
       "type": "stat",
       "targets": [
         {
           "datasource": {
             "type": "loki",
-            "uid": "loki"
+            "uid": "${loki_ds}"
           },
-          "expr": "sum(count_over_time({job=~\"$service\"} [$__range]))",
+          "expr": "60 * sum(rate({job=~\"${service:regex}\",env=~\"${env:regex}\",instance=~\"${instance:regex}\"}[5m]))",
           "editorMode": "code",
           "queryType": "range",
           "refId": "A"
         }
       ],
-      "description": "Total log lines across selected services over the dashboard time range."
+      "description": "Current total log rate across selected services (rolling 5m window)."
     },
     {
       "datasource": {
         "type": "loki",
-        "uid": "loki"
+        "uid": "${loki_ds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -162,26 +162,26 @@
         },
         "textMode": "auto"
       },
-      "title": "WARN Lines",
+      "title": "Error Log Rate (lines/min)",
       "type": "stat",
       "targets": [
         {
           "datasource": {
             "type": "loki",
-            "uid": "loki"
+            "uid": "${loki_ds}"
           },
-          "expr": "sum(count_over_time({job=~\"$service\",level=\"warn\"} [$__range]))",
+          "expr": "60 * sum(rate({job=~\"${service:regex}\",env=~\"${env:regex}\",instance=~\"${instance:regex}\"} |~ \"(?i)\\bERROR\\b\" [5m]))",
           "editorMode": "code",
           "queryType": "range",
           "refId": "A"
         }
       ],
-      "description": "Total WARN-level log lines across selected services over the dashboard time range."
+      "description": "Current ERROR log rate across selected services (rolling 5m window)."
     },
     {
       "datasource": {
         "type": "loki",
-        "uid": "loki"
+        "uid": "${loki_ds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -224,26 +224,26 @@
         },
         "textMode": "auto"
       },
-      "title": "INFO Lines",
+      "title": "Warn Log Rate (lines/min)",
       "type": "stat",
       "targets": [
         {
           "datasource": {
             "type": "loki",
-            "uid": "loki"
+            "uid": "${loki_ds}"
           },
-          "expr": "sum(count_over_time({job=~\"$service\",level=\"info\"} [$__range]))",
+          "expr": "60 * sum(rate({job=~\"${service:regex}\",env=~\"${env:regex}\",instance=~\"${instance:regex}\"} |~ \"(?i)\\bWARN\\b\" [5m]))",
           "editorMode": "code",
           "queryType": "range",
           "refId": "A"
         }
       ],
-      "description": "Total INFO-level log lines across selected services over the dashboard time range."
+      "description": "Current WARN log rate across selected services (rolling 5m window)."
     },
     {
       "datasource": {
         "type": "loki",
-        "uid": "loki"
+        "uid": "${loki_ds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -286,26 +286,26 @@
         },
         "textMode": "auto"
       },
-      "title": "DEBUG Lines",
+      "title": "Error Share (%)",
       "type": "stat",
       "targets": [
         {
           "datasource": {
             "type": "loki",
-            "uid": "loki"
+            "uid": "${loki_ds}"
           },
-          "expr": "sum(count_over_time({job=~\"$service\"} |~ \"(?i) DEBUG \" [$__range]))",
+          "expr": "100 * sum(rate({job=~\"${service:regex}\",env=~\"${env:regex}\",instance=~\"${instance:regex}\"} |~ \"(?i)\\bERROR\\b\" [5m])) / clamp_min(sum(rate({job=~\"${service:regex}\",env=~\"${env:regex}\",instance=~\"${instance:regex}\"}[5m])), 0.0001)",
           "editorMode": "code",
           "queryType": "range",
           "refId": "A"
         }
       ],
-      "description": "Total DEBUG-level log lines across selected services over the dashboard time range."
+      "description": "Current percentage of ERROR lines relative to all logs (rolling 5m window)."
     },
     {
       "datasource": {
         "type": "loki",
-        "uid": "loki"
+        "uid": "${loki_ds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -337,11 +337,11 @@
             "properties": [
               {
                 "id": "displayName",
-                "value": "Error Logs"
+                "value": "Error Rate (lines/min)"
               },
               {
                 "id": "custom.width",
-                "value": 140
+                "value": 160
               }
             ]
           }
@@ -349,7 +349,7 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 24,
+        "w": 12,
         "x": 0,
         "y": 5
       },
@@ -368,7 +368,7 @@
         "sortBy": [
           {
             "desc": true,
-            "displayName": "Error Logs"
+            "displayName": "Error Rate (lines/min)"
           }
         ]
       },
@@ -377,9 +377,9 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "loki"
+            "uid": "${loki_ds}"
           },
-          "expr": "topk(5,sum by (job)(count_over_time({job=~\"$service\",level=\"error\"}[$__range])))",
+          "expr": "60 * topk(5, sum by (job) (rate({job=~\"${service:regex}\",env=~\"${env:regex}\",instance=~\"${instance:regex}\"} |~ \"(?i)\\bERROR\\b\" [5m])))",
           "editorMode": "code",
           "queryType": "range",
           "refId": "A",
@@ -419,7 +419,126 @@
         }
       ],
       "type": "table",
-      "description": "Top 5 services ranked by total error log volume over the selected time range."
+      "description": "Top 5 services ranked by rolling ERROR log rate."
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_ds}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "unit": "short",
+          "decimals": 0,
+          "noValue": "\u2014"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "err_msg"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Error Message"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Rate (lines/min)"
+              },
+              {
+                "id": "custom.width",
+                "value": 140
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 5
+      },
+      "id": 16,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Rate (lines/min)"
+          }
+        ]
+      },
+      "pluginVersion": "10.2.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_ds}"
+          },
+          "expr": "60 * topk(10, sum by (err_msg) (rate({job=~\"${service:regex}\",env=~\"${env:regex}\",instance=~\"${instance:regex}\"} |~ \"(?i)\\bERROR\\b\" | regexp \"(?i)\\bERROR\\b[:\\s-]*(?P<err_msg>.*)\" [5m])))",
+          "editorMode": "code",
+          "queryType": "range",
+          "refId": "A",
+          "legendFormat": "",
+          "format": "table"
+        }
+      ],
+      "title": "Top Error Messages",
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "err_msg",
+                "Value"
+              ]
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": [
+              {
+                "desc": true,
+                "displayName": "Value"
+              }
+            ]
+          }
+        },
+        {
+          "id": "limit",
+          "options": {
+            "limitCount": 10
+          }
+        }
+      ],
+      "type": "table",
+      "description": "Top recurring ERROR messages by rolling rate (best-effort extraction from log text)."
     },
     {
       "collapsed": false,
@@ -436,7 +555,91 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "loki"
+        "uid": "${loki_ds}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 12,
+            "showPoints": "never",
+            "drawStyle": "line",
+            "spanNulls": false
+          },
+          "unit": "short",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 14
+      },
+      "id": 17,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "title": "Log Rate Over Time (lines/min)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_ds}"
+          },
+          "expr": "60 * sum(rate({job=~\"${service:regex}\",env=~\"${env:regex}\",instance=~\"${instance:regex}\"}[5m]))",
+          "editorMode": "code",
+          "queryType": "range",
+          "refId": "A",
+          "legendFormat": "Total"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_ds}"
+          },
+          "expr": "60 * sum(rate({job=~\"${service:regex}\",env=~\"${env:regex}\",instance=~\"${instance:regex}\"} |~ \"(?i)\\bERROR\\b\" [5m]))",
+          "editorMode": "code",
+          "queryType": "range",
+          "refId": "B",
+          "legendFormat": "ERROR"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${loki_ds}"
+          },
+          "expr": "60 * sum(rate({job=~\"${service:regex}\",env=~\"${env:regex}\",instance=~\"${instance:regex}\"} |~ \"(?i)\\bWARN\\b\" [5m]))",
+          "editorMode": "code",
+          "queryType": "range",
+          "refId": "C",
+          "legendFormat": "WARN"
+        }
+      ],
+      "description": "Overall rolling log rate with ERROR/WARN overlays for quick signal detection."
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${loki_ds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -457,8 +660,8 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 16,
-        "x": 0,
+        "w": 10,
+        "x": 8,
         "y": 14
       },
       "id": 5,
@@ -484,21 +687,21 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "loki"
+            "uid": "${loki_ds}"
           },
-          "expr": "sum by (job) (count_over_time({job=~\"$service\"} [$__interval]))",
+          "expr": "60 * sum by (job) (rate({job=~\"${service:regex}\",env=~\"${env:regex}\",instance=~\"${instance:regex}\"}[5m]))",
           "editorMode": "code",
           "queryType": "range",
           "refId": "A",
           "legendFormat": "{{job}}"
         }
       ],
-      "description": "Log volume per service over time."
+      "description": "Rolling log rate per service over time."
     },
     {
       "datasource": {
         "type": "loki",
-        "uid": "loki"
+        "uid": "${loki_ds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -572,8 +775,8 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 8,
-        "x": 16,
+        "w": 6,
+        "x": 18,
         "y": 14
       },
       "id": 6,
@@ -599,9 +802,9 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "loki"
+            "uid": "${loki_ds}"
           },
-          "expr": "sum(count_over_time({job=~\"$service\"} |~ \"(?i) ERROR \" [$__range]))",
+          "expr": "60 * sum(rate({job=~\"${service:regex}\",env=~\"${env:regex}\",instance=~\"${instance:regex}\"} |~ \"(?i)\\bERROR\\b\" [5m]))",
           "editorMode": "code",
           "queryType": "range",
           "refId": "A",
@@ -610,9 +813,9 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "loki"
+            "uid": "${loki_ds}"
           },
-          "expr": "sum(count_over_time({job=~\"$service\"} |~ \"(?i) WARN \" [$__range]))",
+          "expr": "60 * sum(rate({job=~\"${service:regex}\",env=~\"${env:regex}\",instance=~\"${instance:regex}\"} |~ \"(?i)\\bWARN\\b\" [5m]))",
           "editorMode": "code",
           "queryType": "range",
           "refId": "B",
@@ -621,9 +824,9 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "loki"
+            "uid": "${loki_ds}"
           },
-          "expr": "sum(count_over_time({job=~\"$service\"} |~ \"(?i) INFO \" [$__range]))",
+          "expr": "60 * sum(rate({job=~\"${service:regex}\",env=~\"${env:regex}\",instance=~\"${instance:regex}\"} |~ \"(?i)\\bINFO\\b\" [5m]))",
           "editorMode": "code",
           "queryType": "range",
           "refId": "C",
@@ -632,9 +835,9 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "loki"
+            "uid": "${loki_ds}"
           },
-          "expr": "sum(count_over_time({job=~\"$service\"} |~ \"(?i) DEBUG \" [$__range]))",
+          "expr": "60 * sum(rate({job=~\"${service:regex}\",env=~\"${env:regex}\",instance=~\"${instance:regex}\"} |~ \"(?i)\\bDEBUG\\b\" [5m]))",
           "editorMode": "code",
           "queryType": "range",
           "refId": "D",
@@ -658,7 +861,7 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "loki"
+        "uid": "${loki_ds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -722,9 +925,9 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "loki"
+            "uid": "${loki_ds}"
           },
-          "expr": "sum by (job) (count_over_time({job=~\"$service\"} |~ \"(?i) ERROR \" [$__interval]))",
+          "expr": "60 * sum by (job) (rate({job=~\"${service:regex}\",env=~\"${env:regex}\",instance=~\"${instance:regex}\"} |~ \"(?i)\\bERROR\\b\" [5m]))",
           "editorMode": "code",
           "queryType": "range",
           "refId": "A",
@@ -736,7 +939,7 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "loki"
+        "uid": "${loki_ds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -800,9 +1003,9 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "loki"
+            "uid": "${loki_ds}"
           },
-          "expr": "sum by (job) (count_over_time({job=~\"$service\"} |~ \"(?i) WARN \" [$__interval]))",
+          "expr": "60 * sum by (job) (rate({job=~\"${service:regex}\",env=~\"${env:regex}\",instance=~\"${instance:regex}\"} |~ \"(?i)\\bWARN\\b\" [5m]))",
           "editorMode": "code",
           "queryType": "range",
           "refId": "A",
@@ -814,7 +1017,7 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "loki"
+        "uid": "${loki_ds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -856,27 +1059,27 @@
           "sort": "desc"
         }
       },
-      "title": "ERROR + WARN Combined per Service",
+      "title": "Logs Spike Detector (x baseline)",
       "type": "timeseries",
       "targets": [
         {
           "datasource": {
             "type": "loki",
-            "uid": "loki"
+            "uid": "${loki_ds}"
           },
-          "expr": "sum by (job) (count_over_time({job=~\"$service\"} |~ \"(?i)(ERROR|WARN)\" [$__interval]))",
+          "expr": "sum(rate({job=~\"${service:regex}\",env=~\"${env:regex}\",instance=~\"${instance:regex}\"}[5m])) / clamp_min(sum(rate({job=~\"${service:regex}\",env=~\"${env:regex}\",instance=~\"${instance:regex}\"}[5m] offset 30m)), 0.0001)",
           "editorMode": "code",
           "queryType": "range",
           "refId": "A",
-          "legendFormat": "{{job}}"
+          "legendFormat": "Spike Ratio"
         }
       ],
-      "description": "Combined ERROR and WARN log rate per service over time."
+      "description": "Current total log rate divided by the same-rate baseline 30 minutes ago. Values > 2 typically indicate abnormal spikes."
     },
     {
       "datasource": {
         "type": "loki",
-        "uid": "loki"
+        "uid": "${loki_ds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -925,9 +1128,9 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "loki"
+            "uid": "${loki_ds}"
           },
-          "expr": "100 * sum by (job) (count_over_time({job=~\"$service\"} |~ \"(?i) ERROR \" [$__interval])) / sum by (job) (count_over_time({job=~\"$service\"} [$__interval]))",
+          "expr": "100 * sum by (job) (rate({job=~\"${service:regex}\",env=~\"${env:regex}\",instance=~\"${instance:regex}\"} |~ \"(?i)\\bERROR\\b\" [5m])) / clamp_min(sum by (job) (rate({job=~\"${service:regex}\",env=~\"${env:regex}\",instance=~\"${instance:regex}\"}[5m])), 0.0001)",
           "editorMode": "code",
           "queryType": "range",
           "refId": "A",
@@ -951,7 +1154,7 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "loki"
+        "uid": "${loki_ds}"
       },
       "gridPos": {
         "h": 14,
@@ -976,9 +1179,9 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "loki"
+            "uid": "${loki_ds}"
           },
-          "expr": "{job=~\"$service\"} |~ \"$search\"",
+          "expr": "{job=~\"${service:regex}\",env=~\"${env:regex}\",instance=~\"${instance:regex}\"} |= \"$search\"",
           "editorMode": "code",
           "queryType": "range",
           "refId": "A"
@@ -989,7 +1192,7 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "loki"
+        "uid": "${loki_ds}"
       },
       "gridPos": {
         "h": 10,
@@ -1014,9 +1217,9 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "loki"
+            "uid": "${loki_ds}"
           },
-          "expr": "{job=~\"$service\"}",
+          "expr": "{job=~\"${service:regex}\",env=~\"${env:regex}\",instance=~\"${instance:regex}\"}",
           "editorMode": "code",
           "queryType": "range",
           "refId": "A"
@@ -1035,6 +1238,68 @@
   "templating": {
     "list": [
       {
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "label": "Loki",
+        "multi": false,
+        "name": "loki_ds",
+        "options": [],
+        "query": "loki",
+        "refresh": 1,
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "name": "env",
+        "label": "Env",
+        "options": [],
+        "query": "label_values({job=~\".+\"}, env)",
+        "definition": "label_values({job=~\".+\"}, env)",
+        "refresh": 2,
+        "skipUrlSync": false,
+        "sort": 1,
+        "allValue": ".*",
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "name": "instance",
+        "label": "Instance",
+        "options": [],
+        "query": "label_values({job=~\".+\",env=~\"${env:regex}\"}, instance)",
+        "definition": "label_values({job=~\".+\",env=~\"${env:regex}\"}, instance)",
+        "refresh": 2,
+        "skipUrlSync": false,
+        "sort": 1,
+        "allValue": ".*",
+        "type": "query"
+      },
+      {
         "current": {
           "selected": true,
           "text": [
@@ -1050,8 +1315,13 @@
         "name": "service",
         "label": "Service",
         "options": [],
-        "query": "job-producer,job-worker,retry-dispatcher,dlq",
-        "type": "custom"
+        "query": "label_values({job=~\".+\",env=~\"${env:regex}\",instance=~\"${instance:regex}\"}, job)",
+        "definition": "label_values({job=~\".+\",env=~\"${env:regex}\",instance=~\"${instance:regex}\"}, job)",
+        "refresh": 2,
+        "skipUrlSync": false,
+        "sort": 1,
+        "allValue": ".*",
+        "type": "query"
       },
       {
         "current": {
@@ -1100,5 +1370,5 @@
   "timezone": "browser",
   "title": "Logs Overview",
   "uid": "chrono-logs-overview",
-  "version": 4
+  "version": 5
 }

@@ -24,6 +24,12 @@
         },
         {
             "type": "panel",
+            "id": "bargauge",
+            "name": "Bar gauge",
+            "version": ""
+        },
+        {
+            "type": "panel",
             "id": "gauge",
             "name": "Gauge",
             "version": ""
@@ -91,7 +97,7 @@
                 "y": 0
             },
             "id": 100,
-            "title": "Overview - SLO Signals",
+            "title": "SLO",
             "type": "row"
         },
         {
@@ -127,10 +133,10 @@
                 "overrides": []
             },
             "gridPos": {
-                "h": 4,
-                "w": 4,
-                "x": 0,
-                "y": 5
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 120
             },
             "id": 45,
             "options": {
@@ -147,7 +153,7 @@
                 },
                 "textMode": "auto"
             },
-            "title": "job-producer Uptime",
+            "title": "Service Uptime",
             "type": "stat",
             "targets": [
                 {
@@ -155,7 +161,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "max(process_uptime_seconds{service=\"job-producer\", env=~\"$env\"})",
+                    "expr": "max(process_uptime_seconds{service=~\"${producer_service:regex}\", env=~\"$env\"})",
                     "legendFormat": "",
                     "refId": "A",
                     "interval": ""
@@ -192,7 +198,7 @@
             "gridPos": {
                 "h": 4,
                 "w": 4,
-                "x": 0,
+                "x": 16,
                 "y": 1
             },
             "id": 1,
@@ -210,207 +216,16 @@
                 },
                 "textMode": "auto"
             },
-            "title": "Jobs Produced (range)",
+            "title": "Jobs Produced (Window Total)",
             "targets": [
                 {
                     "datasource": {
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "round(sum(increase(chrono_jobs_produced_total{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\",job_type=~\"${job_type:regex}\",topic=~\"${topic:regex}\"}[$__range])) or vector(0))",
+                    "expr": "round(sum(increase(chrono_jobs_produced_total{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",job_type=~\"${job_type:regex}\",topic=~\"${topic:regex}\"}[$__range])) or vector(0))",
                     "instant": true,
                     "legendFormat": "produced"
-                }
-            ],
-            "type": "stat"
-        },
-        {
-            "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-            },
-            "description": "Current job production rate from custom business metric.",
-            "fieldConfig": {
-                "defaults": {
-                    "color": {
-                        "mode": "thresholds"
-                    },
-                    "decimals": 2,
-                    "mappings": [],
-                    "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                            {
-                                "color": "green",
-                                "value": null
-                            }
-                        ]
-                    },
-                    "unit": "ops"
-                },
-                "overrides": []
-            },
-            "gridPos": {
-                "h": 4,
-                "w": 4,
-                "x": 4,
-                "y": 1
-            },
-            "id": 2,
-            "options": {
-                "colorMode": "background",
-                "graphMode": "area",
-                "justifyMode": "center",
-                "orientation": "auto",
-                "reduceOptions": {
-                    "calcs": [
-                        "lastNotNull"
-                    ],
-                    "fields": "",
-                    "values": false
-                },
-                "textMode": "auto"
-            },
-            "title": "Job Production Rate",
-            "targets": [
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "${datasource}"
-                    },
-                    "expr": "sum(clamp_min(rate(chrono_jobs_produced_total{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\",job_type=~\"${job_type:regex}\",topic=~\"${topic:regex}\"}[$__rate_interval]), 0)) or vector(0)",
-                    "instant": true,
-                    "legendFormat": "jobs/s"
-                }
-            ],
-            "type": "stat"
-        },
-        {
-            "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-            },
-            "description": "Current Kafka producer send rate from Kafka client metrics.",
-            "fieldConfig": {
-                "defaults": {
-                    "color": {
-                        "mode": "thresholds"
-                    },
-                    "decimals": 2,
-                    "mappings": [],
-                    "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                            {
-                                "color": "green",
-                                "value": null
-                            }
-                        ]
-                    },
-                    "unit": "ops"
-                },
-                "overrides": []
-            },
-            "gridPos": {
-                "h": 4,
-                "w": 4,
-                "x": 8,
-                "y": 1
-            },
-            "id": 3,
-            "options": {
-                "colorMode": "background",
-                "graphMode": "area",
-                "justifyMode": "center",
-                "orientation": "auto",
-                "reduceOptions": {
-                    "calcs": [
-                        "lastNotNull"
-                    ],
-                    "fields": "",
-                    "values": false
-                },
-                "textMode": "auto"
-            },
-            "title": "Kafka Send Rate",
-            "targets": [
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "${datasource}"
-                    },
-                    "expr": "sum(clamp_min(rate(kafka_producer_record_send_total{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}[$__rate_interval]), 0)) or vector(0)",
-                    "instant": true,
-                    "legendFormat": "records/s"
-                }
-            ],
-            "type": "stat"
-        },
-        {
-            "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-            },
-            "description": "Kafka producer record error rate. Should remain close to zero.",
-            "fieldConfig": {
-                "defaults": {
-                    "color": {
-                        "mode": "thresholds"
-                    },
-                    "decimals": 4,
-                    "mappings": [],
-                    "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                            {
-                                "color": "green",
-                                "value": null
-                            },
-                            {
-                                "color": "yellow",
-                                "value": 0.01
-                            },
-                            {
-                                "color": "red",
-                                "value": 0.1
-                            }
-                        ]
-                    },
-                    "unit": "ops"
-                },
-                "overrides": []
-            },
-            "gridPos": {
-                "h": 4,
-                "w": 4,
-                "x": 12,
-                "y": 1
-            },
-            "id": 4,
-            "options": {
-                "colorMode": "background",
-                "graphMode": "none",
-                "justifyMode": "center",
-                "orientation": "auto",
-                "reduceOptions": {
-                    "calcs": [
-                        "lastNotNull"
-                    ],
-                    "fields": "",
-                    "values": false
-                },
-                "textMode": "auto"
-            },
-            "title": "Kafka Error Rate",
-            "targets": [
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "${datasource}"
-                    },
-                    "expr": "sum(clamp_min(rate(kafka_producer_record_error_total{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}[$__rate_interval]), 0)) or vector(0)",
-                    "instant": true,
-                    "legendFormat": "errors/s"
                 }
             ],
             "type": "stat"
@@ -454,7 +269,7 @@
             "gridPos": {
                 "h": 4,
                 "w": 4,
-                "x": 16,
+                "x": 4,
                 "y": 1
             },
             "id": 5,
@@ -472,14 +287,14 @@
                 },
                 "textMode": "auto"
             },
-            "title": "HTTP Error %",
+            "title": "Error Rate %",
             "targets": [
                 {
                     "datasource": {
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "100 * (sum(clamp_min(rate(http_server_requests_seconds_count{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\",status=~\"4..|5..\",uri!~\"/actuator.*\",uri=~\"${uri:regex}\"}[$__rate_interval]), 0)) or vector(0)) / clamp_min(sum(clamp_min(rate(http_server_requests_seconds_count{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\",uri!~\"/actuator.*\",uri=~\"${uri:regex}\"}[$__rate_interval]), 0)), 1e-9)",
+                    "expr": "100 * (sum(clamp_min(rate(http_server_requests_seconds_count{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",status=~\"4..|5..\",uri!~\"/actuator.*\",uri=~\"${uri:regex}\"}[$__rate_interval]), 0)) or vector(0)) / clamp_min(sum(clamp_min(rate(http_server_requests_seconds_count{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",uri!~\"/actuator.*\",uri=~\"${uri:regex}\"}[$__rate_interval]), 0)), 1e-9)",
                     "instant": true,
                     "legendFormat": "error %"
                 }
@@ -525,7 +340,7 @@
             "gridPos": {
                 "h": 4,
                 "w": 4,
-                "x": 20,
+                "x": 8,
                 "y": 1
             },
             "id": 6,
@@ -543,14 +358,14 @@
                 },
                 "textMode": "auto"
             },
-            "title": "Target Availability",
+            "title": "Availability %",
             "targets": [
                 {
                     "datasource": {
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "100 * avg(up{job=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\"})",
+                    "expr": "100 * avg(up{job=~\"${producer_job:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"})",
                     "instant": true,
                     "legendFormat": "up %"
                 }
@@ -563,10 +378,10 @@
                 "h": 1,
                 "w": 24,
                 "x": 0,
-                "y": 13
+                "y": 9
             },
             "id": 110,
-            "title": "Throughput & Flow",
+            "title": "API Throughput",
             "type": "row"
         },
         {
@@ -595,9 +410,9 @@
             },
             "gridPos": {
                 "h": 4,
-                "w": 12,
+                "w": 4,
                 "x": 0,
-                "y": 30
+                "y": 10
             },
             "id": 48,
             "options": {
@@ -614,7 +429,7 @@
                 },
                 "textMode": "auto"
             },
-            "title": "job-producer Request Rate",
+            "title": "API Request Rate",
             "type": "stat",
             "targets": [
                 {
@@ -622,7 +437,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "sum(clamp_min(rate(http_server_requests_seconds_count{service=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0))",
+                    "expr": "sum(clamp_min(rate(http_server_requests_seconds_count{service=~\"${producer_service:regex}\", uri!~\"/actuator.*\", instance=~\"${instance:regex}\", env=~\"$env\"}[$__rate_interval]), 0))",
                     "legendFormat": "",
                     "refId": "A",
                     "interval": ""
@@ -655,9 +470,9 @@
             },
             "gridPos": {
                 "h": 8,
-                "w": 12,
-                "x": 12,
-                "y": 30
+                "w": 16,
+                "x": 8,
+                "y": 10
             },
             "id": 8,
             "options": {
@@ -676,7 +491,7 @@
                     "sort": "desc"
                 }
             },
-            "title": "job-producer — Request Rate by Endpoint",
+            "title": "Request Rate by Endpoint",
             "type": "timeseries",
             "targets": [
                 {
@@ -684,63 +499,13 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "sum by (method, uri) (clamp_min(rate(http_server_requests_seconds_count{service=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0))",
+                    "expr": "sum by (method, uri) (clamp_min(rate(http_server_requests_seconds_count{service=~\"${producer_service:regex}\", uri!~\"/actuator.*\", instance=~\"${instance:regex}\", env=~\"$env\"}[$__rate_interval]), 0))",
                     "legendFormat": "{{method}} {{uri}}",
                     "refId": "A",
                     "interval": ""
                 }
             ],
             "description": "HTTP request rate broken down by endpoint and HTTP method for job-producer."
-        },
-        {
-            "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-            },
-            "fieldConfig": {
-                "defaults": {
-                    "color": {
-                        "mode": "palette-classic"
-                    },
-                    "unit": "reqps"
-                },
-                "overrides": []
-            },
-            "gridPos": {
-                "h": 8,
-                "w": 12,
-                "x": 0,
-                "y": 38
-            },
-            "id": 9,
-            "options": {
-                "displayMode": "gradient",
-                "orientation": "horizontal",
-                "reduceOptions": {
-                    "calcs": [
-                        "lastNotNull"
-                    ],
-                    "fields": "",
-                    "values": false
-                },
-                "showUnfilled": true,
-                "valueMode": "color"
-            },
-            "title": "job-producer — Status Code Distribution",
-            "type": "bargauge",
-            "targets": [
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "${datasource}"
-                    },
-                    "expr": "sum by (status) (clamp_min(rate(http_server_requests_seconds_count{service=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0))",
-                    "legendFormat": "HTTP {{status}}",
-                    "refId": "A",
-                    "interval": ""
-                }
-            ],
-            "description": "HTTP response status code distribution for job-producer (bar gauge)."
         },
         {
             "datasource": {
@@ -788,7 +553,7 @@
                 "h": 8,
                 "w": 12,
                 "x": 0,
-                "y": 14
+                "y": 45
             },
             "id": 10,
             "options": {
@@ -807,14 +572,14 @@
                     "sort": "desc"
                 }
             },
-            "title": "Job Production vs Kafka Send/Error/Retry",
+            "title": "Kafka Send, Error, Retry Rates",
             "targets": [
                 {
                     "datasource": {
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "sum(clamp_min(rate(chrono_jobs_produced_total{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\",job_type=~\"${job_type:regex}\",topic=~\"${topic:regex}\"}[$__rate_interval]), 0))",
+                    "expr": "sum(clamp_min(rate(chrono_jobs_produced_total{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",job_type=~\"${job_type:regex}\",topic=~\"${topic:regex}\"}[$__rate_interval]), 0))",
                     "legendFormat": "Jobs Produced/s"
                 },
                 {
@@ -822,7 +587,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "sum(clamp_min(rate(kafka_producer_record_send_total{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}[$__rate_interval]), 0))",
+                    "expr": "sum(clamp_min(rate(kafka_producer_record_send_total{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}[$__rate_interval]), 0))",
                     "legendFormat": "Kafka Send/s"
                 },
                 {
@@ -830,7 +595,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "sum(clamp_min(rate(kafka_producer_record_error_total{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}[$__rate_interval]), 0))",
+                    "expr": "sum(clamp_min(rate(kafka_producer_record_error_total{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}[$__rate_interval]), 0))",
                     "legendFormat": "Kafka Error/s"
                 },
                 {
@@ -838,94 +603,8 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "sum(clamp_min(rate(kafka_producer_record_retry_total{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}[$__rate_interval]), 0)) or vector(0)",
+                    "expr": "sum(clamp_min(rate(kafka_producer_record_retry_total{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}[$__rate_interval]), 0)) or vector(0)",
                     "legendFormat": "Kafka Retry/s"
-                }
-            ],
-            "type": "timeseries"
-        },
-        {
-            "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-            },
-            "description": "Business throughput split by topic and job type.",
-            "fieldConfig": {
-                "defaults": {
-                    "color": {
-                        "mode": "palette-classic"
-                    },
-                    "custom": {
-                        "axisCenteredZero": false,
-                        "axisColorMode": "text",
-                        "axisLabel": "jobs/s",
-                        "axisPlacement": "auto",
-                        "barAlignment": 0,
-                        "drawStyle": "line",
-                        "fillOpacity": 8,
-                        "gradientMode": "opacity",
-                        "lineInterpolation": "smooth",
-                        "lineWidth": 2,
-                        "pointSize": 4,
-                        "scaleDistribution": {
-                            "type": "linear"
-                        },
-                        "showPoints": "never",
-                        "spanNulls": false,
-                        "stacking": {
-                            "group": "A",
-                            "mode": "none"
-                        },
-                        "thresholdsStyle": {
-                            "mode": "off"
-                        }
-                    },
-                    "mappings": [],
-                    "unit": "ops",
-                    "min": 0
-                },
-                "overrides": []
-            },
-            "gridPos": {
-                "h": 8,
-                "w": 12,
-                "x": 12,
-                "y": 14
-            },
-            "id": 11,
-            "options": {
-                "legend": {
-                    "calcs": [
-                        "mean",
-                        "max",
-                        "lastNotNull"
-                    ],
-                    "displayMode": "table",
-                    "placement": "bottom",
-                    "showLegend": true
-                },
-                "tooltip": {
-                    "mode": "multi",
-                    "sort": "desc"
-                }
-            },
-            "title": "Produced Rate by Job Type and Topic",
-            "targets": [
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "${datasource}"
-                    },
-                    "expr": "sum by (job_type) (clamp_min(rate(chrono_jobs_produced_total{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\",job_type=~\"${job_type:regex}\",topic=~\"${topic:regex}\"}[$__rate_interval]), 0))",
-                    "legendFormat": "job_type={{job_type}}"
-                },
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "${datasource}"
-                    },
-                    "expr": "sum by (topic) (clamp_min(rate(kafka_producer_record_send_total{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}[$__rate_interval]), 0))",
-                    "legendFormat": "topic={{topic}} send"
                 }
             ],
             "type": "timeseries"
@@ -1000,8 +679,8 @@
             "gridPos": {
                 "h": 8,
                 "w": 12,
-                "x": 0,
-                "y": 22
+                "x": 12,
+                "y": 45
             },
             "id": 12,
             "options": {
@@ -1027,7 +706,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "sum(clamp_min(rate(kafka_producer_record_send_total{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}[$__rate_interval]), 0))",
+                    "expr": "sum(clamp_min(rate(kafka_producer_record_send_total{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}[$__rate_interval]), 0))",
                     "legendFormat": "records/s"
                 },
                 {
@@ -1035,7 +714,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "sum(clamp_min(rate(kafka_producer_request_total{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\"}[$__rate_interval]), 0)) or vector(0)",
+                    "expr": "sum(clamp_min(rate(kafka_producer_request_total{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"}[$__rate_interval]), 0)) or vector(0)",
                     "legendFormat": "requests/s"
                 },
                 {
@@ -1043,7 +722,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "sum(clamp_min(rate(kafka_producer_outgoing_byte_total{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\"}[$__rate_interval]), 0)) or vector(0)",
+                    "expr": "sum(clamp_min(rate(kafka_producer_outgoing_byte_total{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"}[$__rate_interval]), 0)) or vector(0)",
                     "legendFormat": "egress bytes/s"
                 },
                 {
@@ -1051,7 +730,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "sum(clamp_min(rate(kafka_producer_incoming_byte_total{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\"}[$__rate_interval]), 0)) or vector(0)",
+                    "expr": "sum(clamp_min(rate(kafka_producer_incoming_byte_total{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"}[$__rate_interval]), 0)) or vector(0)",
                     "legendFormat": "ingress bytes/s"
                 }
             ],
@@ -1127,8 +806,8 @@
             "gridPos": {
                 "h": 8,
                 "w": 12,
-                "x": 12,
-                "y": 22
+                "x": 0,
+                "y": 53
             },
             "id": 13,
             "options": {
@@ -1154,7 +833,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "avg(kafka_producer_records_per_request_avg{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\"}) or vector(0)",
+                    "expr": "avg(kafka_producer_records_per_request_avg{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"}) or vector(0)",
                     "legendFormat": "records/request avg"
                 },
                 {
@@ -1162,7 +841,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "avg(kafka_producer_request_size_avg{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\"}) or vector(0)",
+                    "expr": "avg(kafka_producer_request_size_avg{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"}) or vector(0)",
                     "legendFormat": "request size avg"
                 },
                 {
@@ -1170,7 +849,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "avg(kafka_producer_batch_size_avg{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\"}) or vector(0)",
+                    "expr": "avg(kafka_producer_batch_size_avg{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"}) or vector(0)",
                     "legendFormat": "batch size avg"
                 },
                 {
@@ -1178,7 +857,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "avg(kafka_producer_compression_rate_avg{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\"}) or vector(0)",
+                    "expr": "avg(kafka_producer_compression_rate_avg{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"}) or vector(0)",
                     "legendFormat": "compression rate avg"
                 }
             ],
@@ -1190,80 +869,11 @@
                 "h": 1,
                 "w": 24,
                 "x": 0,
-                "y": 54
+                "y": 26
             },
             "id": 120,
-            "title": "Latency Analysis",
+            "title": "API Latency",
             "type": "row"
-        },
-        {
-            "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-            },
-            "fieldConfig": {
-                "defaults": {
-                    "color": {
-                        "mode": "thresholds"
-                    },
-                    "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                            {
-                                "color": "green",
-                                "value": null
-                            },
-                            {
-                                "color": "yellow",
-                                "value": 0.5
-                            },
-                            {
-                                "color": "red",
-                                "value": 1
-                            }
-                        ]
-                    },
-                    "unit": "s",
-                    "noValue": "N/A"
-                },
-                "overrides": []
-            },
-            "gridPos": {
-                "h": 4,
-                "w": 12,
-                "x": 0,
-                "y": 63
-            },
-            "id": 201,
-            "options": {
-                "colorMode": "background",
-                "graphMode": "none",
-                "justifyMode": "center",
-                "orientation": "auto",
-                "reduceOptions": {
-                    "calcs": [
-                        "lastNotNull"
-                    ],
-                    "fields": "",
-                    "values": false
-                },
-                "textMode": "auto"
-            },
-            "title": "job-producer — p99 HTTP",
-            "type": "stat",
-            "targets": [
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "${datasource}"
-                    },
-                    "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
-                    "legendFormat": "",
-                    "refId": "A",
-                    "interval": ""
-                }
-            ],
-            "description": "99th percentile HTTP request latency for job-producer (excluding actuator endpoints)."
         },
         {
             "datasource": {
@@ -1283,7 +893,7 @@
                         "spanNulls": false,
                         "lineInterpolation": "smooth"
                     },
-                    "unit": "s",
+                    "unit": "reqps",
                     "min": 0
                 },
                 "overrides": []
@@ -1292,40 +902,32 @@
                 "h": 8,
                 "w": 12,
                 "x": 12,
-                "y": 79
+                "y": 18
             },
             "id": 202,
             "options": {
-                "legend": {
-                    "calcs": [
-                        "mean",
-                        "max",
-                        "lastNotNull"
-                    ],
-                    "displayMode": "table",
-                    "placement": "bottom",
-                    "showLegend": true
+                "showHeader": true,
+                "footer": {
+                    "show": false
                 },
-                "tooltip": {
-                    "mode": "multi",
-                    "sort": "desc"
-                }
+                "cellHeight": "sm"
             },
-            "title": "job-producer — HTTP p90 Latency",
-            "type": "timeseries",
+            "title": "Top Endpoints by Traffic",
+            "type": "table",
             "targets": [
                 {
                     "datasource": {
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "histogram_quantile(0.90, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
-                    "legendFormat": "HTTP p90",
+                    "expr": "topk(10, sum by (method, uri) (clamp_min(rate(http_server_requests_seconds_count{service=~\"${producer_service:regex}\", uri!~\"/actuator.*\", instance=~\"${instance:regex}\", env=~\"$env\"}[$__rate_interval]), 0)))",
                     "refId": "A",
-                    "interval": ""
+                    "format": "table",
+                    "instant": true,
+                    "editorMode": "code"
                 }
             ],
-            "description": "p90 HTTP request latency for job-producer (excluding actuator endpoints)."
+            "description": "Top endpoints by current request rate (excluding actuator)."
         },
         {
             "datasource": {
@@ -1348,13 +950,30 @@
                     "unit": "s",
                     "min": 0
                 },
-                "overrides": []
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "error %"
+                        },
+                        "properties": [
+                            {
+                                "id": "unit",
+                                "value": "percent"
+                            },
+                            {
+                                "id": "custom.axisPlacement",
+                                "value": "right"
+                            }
+                        ]
+                    }
+                ]
             },
             "gridPos": {
                 "h": 8,
                 "w": 12,
-                "x": 0,
-                "y": 79
+                "x": 12,
+                "y": 27
             },
             "id": 58,
             "options": {
@@ -1373,7 +992,7 @@
                     "sort": "desc"
                 }
             },
-            "title": "job-producer — p95 vs p99 HTTP Latency",
+            "title": "Latency vs Error Correlation",
             "type": "timeseries",
             "targets": [
                 {
@@ -1381,204 +1000,30 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "histogram_quantile(0.95, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
-                    "legendFormat": "p95",
+                    "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=~\"${producer_service:regex}\", uri!~\"/actuator.*\", instance=~\"${instance:regex}\", env=~\"$env\"}[$__rate_interval]), 0)))",
+                    "legendFormat": "p99 latency (s)",
                     "refId": "A",
-                    "interval": ""
+                    "editorMode": "code"
                 },
                 {
                     "datasource": {
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
-                    "legendFormat": "p99",
+                    "expr": "100 * (sum(clamp_min(rate(http_server_requests_seconds_count{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",status=~\"4..|5..\",uri!~\"/actuator.*\",uri=~\"${uri:regex}\"}[$__rate_interval]), 0)) or vector(0)) / clamp_min(sum(clamp_min(rate(http_server_requests_seconds_count{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",uri!~\"/actuator.*\",uri=~\"${uri:regex}\"}[$__rate_interval]), 0)), 1e-9)",
+                    "legendFormat": "error %",
                     "refId": "B",
-                    "interval": ""
+                    "editorMode": "code"
                 }
             ],
-            "description": "HTTP request latency comparison showing p95 and p99 for job-producer (excluding actuator endpoints)."
+            "description": "Correlates p99 API latency with HTTP error percentage to detect user-impacting degradation."
         },
         {
             "datasource": {
                 "type": "prometheus",
                 "uid": "${datasource}"
             },
-            "fieldConfig": {
-                "defaults": {
-                    "color": {
-                        "mode": "palette-classic"
-                    },
-                    "custom": {
-                        "lineWidth": 2,
-                        "fillOpacity": 5,
-                        "showPoints": "never",
-                        "drawStyle": "line",
-                        "spanNulls": false,
-                        "lineInterpolation": "smooth"
-                    },
-                    "unit": "s",
-                    "min": 0
-                },
-                "overrides": []
-            },
-            "gridPos": {
-                "h": 8,
-                "w": 12,
-                "x": 12,
-                "y": 63
-            },
-            "id": 203,
-            "options": {
-                "legend": {
-                    "calcs": [
-                        "mean",
-                        "max",
-                        "lastNotNull"
-                    ],
-                    "displayMode": "table",
-                    "placement": "bottom",
-                    "showLegend": true
-                },
-                "tooltip": {
-                    "mode": "multi",
-                    "sort": "desc"
-                }
-            },
-            "title": "job-producer — HTTP Latency p50/p90/p95/p99 (all endpoints)",
-            "type": "timeseries",
-            "targets": [
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "${datasource}"
-                    },
-                    "expr": "histogram_quantile(0.50, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
-                    "legendFormat": "p50",
-                    "refId": "A",
-                    "interval": ""
-                },
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "${datasource}"
-                    },
-                    "expr": "histogram_quantile(0.90, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
-                    "legendFormat": "p90",
-                    "refId": "B",
-                    "interval": ""
-                },
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "${datasource}"
-                    },
-                    "expr": "histogram_quantile(0.95, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
-                    "legendFormat": "p95",
-                    "refId": "C",
-                    "interval": ""
-                },
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "${datasource}"
-                    },
-                    "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
-                    "legendFormat": "p99",
-                    "refId": "D",
-                    "interval": ""
-                }
-            ],
-            "description": "p50 / p90 / p95 / p99 HTTP request latency for job-producer (all endpoints combined)."
-        },
-        {
-            "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-            },
-            "fieldConfig": {
-                "defaults": {
-                    "color": {
-                        "mode": "palette-classic"
-                    },
-                    "custom": {
-                        "lineWidth": 2,
-                        "fillOpacity": 5,
-                        "showPoints": "never",
-                        "drawStyle": "line",
-                        "spanNulls": false,
-                        "lineInterpolation": "smooth"
-                    },
-                    "unit": "s",
-                    "min": 0
-                },
-                "overrides": []
-            },
-            "gridPos": {
-                "h": 8,
-                "w": 12,
-                "x": 0,
-                "y": 71
-            },
-            "id": 7,
-            "options": {
-                "legend": {
-                    "calcs": [
-                        "mean",
-                        "max",
-                        "lastNotNull"
-                    ],
-                    "displayMode": "table",
-                    "placement": "bottom",
-                    "showLegend": true
-                },
-                "tooltip": {
-                    "mode": "multi",
-                    "sort": "desc"
-                }
-            },
-            "title": "job-producer — p50/p90/p99 per Endpoint",
-            "type": "timeseries",
-            "targets": [
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "${datasource}"
-                    },
-                    "expr": "histogram_quantile(0.50, sum by (le, uri) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
-                    "legendFormat": "p50 {{uri}}",
-                    "refId": "A",
-                    "interval": ""
-                },
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "${datasource}"
-                    },
-                    "expr": "histogram_quantile(0.90, sum by (le, uri) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
-                    "legendFormat": "p90 {{uri}}",
-                    "refId": "B",
-                    "interval": ""
-                },
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "${datasource}"
-                    },
-                    "expr": "histogram_quantile(0.99, sum by (le, uri) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\", uri!~\"/actuator.*\", instance=~\"$instance\", env=~\"$env\"}[$__rate_interval]), 0)))",
-                    "legendFormat": "p99 {{uri}}",
-                    "refId": "C",
-                    "interval": ""
-                }
-            ],
-            "description": "Per-endpoint p50 / p90 / p99 HTTP latency for job-producer."
-        },
-        {
-            "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-            },
-            "description": "Job-producer API latency percentiles across filtered endpoints.",
+            "description": "Combined API latency percentiles for fast comparison and trend analysis.",
             "fieldConfig": {
                 "defaults": {
                     "color": {
@@ -1619,7 +1064,7 @@
                 "h": 8,
                 "w": 12,
                 "x": 0,
-                "y": 55
+                "y": 27
             },
             "id": 20,
             "options": {
@@ -1638,39 +1083,37 @@
                     "sort": "desc"
                 }
             },
-            "title": "HTTP API Latency (p50/p90/p95/p99)",
+            "title": "HTTP Latency p50/p90/p99",
             "targets": [
                 {
                     "datasource": {
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "histogram_quantile(0.50, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\",uri!~\"/actuator.*\",uri=~\"${uri:regex}\"}[$__rate_interval]), 0)))",
-                    "legendFormat": "p50"
+                    "expr": "histogram_quantile(0.50, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=~\"${producer_service:regex}\", uri!~\"/actuator.*\", instance=~\"${instance:regex}\", env=~\"$env\"}[$__rate_interval]), 0)))",
+                    "legendFormat": "p50",
+                    "refId": "A",
+                    "editorMode": "code"
                 },
                 {
                     "datasource": {
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "histogram_quantile(0.90, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\",uri!~\"/actuator.*\",uri=~\"${uri:regex}\"}[$__rate_interval]), 0)))",
-                    "legendFormat": "p90"
+                    "expr": "histogram_quantile(0.90, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=~\"${producer_service:regex}\", uri!~\"/actuator.*\", instance=~\"${instance:regex}\", env=~\"$env\"}[$__rate_interval]), 0)))",
+                    "legendFormat": "p90",
+                    "refId": "B",
+                    "editorMode": "code"
                 },
                 {
                     "datasource": {
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "histogram_quantile(0.95, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\",uri!~\"/actuator.*\",uri=~\"${uri:regex}\"}[$__rate_interval]), 0)))",
-                    "legendFormat": "p95"
-                },
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "${datasource}"
-                    },
-                    "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\",uri!~\"/actuator.*\",uri=~\"${uri:regex}\"}[$__rate_interval]), 0)))",
-                    "legendFormat": "p99"
+                    "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=~\"${producer_service:regex}\", uri!~\"/actuator.*\", instance=~\"${instance:regex}\", env=~\"$env\"}[$__rate_interval]), 0)))",
+                    "legendFormat": "p99",
+                    "refId": "C",
+                    "editorMode": "code"
                 }
             ],
             "type": "timeseries"
@@ -1680,7 +1123,7 @@
                 "type": "prometheus",
                 "uid": "${datasource}"
             },
-            "description": "Top endpoints by p95 latency.",
+            "description": "Tail-latency spread signal. Rising p99-p50 indicates instability even if average latency appears stable.",
             "fieldConfig": {
                 "defaults": {
                     "color": {
@@ -1721,7 +1164,7 @@
                 "h": 8,
                 "w": 12,
                 "x": 12,
-                "y": 55
+                "y": 35
             },
             "id": 21,
             "options": {
@@ -1740,219 +1183,17 @@
                     "sort": "desc"
                 }
             },
-            "title": "Top 10 Endpoints by p95 Latency",
+            "title": "Latency Spread (p99 - p50)",
             "targets": [
                 {
                     "datasource": {
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "topk(10, histogram_quantile(0.95, sum by (le, uri) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\",uri!~\"/actuator.*\",uri=~\"${uri:regex}\"}[$__rate_interval]), 0))))",
-                    "legendFormat": "{{uri}}"
-                }
-            ],
-            "type": "timeseries"
-        },
-        {
-            "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-            },
-            "description": "Spring Kafka template send latency percentiles measured by Micrometer observation.",
-            "fieldConfig": {
-                "defaults": {
-                    "color": {
-                        "mode": "palette-classic"
-                    },
-                    "custom": {
-                        "axisCenteredZero": false,
-                        "axisColorMode": "text",
-                        "axisLabel": "seconds",
-                        "axisPlacement": "auto",
-                        "barAlignment": 0,
-                        "drawStyle": "line",
-                        "fillOpacity": 10,
-                        "gradientMode": "opacity",
-                        "lineInterpolation": "smooth",
-                        "lineWidth": 2,
-                        "pointSize": 4,
-                        "scaleDistribution": {
-                            "type": "linear"
-                        },
-                        "showPoints": "never",
-                        "spanNulls": false,
-                        "stacking": {
-                            "group": "A",
-                            "mode": "none"
-                        },
-                        "thresholdsStyle": {
-                            "mode": "off"
-                        }
-                    },
-                    "mappings": [],
-                    "unit": "s",
-                    "min": 0
-                },
-                "overrides": []
-            },
-            "gridPos": {
-                "h": 8,
-                "w": 12,
-                "x": 0,
-                "y": 87
-            },
-            "id": 22,
-            "options": {
-                "legend": {
-                    "calcs": [
-                        "mean",
-                        "max",
-                        "lastNotNull"
-                    ],
-                    "displayMode": "table",
-                    "placement": "bottom",
-                    "showLegend": true
-                },
-                "tooltip": {
-                    "mode": "multi",
-                    "sort": "desc"
-                }
-            },
-            "title": "Kafka Template Latency (p50/p90/p95/p99)",
-            "targets": [
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "${datasource}"
-                    },
-                    "expr": "histogram_quantile(0.50, sum by (le) (clamp_min(rate(spring_kafka_template_seconds_bucket{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\"}[$__rate_interval]), 0)))",
-                    "legendFormat": "p50"
-                },
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "${datasource}"
-                    },
-                    "expr": "histogram_quantile(0.90, sum by (le) (clamp_min(rate(spring_kafka_template_seconds_bucket{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\"}[$__rate_interval]), 0)))",
-                    "legendFormat": "p90"
-                },
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "${datasource}"
-                    },
-                    "expr": "histogram_quantile(0.95, sum by (le) (clamp_min(rate(spring_kafka_template_seconds_bucket{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\"}[$__rate_interval]), 0)))",
-                    "legendFormat": "p95"
-                },
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "${datasource}"
-                    },
-                    "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(spring_kafka_template_seconds_bucket{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\"}[$__rate_interval]), 0)))",
-                    "legendFormat": "p99"
-                }
-            ],
-            "type": "timeseries"
-        },
-        {
-            "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-            },
-            "description": "Native Kafka producer internal latency and queueing metrics.",
-            "fieldConfig": {
-                "defaults": {
-                    "color": {
-                        "mode": "palette-classic"
-                    },
-                    "custom": {
-                        "axisCenteredZero": false,
-                        "axisColorMode": "text",
-                        "axisLabel": "milliseconds",
-                        "axisPlacement": "auto",
-                        "barAlignment": 0,
-                        "drawStyle": "line",
-                        "fillOpacity": 10,
-                        "gradientMode": "opacity",
-                        "lineInterpolation": "smooth",
-                        "lineWidth": 2,
-                        "pointSize": 4,
-                        "scaleDistribution": {
-                            "type": "linear"
-                        },
-                        "showPoints": "never",
-                        "spanNulls": false,
-                        "stacking": {
-                            "group": "A",
-                            "mode": "none"
-                        },
-                        "thresholdsStyle": {
-                            "mode": "off"
-                        }
-                    },
-                    "mappings": [],
-                    "unit": "ms",
-                    "min": 0
-                },
-                "overrides": []
-            },
-            "gridPos": {
-                "h": 8,
-                "w": 12,
-                "x": 12,
-                "y": 87
-            },
-            "id": 23,
-            "options": {
-                "legend": {
-                    "calcs": [
-                        "mean",
-                        "max",
-                        "lastNotNull"
-                    ],
-                    "displayMode": "table",
-                    "placement": "bottom",
-                    "showLegend": true
-                },
-                "tooltip": {
-                    "mode": "multi",
-                    "sort": "desc"
-                }
-            },
-            "title": "Kafka Producer Latencies (avg/max)",
-            "targets": [
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "${datasource}"
-                    },
-                    "expr": "1000 * avg(kafka_producer_request_latency_avg{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\"})",
-                    "legendFormat": "request latency avg"
-                },
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "${datasource}"
-                    },
-                    "expr": "1000 * avg(kafka_producer_request_latency_max{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\"})",
-                    "legendFormat": "request latency max"
-                },
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "${datasource}"
-                    },
-                    "expr": "1000 * avg(kafka_producer_record_queue_time_avg{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\"}) or vector(0)",
-                    "legendFormat": "queue time avg"
-                },
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "${datasource}"
-                    },
-                    "expr": "1000 * avg(kafka_producer_record_queue_time_max{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\"}) or vector(0)",
-                    "legendFormat": "queue time max"
+                    "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=~\"${producer_service:regex}\", uri!~\"/actuator.*\", instance=~\"${instance:regex}\", env=~\"$env\"}[$__rate_interval]), 0))) - histogram_quantile(0.50, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=~\"${producer_service:regex}\", uri!~\"/actuator.*\", instance=~\"${instance:regex}\", env=~\"$env\"}[$__rate_interval]), 0)))",
+                    "legendFormat": "p99-p50",
+                    "refId": "A",
+                    "editorMode": "code"
                 }
             ],
             "type": "timeseries"
@@ -1963,10 +1204,10 @@
                 "h": 1,
                 "w": 24,
                 "x": 0,
-                "y": 95
+                "y": 74
             },
             "id": 130,
-            "title": "Errors & Reliability",
+            "title": "Errors",
             "type": "row"
         },
         {
@@ -2015,7 +1256,7 @@
                 "h": 8,
                 "w": 12,
                 "x": 0,
-                "y": 96
+                "y": 75
             },
             "id": 30,
             "options": {
@@ -2041,7 +1282,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "sum(clamp_min(rate(http_server_requests_seconds_count{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\",status=~\"4..\",uri!~\"/actuator.*\",uri=~\"${uri:regex}\"}[$__rate_interval]), 0))",
+                    "expr": "sum(clamp_min(rate(http_server_requests_seconds_count{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",status=~\"4..\",uri!~\"/actuator.*\",uri=~\"${uri:regex}\"}[$__rate_interval]), 0))",
                     "legendFormat": "4xx"
                 },
                 {
@@ -2049,7 +1290,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "sum(clamp_min(rate(http_server_requests_seconds_count{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\",status=~\"5..\",uri!~\"/actuator.*\",uri=~\"${uri:regex}\"}[$__rate_interval]), 0))",
+                    "expr": "sum(clamp_min(rate(http_server_requests_seconds_count{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",status=~\"5..\",uri!~\"/actuator.*\",uri=~\"${uri:regex}\"}[$__rate_interval]), 0))",
                     "legendFormat": "5xx"
                 }
             ],
@@ -2101,7 +1342,7 @@
                 "h": 8,
                 "w": 12,
                 "x": 12,
-                "y": 96
+                "y": 75
             },
             "id": 31,
             "options": {
@@ -2127,7 +1368,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "sum by (topic) (clamp_min(rate(kafka_producer_record_error_total{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}[$__rate_interval]), 0))",
+                    "expr": "sum by (topic) (clamp_min(rate(kafka_producer_record_error_total{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}[$__rate_interval]), 0))",
                     "legendFormat": "topic={{topic}} error/s"
                 },
                 {
@@ -2135,7 +1376,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "sum by (topic) (clamp_min(rate(kafka_producer_record_retry_total{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}[$__rate_interval]), 0)) or vector(0)",
+                    "expr": "sum by (topic) (clamp_min(rate(kafka_producer_record_retry_total{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}[$__rate_interval]), 0)) or vector(0)",
                     "legendFormat": "topic={{topic}} retry/s"
                 }
             ],
@@ -2187,7 +1428,7 @@
                 "h": 8,
                 "w": 12,
                 "x": 0,
-                "y": 104
+                "y": 83
             },
             "id": 32,
             "options": {
@@ -2213,7 +1454,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "topk(10, sum by (uri) (clamp_min(rate(http_server_requests_seconds_count{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\",status=~\"5..\",uri!~\"/actuator.*\",uri=~\"${uri:regex}\"}[$__rate_interval]), 0)))",
+                    "expr": "topk(10, sum by (uri) (clamp_min(rate(http_server_requests_seconds_count{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",status=~\"5..\",uri!~\"/actuator.*\",uri=~\"${uri:regex}\"}[$__rate_interval]), 0)))",
                     "legendFormat": "{{uri}}"
                 }
             ],
@@ -2246,7 +1487,7 @@
                 "h": 8,
                 "w": 12,
                 "x": 12,
-                "y": 104
+                "y": 83
             },
             "id": 33,
             "options": {
@@ -2275,7 +1516,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "sum by (exception) (clamp_min(rate(http_server_requests_seconds_count{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\",exception!=\"None\",uri!~\"/actuator.*\",uri=~\"${uri:regex}\"}[$__rate_interval]), 0))",
+                    "expr": "sum by (exception) (clamp_min(rate(http_server_requests_seconds_count{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",exception!=\"None\",uri!~\"/actuator.*\",uri=~\"${uri:regex}\"}[$__rate_interval]), 0))",
                     "format": "table",
                     "instant": true,
                     "legendFormat": "{{exception}}"
@@ -2306,10 +1547,10 @@
                 "h": 1,
                 "w": 24,
                 "x": 0,
-                "y": 112
+                "y": 103
             },
             "id": 140,
-            "title": "Resource & Capacity",
+            "title": "System",
             "type": "row"
         },
         {
@@ -2381,7 +1622,7 @@
                 "h": 8,
                 "w": 12,
                 "x": 0,
-                "y": 113
+                "y": 104
             },
             "id": 40,
             "options": {
@@ -2407,7 +1648,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "sum(jvm_memory_used_bytes{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\",area=\"heap\"})",
+                    "expr": "sum(jvm_memory_used_bytes{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",area=\"heap\"})",
                     "legendFormat": "heap used"
                 },
                 {
@@ -2415,7 +1656,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "sum(jvm_memory_max_bytes{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\",area=\"heap\"})",
+                    "expr": "sum(jvm_memory_max_bytes{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",area=\"heap\"})",
                     "legendFormat": "heap max"
                 },
                 {
@@ -2423,7 +1664,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "sum(jvm_memory_used_bytes{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\",area=\"nonheap\"})",
+                    "expr": "sum(jvm_memory_used_bytes{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",area=\"nonheap\"})",
                     "legendFormat": "non-heap used"
                 }
             ],
@@ -2492,7 +1733,7 @@
                 "h": 8,
                 "w": 12,
                 "x": 12,
-                "y": 113
+                "y": 104
             },
             "id": 41,
             "options": {
@@ -2518,7 +1759,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "max(process_resident_memory_bytes{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\"})",
+                    "expr": "max(process_resident_memory_bytes{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"})",
                     "legendFormat": "rss"
                 },
                 {
@@ -2526,7 +1767,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "100 * max(process_cpu_usage{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\"})",
+                    "expr": "100 * max(process_cpu_usage{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"})",
                     "legendFormat": "cpu %"
                 }
             ],
@@ -2610,8 +1851,8 @@
             "gridPos": {
                 "h": 8,
                 "w": 12,
-                "x": 0,
-                "y": 121
+                "x": 12,
+                "y": 53
             },
             "id": 42,
             "options": {
@@ -2630,14 +1871,14 @@
                     "sort": "desc"
                 }
             },
-            "title": "Kafka Producer Buffer and In-Flight",
+            "title": "Kafka Backpressure (Buffer/Queue Depth Proxy)",
             "targets": [
                 {
                     "datasource": {
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "avg(kafka_producer_buffer_total_bytes{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\"}) or vector(0)",
+                    "expr": "avg(kafka_producer_buffer_total_bytes{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"}) or vector(0)",
                     "legendFormat": "buffer total"
                 },
                 {
@@ -2645,7 +1886,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "avg(kafka_producer_buffer_available_bytes{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\"}) or vector(0)",
+                    "expr": "avg(kafka_producer_buffer_available_bytes{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"}) or vector(0)",
                     "legendFormat": "buffer available"
                 },
                 {
@@ -2653,7 +1894,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "100 * (avg(kafka_producer_buffer_total_bytes{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\"}) - avg(kafka_producer_buffer_available_bytes{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\"})) / clamp_min(avg(kafka_producer_buffer_total_bytes{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\"}), 1e-9) or vector(0)",
+                    "expr": "100 * (avg(kafka_producer_buffer_total_bytes{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"}) - avg(kafka_producer_buffer_available_bytes{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"})) / clamp_min(avg(kafka_producer_buffer_total_bytes{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"}), 1e-9) or vector(0)",
                     "legendFormat": "buffer used %"
                 },
                 {
@@ -2661,7 +1902,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "avg(kafka_producer_requests_in_flight{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\"}) or vector(0)",
+                    "expr": "avg(kafka_producer_requests_in_flight{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"}) or vector(0)",
                     "legendFormat": "in-flight requests"
                 }
             ],
@@ -2729,8 +1970,8 @@
             "gridPos": {
                 "h": 8,
                 "w": 12,
-                "x": 12,
-                "y": 121
+                "x": 0,
+                "y": 120
             },
             "id": 43,
             "options": {
@@ -2756,7 +1997,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "max(jvm_threads_live_threads{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\"})",
+                    "expr": "max(jvm_threads_live_threads{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"})",
                     "legendFormat": "live threads"
                 },
                 {
@@ -2764,7 +2005,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "sum((http_server_requests_active_seconds_gcount{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\",uri!~\"/actuator.*\"}) or (http_server_requests_active_seconds_active_count{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\",uri!~\"/actuator.*\"}))",
+                    "expr": "sum((http_server_requests_active_seconds_gcount{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",uri!~\"/actuator.*\"}) or (http_server_requests_active_seconds_active_count{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",uri!~\"/actuator.*\"}))",
                     "legendFormat": "active requests"
                 },
                 {
@@ -2772,7 +2013,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(jvm_gc_pause_seconds_bucket{service=\"job-producer\",env=~\"$env\",instance=~\"${instance:regex}\"}[$__rate_interval]), 0)))",
+                    "expr": "histogram_quantile(0.99, sum by (le) (clamp_min(rate(jvm_gc_pause_seconds_bucket{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\"}[$__rate_interval]), 0)))",
                     "legendFormat": "gc pause p99"
                 }
             ],
@@ -2806,8 +2047,8 @@
             "gridPos": {
                 "h": 4,
                 "w": 4,
-                "x": 0,
-                "y": 9
+                "x": 4,
+                "y": 10
             },
             "id": 204,
             "options": {
@@ -2824,7 +2065,7 @@
                 },
                 "textMode": "auto"
             },
-            "title": "job-producer — Total API Requests (Range)",
+            "title": "API Requests (Window Total)",
             "type": "stat",
             "targets": [
                 {
@@ -2832,7 +2073,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "sum(increase(http_server_requests_seconds_count{service=\"job-producer\", env=~\"$env\", uri!~\"/actuator.*\"}[$__range]))",
+                    "expr": "sum(increase(http_server_requests_seconds_count{service=~\"${producer_service:regex}\", env=~\"$env\", uri!~\"/actuator.*\"}[$__range]))",
                     "legendFormat": "total",
                     "refId": "A",
                     "interval": "",
@@ -2878,8 +2119,8 @@
             "gridPos": {
                 "h": 4,
                 "w": 4,
-                "x": 4,
-                "y": 9
+                "x": 0,
+                "y": 1
             },
             "id": 205,
             "options": {
@@ -2896,7 +2137,7 @@
                 },
                 "textMode": "auto"
             },
-            "title": "job-producer — Success Rate %",
+            "title": "Request Success %",
             "type": "stat",
             "targets": [
                 {
@@ -2904,7 +2145,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "clamp_max(clamp_min(100 * sum(clamp_min(rate(http_server_requests_seconds_count{service=\"job-producer\", env=~\"$env\", outcome=\"SUCCESS\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)) / clamp_min(sum(clamp_min(rate(http_server_requests_seconds_count{service=\"job-producer\", env=~\"$env\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)), 1e-9), 0), 100)",
+                    "expr": "clamp_max(clamp_min(100 * sum(clamp_min(rate(http_server_requests_seconds_count{service=~\"${producer_service:regex}\", env=~\"$env\", outcome=\"SUCCESS\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)) / clamp_min(sum(clamp_min(rate(http_server_requests_seconds_count{service=~\"${producer_service:regex}\", env=~\"$env\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)), 1e-9), 0), 100)",
                     "legendFormat": "",
                     "refId": "A",
                     "interval": "",
@@ -2950,8 +2191,8 @@
             "gridPos": {
                 "h": 4,
                 "w": 4,
-                "x": 8,
-                "y": 9
+                "x": 12,
+                "y": 1
             },
             "id": 206,
             "options": {
@@ -2968,7 +2209,7 @@
                 },
                 "textMode": "auto"
             },
-            "title": "job-producer — p95 Latency",
+            "title": "API Latency p95",
             "type": "stat",
             "targets": [
                 {
@@ -2976,7 +2217,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "histogram_quantile(0.95, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\", env=~\"$env\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)))",
+                    "expr": "histogram_quantile(0.95, sum by (le) (clamp_min(rate(http_server_requests_seconds_bucket{service=~\"${producer_service:regex}\", env=~\"$env\", uri!~\"/actuator.*\"}[$__rate_interval]), 0)))",
                     "legendFormat": "p95",
                     "refId": "A",
                     "interval": "",
@@ -3035,7 +2276,7 @@
                 "h": 8,
                 "w": 12,
                 "x": 0,
-                "y": 129
+                "y": 18
             },
             "id": 207,
             "options": {
@@ -3060,7 +2301,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "sum by (service) ((http_server_requests_active_seconds_gcount{service=\"job-producer\", env=~\"$env\", uri!~\"/actuator.*\"}) or (http_server_requests_active_seconds_active_count{service=\"job-producer\", env=~\"$env\", uri!~\"/actuator.*\"}))",
+                    "expr": "sum by (service) ((http_server_requests_active_seconds_gcount{service=~\"${producer_service:regex}\", env=~\"$env\", uri!~\"/actuator.*\"}) or (http_server_requests_active_seconds_active_count{service=~\"${producer_service:regex}\", env=~\"$env\", uri!~\"/actuator.*\"}))",
                     "legendFormat": "in-flight — {{service}}",
                     "refId": "A",
                     "interval": "",
@@ -3071,14 +2312,14 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "sum((http_server_requests_active_seconds_gcount{service=\"job-producer\", env=~\"$env\", uri!~\"/actuator.*\"}) or (http_server_requests_active_seconds_active_count{service=\"job-producer\", env=~\"$env\", uri!~\"/actuator.*\"}))",
+                    "expr": "sum((http_server_requests_active_seconds_gcount{service=~\"${producer_service:regex}\", env=~\"$env\", uri!~\"/actuator.*\"}) or (http_server_requests_active_seconds_active_count{service=~\"${producer_service:regex}\", env=~\"$env\", uri!~\"/actuator.*\"}))",
                     "legendFormat": "total in-flight",
                     "refId": "B",
                     "interval": "",
                     "editorMode": "code"
                 }
             ],
-            "title": "job-producer — HTTP In-Flight Requests — Active Concurrency",
+            "title": "In-Flight Requests (Backpressure)",
             "type": "timeseries",
             "description": "Number of HTTP requests currently being processed (active / in-flight) per application. Uses Micrometer LongTaskTimer active-count metric with compatibility fallback for both OpenMetrics variants (`http_server_requests_active_seconds_gcount` and `http_server_requests_active_seconds_active_count`). Sustained high values indicate thread-pool saturation or upstream blocking. Sudden spikes coinciding with p99 latency rises confirm concurrency-driven slowdowns."
         },
@@ -3108,8 +2349,8 @@
             "gridPos": {
                 "h": 8,
                 "w": 12,
-                "x": 12,
-                "y": 38
+                "x": 0,
+                "y": 61
             },
             "id": 208,
             "options": {
@@ -3136,7 +2377,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "sum by (topic) (clamp_min(rate(kafka_producer_record_send_total{service=\"job-producer\", env=~\"$env\"}[$__rate_interval]), 0))",
+                    "expr": "sum by (topic) (clamp_min(rate(kafka_producer_record_send_total{service=~\"${producer_service:regex}\", env=~\"$env\"}[$__rate_interval]), 0))",
                     "legendFormat": "{{topic}}",
                     "refId": "A",
                     "interval": "",
@@ -3144,69 +2385,6 @@
                 }
             ],
             "description": "Kafka producer record send rate by topic for job-producer."
-        },
-        {
-            "datasource": {
-                "type": "prometheus",
-                "uid": "${datasource}"
-            },
-            "fieldConfig": {
-                "defaults": {
-                    "color": {
-                        "mode": "palette-classic"
-                    },
-                    "custom": {
-                        "lineWidth": 2,
-                        "fillOpacity": 5,
-                        "showPoints": "never",
-                        "drawStyle": "line",
-                        "spanNulls": false,
-                        "lineInterpolation": "smooth"
-                    },
-                    "unit": "ms",
-                    "min": 0
-                },
-                "overrides": []
-            },
-            "gridPos": {
-                "h": 8,
-                "w": 12,
-                "x": 0,
-                "y": 46
-            },
-            "id": 209,
-            "options": {
-                "legend": {
-                    "calcs": [
-                        "mean",
-                        "max",
-                        "lastNotNull"
-                    ],
-                    "displayMode": "table",
-                    "placement": "bottom",
-                    "showLegend": true
-                },
-                "tooltip": {
-                    "mode": "multi",
-                    "sort": "desc"
-                }
-            },
-            "title": "Kafka Producer Request Latency avg (ms)",
-            "type": "timeseries",
-            "targets": [
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "${datasource}"
-                    },
-                    "expr": "kafka_producer_request_latency_avg{service=\"job-producer\", env=~\"$env\"}",
-                    "legendFormat": "{{client_id}}",
-                    "refId": "A",
-                    "interval": "",
-                    "editorMode": "code"
-                }
-            ],
-            "description": "Average Kafka producer request latency for job-producer."
         },
         {
             "datasource": {
@@ -3235,7 +2413,7 @@
                 "h": 8,
                 "w": 12,
                 "x": 12,
-                "y": 46
+                "y": 61
             },
             "id": 210,
             "options": {
@@ -3262,7 +2440,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "sum by (topic) (clamp_min(rate(kafka_producer_record_error_total{service=\"job-producer\", env=~\"$env\"}[$__rate_interval]), 0))",
+                    "expr": "sum by (topic) (clamp_min(rate(kafka_producer_record_error_total{service=~\"${producer_service:regex}\", env=~\"$env\"}[$__rate_interval]), 0))",
                     "legendFormat": "errors {{topic}}",
                     "refId": "A",
                     "interval": "",
@@ -3352,8 +2530,8 @@
             "gridPos": {
                 "h": 8,
                 "w": 12,
-                "x": 12,
-                "y": 71
+                "x": 0,
+                "y": 35
             },
             "id": 211,
             "options": {
@@ -3381,7 +2559,7 @@
                         "type": "prometheus",
                         "uid": "${datasource}"
                     },
-                    "expr": "topk(10, histogram_quantile(0.99, sum by (le, service, uri) (clamp_min(rate(http_server_requests_seconds_bucket{service=\"job-producer\", env=~\"$env\", uri!~\"/actuator.*\"}[$__rate_interval]), 0))))",
+                    "expr": "topk(10, histogram_quantile(0.99, sum by (le, service, uri) (clamp_min(rate(http_server_requests_seconds_bucket{service=~\"${producer_service:regex}\", env=~\"$env\", uri!~\"/actuator.*\"}[$__rate_interval]), 0))))",
                     "legendFormat": "",
                     "refId": "A",
                     "interval": "",
@@ -3390,7 +2568,7 @@
                     "format": "table"
                 }
             ],
-            "title": "job-producer — Top 10 Slowest Endpoints (p99)",
+            "title": "Top Endpoints by Latency",
             "transformations": [
                 {
                     "id": "filterFieldsByName",
@@ -3424,6 +2602,89 @@
             ],
             "type": "table",
             "description": "Top 10 HTTP endpoints ranked by p99 latency. Computed as a point-in-time snapshot over the selected rate interval."
+        },
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 44
+            },
+            "id": 150,
+            "title": "Kafka Producer",
+            "type": "row"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "unit": "percent",
+                    "min": 0,
+                    "max": 100,
+                    "decimals": 3,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 0.1
+                            },
+                            {
+                                "color": "red",
+                                "value": 1
+                            }
+                        ]
+                    }
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 12,
+                "x": 0,
+                "y": 69
+            },
+            "id": 212,
+            "options": {
+                "colorMode": "background",
+                "graphMode": "none",
+                "justifyMode": "center",
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "textMode": "auto"
+            },
+            "title": "Kafka Send Failure %",
+            "type": "stat",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "${datasource}"
+                    },
+                    "expr": "100 * (sum(clamp_min(rate(kafka_producer_record_error_total{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}[$__rate_interval]), 0)) or vector(0)) / clamp_min(sum(clamp_min(rate(kafka_producer_record_send_total{service=~\"${producer_service:regex}\",env=~\"$env\",instance=~\"${instance:regex}\",topic=~\"${topic:regex}\"}[$__rate_interval]), 0)), 1e-9)",
+                    "instant": true,
+                    "legendFormat": "send failure %",
+                    "refId": "A"
+                }
+            ],
+            "description": "Kafka send failure percentage derived from producer error and send rates."
         }
     ],
     "refresh": "30s",
@@ -3455,17 +2716,57 @@
                 "allValue": ".*",
                 "current": {
                     "selected": true,
+                    "text": "job-producer",
+                    "value": "job-producer"
+                },
+                "definition": "label_values(chrono_jobs_produced_total, service)",
+                "hide": 0,
+                "includeAll": true,
+                "label": "Producer Service",
+                "multi": false,
+                "name": "producer_service",
+                "options": [],
+                "query": "label_values(chrono_jobs_produced_total, service)",
+                "refresh": 2,
+                "skipUrlSync": false,
+                "sort": 1,
+                "type": "query"
+            },
+            {
+                "allValue": ".*",
+                "current": {
+                    "selected": true,
+                    "text": "job-producer",
+                    "value": "job-producer"
+                },
+                "definition": "label_values(up, job)",
+                "hide": 0,
+                "includeAll": true,
+                "label": "Producer Job",
+                "multi": false,
+                "name": "producer_job",
+                "options": [],
+                "query": "label_values(up, job)",
+                "refresh": 2,
+                "skipUrlSync": false,
+                "sort": 1,
+                "type": "query"
+            },
+            {
+                "allValue": ".*",
+                "current": {
+                    "selected": true,
                     "text": "All",
                     "value": "$__all"
                 },
-                "definition": "label_values(up{job=\"job-producer\"}, env)",
+                "definition": "label_values(up{job=~\"${producer_job:regex}\"}, env)",
                 "hide": 0,
                 "includeAll": true,
                 "label": "Environment",
                 "multi": true,
                 "name": "env",
                 "options": [],
-                "query": "label_values(up{job=\"job-producer\"}, env)",
+                "query": "label_values(up{job=~\"${producer_job:regex}\"}, env)",
                 "refresh": 2,
                 "skipUrlSync": false,
                 "sort": 1,
@@ -3478,14 +2779,14 @@
                     "text": "All",
                     "value": "$__all"
                 },
-                "definition": "label_values(up{job=\"job-producer\",env=~\"$env\"}, instance)",
+                "definition": "label_values(up{job=~\"${producer_job:regex}\",env=~\"$env\"}, instance)",
                 "hide": 0,
                 "includeAll": true,
                 "label": "Instance",
                 "multi": true,
                 "name": "instance",
                 "options": [],
-                "query": "label_values(up{job=\"job-producer\",env=~\"$env\"}, instance)",
+                "query": "label_values(up{job=~\"${producer_job:regex}\",env=~\"$env\"}, instance)",
                 "refresh": 2,
                 "skipUrlSync": false,
                 "sort": 1,
@@ -3498,14 +2799,14 @@
                     "text": "All",
                     "value": "$__all"
                 },
-                "definition": "label_values(kafka_producer_record_send_total{service=\"job-producer\",instance=~\"${instance:regex}\"}, topic)",
+                "definition": "label_values(kafka_producer_record_send_total{service=~\"${producer_service:regex}\",instance=~\"${instance:regex}\"}, topic)",
                 "hide": 0,
                 "includeAll": true,
                 "label": "Topic",
                 "multi": true,
                 "name": "topic",
                 "options": [],
-                "query": "label_values(kafka_producer_record_send_total{service=\"job-producer\",instance=~\"${instance:regex}\"}, topic)",
+                "query": "label_values(kafka_producer_record_send_total{service=~\"${producer_service:regex}\",instance=~\"${instance:regex}\"}, topic)",
                 "refresh": 2,
                 "skipUrlSync": false,
                 "sort": 1,
@@ -3518,14 +2819,14 @@
                     "text": "All",
                     "value": "$__all"
                 },
-                "definition": "label_values(chrono_jobs_produced_total{service=\"job-producer\",instance=~\"${instance:regex}\"}, job_type)",
+                "definition": "label_values(chrono_jobs_produced_total{service=~\"${producer_service:regex}\",instance=~\"${instance:regex}\"}, job_type)",
                 "hide": 0,
                 "includeAll": true,
                 "label": "Job Type",
                 "multi": true,
                 "name": "job_type",
                 "options": [],
-                "query": "label_values(chrono_jobs_produced_total{service=\"job-producer\",instance=~\"${instance:regex}\"}, job_type)",
+                "query": "label_values(chrono_jobs_produced_total{service=~\"${producer_service:regex}\",instance=~\"${instance:regex}\"}, job_type)",
                 "refresh": 2,
                 "skipUrlSync": false,
                 "sort": 1,
@@ -3538,14 +2839,14 @@
                     "text": "All",
                     "value": "$__all"
                 },
-                "definition": "label_values(http_server_requests_seconds_count{service=\"job-producer\",instance=~\"${instance:regex}\",uri!~\"/actuator.*\"}, uri)",
+                "definition": "label_values(http_server_requests_seconds_count{service=~\"${producer_service:regex}\",instance=~\"${instance:regex}\",uri!~\"/actuator.*\"}, uri)",
                 "hide": 0,
                 "includeAll": true,
                 "label": "URI",
                 "multi": true,
                 "name": "uri",
                 "options": [],
-                "query": "label_values(http_server_requests_seconds_count{service=\"job-producer\",instance=~\"${instance:regex}\",uri!~\"/actuator.*\"}, uri)",
+                "query": "label_values(http_server_requests_seconds_count{service=~\"${producer_service:regex}\",instance=~\"${instance:regex}\",uri!~\"/actuator.*\"}, uri)",
                 "refresh": 2,
                 "skipUrlSync": false,
                 "sort": 3,
@@ -3580,5 +2881,5 @@
     "timezone": "browser",
     "title": "Job Producer",
     "uid": "chrono-job-producer",
-    "version": 1
+    "version": 7
 }
