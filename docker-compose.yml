@@ -35,7 +35,7 @@ services:
       retries: 5
 
   kafka-jmx-exporter:
-    image: bitnami/jmx-exporter:0.20.0
+    image: bitnami/jmx-exporter@sha256:3dd4111be1f94706033fe5c05bf31794bb6da38b48de7d0e141efc96e566f5f8
     container_name: kafka-jmx-exporter
     command:
       - "5556"
