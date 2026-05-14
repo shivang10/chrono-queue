@@ -61,8 +61,8 @@ spring:
   task:
     scheduling:
       pool:
-        size: 2
-      thread-name-prefix: retry-sched-
+        size: ${RETRY_DISPATCHER_SCHEDULING_POOL_SIZE:2}
+      thread-name-prefix: ${RETRY_DISPATCHER_SCHEDULING_THREAD_PREFIX:retry-sched-}
       shutdown:
         await-termination: true
         await-termination-period: 30s

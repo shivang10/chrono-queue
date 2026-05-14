@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
 @Component
@@ -30,7 +31,7 @@ public class JobEventConsumer {
     private final RetryHandler retryHandler;
     private final MeterRegistry meterRegistry;
     private final double simulatedFailureRate;
-    private final Random random;
+    private final Random seededRandom;
 
     public JobEventConsumer(ObjectMapper objectMapper,
             JobProcessingService jobProcessingService,
@@ -43,10 +44,10 @@ public class JobEventConsumer {
         this.meterRegistry = meterRegistry;
         this.simulatedFailureRate = workerValidationProperties.getSimulatedFailureRate();
         Long randomSeed = workerValidationProperties.getRandomSeed();
-        this.random = randomSeed == null ? new Random() : new Random(randomSeed);
+        this.seededRandom = randomSeed == null ? null : new Random(randomSeed);
     }
 
-    @KafkaListener(topics = KafkaTopics.PAYMENT_JOBS, concurrency = "${worker.kafka.concurrency.payment-processing-jobs:12}")
+    @KafkaListener(topics = KafkaTopics.PAYMENT_JOBS, concurrency = "${worker.kafka.concurrency.payment-processing-jobs:6}")
     public void consumePayment(
             @Payload List<String> message,
             @Header(KafkaHeaders.RECEIVED_TOPIC) List<String> topics,
@@ -58,7 +59,7 @@ public class JobEventConsumer {
         consume(message, topics, partitions, offsets, keys, acknowledgment);
     }
 
-    @KafkaListener(topics = KafkaTopics.EMAIL_JOBS, concurrency = "${worker.kafka.concurrency.email-jobs:6}")
+    @KafkaListener(topics = KafkaTopics.EMAIL_JOBS, concurrency = "${worker.kafka.concurrency.email-jobs:3}")
     public void consumeEmail(
             @Payload List<String> message,
             @Header(KafkaHeaders.RECEIVED_TOPIC) List<String> topics,
@@ -70,7 +71,7 @@ public class JobEventConsumer {
         consume(message, topics, partitions, offsets, keys, acknowledgment);
     }
 
-    @KafkaListener(topics = KafkaTopics.WEBHOOK_JOBS, concurrency = "${worker.kafka.concurrency.webhook-jobs:6}")
+    @KafkaListener(topics = KafkaTopics.WEBHOOK_JOBS, concurrency = "${worker.kafka.concurrency.webhook-jobs:3}")
     public void consumeWebhook(
             @Payload List<String> message,
             @Header(KafkaHeaders.RECEIVED_TOPIC) List<String> topics,
@@ -117,7 +118,7 @@ public class JobEventConsumer {
                 meterRegistry.counter("chrono.jobs.consumed",
                         "job_type", "unknown",
                         "result", "malformed").increment();
-                return;
+                continue;
             }
             try {
 
@@ -183,7 +184,7 @@ public class JobEventConsumer {
                     "Invalid worker.validation.simulated-failure-rate: " + simulatedFailureRate);
         }
 
-        double roll = random.nextDouble();
+        double roll = nextFailureRoll();
 
         log.debug("Simulated failure check - jobId: {}, failureRate: {}, roll: {}",
                 jobEvent.getJobId(), simulatedFailureRate, roll);
@@ -191,6 +192,16 @@ public class JobEventConsumer {
         if (roll < simulatedFailureRate) {
             throw new JobExecutionException(true,
                     "Simulated transient failure for job " + jobEvent.getJobId());
+        }
+    }
+
+    private double nextFailureRoll() {
+        if (seededRandom == null) {
+            return ThreadLocalRandom.current().nextDouble();
+        }
+
+        synchronized (seededRandom) {
+            return seededRandom.nextDouble();
         }
     }
 }

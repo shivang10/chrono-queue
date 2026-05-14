@@ -14,10 +14,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.RecordMetadata;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -25,19 +27,20 @@ import java.util.concurrent.TimeoutException;
 @Slf4j
 @Service
 public class JobEventProducerService {
-    private static final long PUBLISH_TIMEOUT_SECONDS = 5L;
-
     private final JobProducerMapper jobProducerMapper;
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
     private final MeterRegistry meterRegistry;
+    private final Duration publishTimeout;
 
     public JobEventProducerService(KafkaTemplate<String, String> kafkaTemplate, ObjectMapper objectMapper,
-            JobProducerMapper jobProducerMapper, MeterRegistry meterRegistry) {
+            JobProducerMapper jobProducerMapper, MeterRegistry meterRegistry,
+            @Value("${job.publish.timeout:5s}") Duration publishTimeout) {
         this.kafkaTemplate = kafkaTemplate;
         this.objectMapper = objectMapper;
         this.jobProducerMapper = jobProducerMapper;
         this.meterRegistry = meterRegistry;
+        this.publishTimeout = publishTimeout;
     }
 
     public JobEventResponseDTO produceJobEvent(JobEventRequestDTO jobEventRequestDTO) {
@@ -63,7 +66,7 @@ public class JobEventProducerService {
 
         try {
             SendResult<String, String> result = kafkaTemplate.send(topicName, key, value)
-                    .get(PUBLISH_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+                    .get(publishTimeout.toMillis(), TimeUnit.MILLISECONDS);
             RecordMetadata metadata = result.getRecordMetadata();
             log.debug("Kafka send confirmed - topic: {}, partition: {}, offset: {}, key: {}",
                     metadata.topic(),

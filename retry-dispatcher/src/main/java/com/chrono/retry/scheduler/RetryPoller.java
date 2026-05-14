@@ -1,6 +1,7 @@
 package com.chrono.retry.scheduler;
 
 import com.chrono.common.model.JobEventModel;
+import com.chrono.common.exceptions.InfrastructureException;
 import com.chrono.retry.config.RetryPollerProperties;
 import com.chrono.retry.producer.JobRequeueProducer;
 import com.chrono.retry.repository.RetryQueueRepository;
@@ -32,6 +33,7 @@ public class RetryPoller {
     private final Counter dispatchedCounter;
     private final Counter deserializationFailureCounter;
     private final Counter pollSkippedCounter;
+    private final Counter fetchFailureCounter;
 
     public RetryPoller(RetryQueueRepository retryQueueRepository,
             JobRequeueProducer jobRequeueProducer,
@@ -58,6 +60,9 @@ public class RetryPoller {
         this.pollSkippedCounter = Counter.builder("retry.poller.skipped.total")
                 .description("Total number of polls skipped due to overlap")
                 .register(meterRegistry);
+        this.fetchFailureCounter = Counter.builder("retry.poller.fetch.failures.total")
+                .description("Total number of Redis fetch failures")
+                .register(meterRegistry);
     }
 
     @Scheduled(fixedDelayString = "${retry.poller.fixed-delay:1000}")
@@ -78,9 +83,16 @@ public class RetryPoller {
     private void doPoll() {
         pollCounter.increment();
 
-        List<String> dueJobs = retryQueueRepository.fetchDueJobs(
-                retryPollerProperties.getBatchSize(),
-                System.currentTimeMillis());
+        List<String> dueJobs;
+        try {
+            dueJobs = retryQueueRepository.fetchDueJobs(
+                    retryPollerProperties.getBatchSize(),
+                    System.currentTimeMillis());
+        } catch (InfrastructureException ex) {
+            fetchFailureCounter.increment();
+            log.error("Retry poll failed while fetching due jobs", ex);
+            return;
+        }
 
         if (dueJobs.isEmpty()) {
             log.debug("No due jobs to retry at this poll");

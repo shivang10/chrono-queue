@@ -1,6 +1,8 @@
 package com.chrono.retry.repository;
 
+import com.chrono.common.api.ErrorCode;
 import com.chrono.common.constants.RedisKeys;
+import com.chrono.common.exceptions.InfrastructureException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -33,7 +35,10 @@ public class RetryQueueRepository {
             return result;
         } catch (RuntimeException ex) {
             log.error("Failed to fetch due jobs from Redis - batchSize: {}", batchSize, ex);
-            return List.of();
+            throw new InfrastructureException(
+                    ErrorCode.RETRY_SCHEDULING_FAILED,
+                    "Failed to fetch due jobs from Redis",
+                    ex);
         }
     }
 }

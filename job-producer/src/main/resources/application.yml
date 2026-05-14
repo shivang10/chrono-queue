@@ -53,6 +53,10 @@ server:
   compression:
     enabled: true
 
+job:
+  publish:
+    timeout: ${JOB_PUBLISH_TIMEOUT:5s}
+
 # ── Actuator / Observability ───────────────────────────────
 management:
   endpoints:
